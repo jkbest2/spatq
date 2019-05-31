@@ -1,0 +1,16 @@
+Package: spatq
+Title: Use spatially varying catchability to standardize fishery-dependent data
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "John",
+           family = "Best",
+           role = c("aut", "cre"),
+           email = "jkbest@uw.edu",
+           comment = c(ORCID = "0000-0002-8920-0900"))
+Description: This package defines a TMB model for fitting index standardization
+    models with both fishery-independent and -dependent observations. The
+    fishery-dependent observations are allowed spatially-correlated deviations
+    in catchability.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
