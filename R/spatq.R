@@ -8,5 +8,6 @@
 #' @docType package
 #' @name spatq
 #' @useDynLib spatq
+#' @import TMB
 NULL
 
