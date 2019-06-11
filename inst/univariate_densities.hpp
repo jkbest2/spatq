@@ -1,35 +1,18 @@
-// Log-normal pdf, defined as in R
+//' Log-normal density
+//'
+//' Calculate the density of an observation that is log-normally distributed
+//' with a given mean and standard deviation of the distribution on the log
+//' scale. Vectorized to accept vectors<Type> observations, means, and/or
+//' standard deviations.
+//' @param x [Type] observation
+//' @param meanlog [Type] mean on the log scale
+//' @param sdlog [Type] standard deviation on the log scale
+//' @param give_log [int] return density (0, default) or log density (1)
+//' @return Type density or log density
 template<class Type>
-Type dlnorm(Type x, Type meanlog, Type sdlog, bool give_log = false){
+Type dlnorm(Type x, Type meanlog, Type sdlog, int give_log = 0){
   Type logres = dnorm(log(x), meanlog, sdlog, true) - log(x);
   if(give_log) return logres; else return exp(logres);
 }
+VECTORIZE4_ttti(dlnorm);
 
-template<class Type>
-vector<Type> dlnorm(vector<Type> x, Type meanlog, Type sdlog,
-                    bool give_log = false){
-  int N_obs = x.size();
-  vector<Type> logres(N_obs);
-
-  for (int i = 0; i < N_obs; i++) {
-    logres(i) = dlnorm(x(i), meanlog, sdlog, true);
-  }
-  if(give_log) return logres; else return exp(logres);
-}
-
-template<class Type>
-vector<Type> dlnorm(vector<Type> x, vector<Type> meanlog, Type sdlog,
-                    bool give_log = false){
-  int N_obs = x.size();
-  int N_mu = meanlog.size();
-  if (N_obs != N_mu) {
-    error("Number of observations and means must match!");
-  }
-
-  vector<Type> logres(N_obs);
-
-  for (int i = 0; i < N_obs; i++) {
-    logres(i) = dlnorm(log(x(i)), meanlog(i), sdlog, true);
-  }
-  if(give_log) return logres; else return exp(logres);
-}
