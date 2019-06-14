@@ -1,5 +1,7 @@
 context("Test objective function")
 
+library(INLA)
+
 set.seed(394870)
 
 n_obs <- 1000L
@@ -22,24 +24,29 @@ spat <- backsolve(L, rnorm(mesh$n))
 omega <- as.vector(A %*% spat)
 
 sigma_c <- 0.25
-## obs <- rlnorm(n_obs, omega, 0.25)
-obs <- rlnorm(n_obs, 0, sigma_c)
+obs <- rlnorm(n_obs, omega, sigma_c)
+## obs <- rlnorm(n_obs, 0, sigma_c)
 
 data <- list(X = matrix(rep(1, n_obs)),
              Y = obs,
              fem = fem,
              A = A)
 pars <- list(beta = c(0.0),
-             ## log_kappa2 = log(kappa2),
-             ## log_tau = log(tau),
-             ## spat = spat,
-             log_sigma = log(sigma_c))
+             log_kappa2 = log(kappa2),
+             log_tau = log(tau),
+             log_sigma = log(sigma_c),
+             spat = spat)
+
 obj <- TMB::MakeADFun(data = data,
                       parameters = pars,
-                      map = list(),
-                      ## random = "spat",
-                      DLL = "spatq")
+                      map = list(log_kappa2 = factor(NA),
+                                 log_tau = factor(NA)),
+                      random = "spat",
+                      DLL = "spatq",
+                      silent = FALSE,
+                      inner.control = list(maxit = 5000L))
 obj$fn()
+
 obj$gr()
 opt <- optim(obj$par, obj$fn, obj$gr, method = "BFGS")
 

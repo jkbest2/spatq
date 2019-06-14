@@ -16,3 +16,16 @@ Type dlnorm(Type x, Type meanlog, Type sdlog, int give_log = 0){
 }
 VECTORIZE4_ttti(dlnorm);
 
+//' Random log-normal deviates
+//'
+//' Generate independent log-normal draws with mean and standard deviation on
+//' the log scale. Length of output is the max of length of meanlog or sdlog.
+//' @param meanlog mean on the log scale
+//' @param meansd standard deviation on the log scale
+//' @return log-normally distributed random deviate
+// template<class Type>
+// Type rlnorm(Type meanlog, Type sdlog) {
+//   return exp(rnorm(meanlog, sdlog));
+// }
+// VECTORIZE2_tt(rlnorm);
+

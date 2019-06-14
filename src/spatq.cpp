@@ -10,27 +10,27 @@ Type objective_function<Type>::operator() () {
   DATA_SPARSE_MATRIX(A);
 
   PARAMETER_VECTOR(beta);
-  // PARAMETER(log_kappa2);
-  // PARAMETER(log_tau);
-  // PARAMETER_VECTOR(spat);
+  PARAMETER(log_kappa2);
+  PARAMETER(log_tau);
   PARAMETER(log_sigma);
+  PARAMETER_VECTOR(spat);
 
   vector<Type> jnll(2);
   jnll.setZero();
 
-  // Type kappa2 = exp(log_kappa2);
-  // Type tau = exp(log_tau);
+  Type kappa2 = exp(log_kappa2);
+  Type tau = exp(log_tau);
 
-  // Eigen::SparseMatrix<Type> Q = Matern_Q(fem, kappa2, tau);
-  // density::GMRF_t<Type> gmrf(Q);
+  Eigen::SparseMatrix<Type> Q = Matern_Q(fem, kappa2, tau);
+  density::GMRF_t<Type> gmrf(Q);
 
   // Project spatial effects from mesh nodes to observation locations
-  // vector<Type> omega(Y.size());
-  // omega = A * spat;
+  vector<Type> omega(Y.size());
+  omega = A * spat;
 
   vector<Type> mu(Y.size());
-  // mu = X * beta + omega;
-  mu = X * beta;
+  mu = X * beta + omega;
+  // mu = X * beta;
 
   // NOTE dlnorm must take vector<Type>, so mean vector should be precalculated
   // so don't try e.g. `dlnorm(y, X * beta, exp(log_sigma), true)`
@@ -39,12 +39,15 @@ Type objective_function<Type>::operator() () {
   //   jnll(0) -= dlnorm(Y(i), mu(i), exp(log_sigma), true);
   // }
 
-  // jnll(1) += gmrf(omega);
+  jnll(1) += gmrf(omega);
 
   REPORT(mu);
   REPORT(jnll);
+  REPORT(jnll.sum());
+  REPORT(Q);
+
   ADREPORT(beta);
 
-  return sum(jnll);
+  return jnll.sum();
 }
 
