@@ -17,8 +17,11 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1
-Depends:
-    TMB
+Imports:
+    TMB,
+    INLA
 LinkingTo:
     TMB,
     RcppEigen
+Suggests: 
+    testthat (>= 2.1.0)
