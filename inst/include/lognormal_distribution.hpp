@@ -28,4 +28,11 @@ VECTORIZE4_ttti(dlnorm);
 //   return exp(rnorm(meanlog, sdlog));
 // }
 // VECTORIZE2_tt(rlnorm);
+// VECTORIZE2_n(rlnorm);
+template<class Type>
+Type rlnorm(Type meanlog, Type sdlog) {
+  return exp(Rf_rnorm(asDouble(meanlog), asDouble(sdlog)));
+}
+VECTORIZE2_tt(rlnorm);
+VECTORIZE2_n(rlnorm);
 
