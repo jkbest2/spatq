@@ -3,6 +3,7 @@
 <!-- badges: start -->
 [![Travis build status](https://travis-ci.org/jkbest2/spatq.svg?branch=master)](https://travis-ci.org/jkbest2/spatq)
 [![Codecov test coverage](https://codecov.io/gh/jkbest2/spatq/branch/master/graph/badge.svg)](https://codecov.io/gh/jkbest2/spatq?branch=master)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
 
 This package provides a [Template Model Builder](https://github.com/kaskr/adcomp) program to fit index standardization models that include both fishery-dependent and -independent observations. The goal is to explore the utility of standardizing fishery-dependent observations by allowing for spatially varying catchability.
