@@ -67,25 +67,32 @@ Type objective_function<Type>::operator() () {
   log_n = X_n * beta_n + omega_n;
   log_w = X_w * beta_w + omega_w;
 
-  // Convert to encounter probability (p) and positive catch rate (r)
-  vector<Type> p(N_obs);
-  vector<Type> r(N_obs);
-  vector<Type> pr_tmp(2);
+  // Convert to log-probability encounter (p), log-probability of zero catch
+  // (1mp) and positive catch rate (r)
+  // TODO Use a N_obs×3 matrix here instead of three vectors. Maybe transpose
+  // that so that elements to be accessed together are in a column?
+  vector<Type> log_p_enc(N_obs);
+  vector<Type> log_p_zero(N_obs);
+  vector<Type> log_r(N_obs);
+  // Temporary vector to use for return of logpoislink function. See todo above
+  // for probably more elegant solution.
+  vector<Type> log_ppr_tmp(3);
   for (int i = 0; i < N_obs; i++) {
     // TODO VECTORIZE2_tt poislink function? Not sure if this will work if it
-    // returns a vector
-    pr_tmp = poislink(log_n(i), log_w(i));
-    p(i) = pr_tmp(0);
-    r(i) = pr_tmp(1);
+    // returns a vector. Probably better to pass in views to p and r here.
+    log_ppr_tmp = logpoislink(log_n(i), log_w(i));
+    log_p_enc(i) = log_ppr_tmp(0);
+    log_p_zero(i) = log_ppr_tmp(1);
+    log_r(i) = log_ppr_tmp(2);
   }
 
   // Calculate likelihood
   for (int i = 0; i < N_obs; i++) {
     if (catch_obs(i) == 0) {
-      jnll(0) -= log(Type(1.0) - p(i));
+      jnll(0) -= log_p_zero(i);
     } else {
-      jnll(0) -= log(p(i)) +
-        dlnorm(catch_obs(i), r(i) - sigma * sigma / Type(2.0), sigma, true);
+      jnll(0) -= log_p_enc(i) +
+        dlnorm(catch_obs(i), log_r(i) - sigma * sigma / Type(2.0), sigma, true);
     }
   }
 
@@ -93,11 +100,11 @@ Type objective_function<Type>::operator() () {
   // of log Normal with logsd `sigma`.
   SIMULATE {
     vector<Type> encounter(N_obs);
-    vector<Type> catch_mean(N_obs);
+    vector<Type> log_catch_median(N_obs);
 
-    encounter = rbinom(Type(1.0), p);
-    catch_mean = r - sigma * sigma / Type(2.0);
-    catch_obs = encounter * rlnorm(log(catch_mean), sigma);
+    encounter = rbinom(Type(1.0), exp(log_p_enc));
+    log_catch_median = log_r - sigma * sigma / Type(2.0);
+    catch_obs = encounter * rlnorm(log_catch_median, sigma);
 
     REPORT(encounter);
     REPORT(catch_obs);
