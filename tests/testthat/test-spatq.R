@@ -27,6 +27,12 @@ names(fem) <- c("M0", "c1", "M1", "M2", "va", "ta")
 A_spat <- INLA::inla.spde.make.A(mesh, loc)
 A_sptemp <- INLA::inla.spde.make.A(mesh, loc, group = years)
 
+## Select observations that are fishery-dependent and generate projection matrix
+## to only those locaitons
+fishdep <- rbinom(n_obs, 1, 0.75)
+A_qspat <- INLA::inla.spde.make.A(mesh, loc, weights = fishdep)
+A_qsptemp <- INLA::inla.spde.make.A(mesh, loc, group = years, weights = fishdep)
+
 ## Set simulation parameter values. `beta_n` at 0.75 gives roughly 12% zero
 ## catches, and `beta_w` of 5.0 gives a mean positive catch of about 150. A rho
 ## of 0.4 means that edges are effectively uncorrelated with the center of the
@@ -36,6 +42,8 @@ sigma_spat <- 0.5
 kappa <- sqrt(8) / rho
 pars_gen <- list(beta_n = rep(0.75, n_years),
                  beta_w = rep(5.0, n_years),
+                 lambda_n = rnorm(1),
+                 lambda_w = rnorm(1),
                  rho = rho,
                  sigma_spat = sigma_spat,
                  kappa = kappa,
@@ -48,9 +56,13 @@ pars_gen <- list(beta_n = rep(0.75, n_years),
 data <- list(catch_obs = rep(0, n_obs),
              X_n = model.matrix(~ factor(years) + 0),
              X_w = model.matrix(~ factor(years) + 0),
-             spde = fem,
              A_spat = A_spat,
-             A_sptemp = A_sptemp)
+             A_sptemp = A_sptemp,
+             R_n = matrix(rnorm(n_obs), ncol = 1L),
+             R_w = matrix(rnorm(n_obs), ncol = 1L),
+             A_qspat = A_qspat,
+             A_qsptemp = A_qsptemp,
+             spde = fem)
 
 ## Spatial random effects (`spat_n` and `spat_w`) are set to zero vectors of
 ## appropriate length, as these are simulated.
@@ -60,18 +72,20 @@ pars <- list(beta_n = pars_gen$beta_n,
              omega_w = rep(0.0, mesh$n),
              epsilon_n = matrix(0.0, nrow = mesh$n, ncol = n_years),
              epsilon_w = matrix(0.0, nrow = mesh$n, ncol = n_years),
+             lambda_n = pars_gen$lambda_n,
+             lambda_w = pars_gen$lambda_w,
+             phi_n = rep(0.0, mesh$n),
+             phi_w = rep(0.0, mesh$n),
+             psi_n = matrix(0.0, nrow = mesh$n, ncol = n_years),
+             psi_w = matrix(0.0, nrow = mesh$n, ncol = n_years),
              log_kappa = rep(log(pars_gen$kappa), 8),
              log_tau = rep(log(pars_gen$tau), 8),
              log_sigma = log(pars_gen$sigma_c))
 
-## Map off parameters not currently used
-spatq_map <- list(log_kappa = factor(c(1, 2, 3, 4, NA, NA, NA, NA)),
-                  log_tau = factor(c(1, 2, 3, 4, NA, NA, NA, NA)))
-
 ## A TMB model object that can be used to simulate
 obj <- TMB::MakeADFun(data = data,
                       parameters = pars,
-                      map = spatq_map,
+                      map = list(),
                       random = c("omega_n", "omega_w",
                                  "epsilon_n", "epsilon_w"),
                       DLL = "spatq")

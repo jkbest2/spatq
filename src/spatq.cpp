@@ -23,6 +23,15 @@ Type objective_function<Type>::operator() () {
   DATA_SPARSE_MATRIX(A_sptemp);    // Spatiotemporal
 
   // ---------------------------------------------------------------------------
+  // Fixed effects design matrix
+  DATA_MATRIX(R_n);
+  DATA_MATRIX(R_w);
+
+  // Catchability projection matrices
+  DATA_SPARSE_MATRIX(A_qspat);     // Spatial fishery-dependent
+  DATA_SPARSE_MATRIX(A_qsptemp);    // Spatiotemporal fishery-dependent
+
+  // ---------------------------------------------------------------------------
   // FEM matrices for SPDE spatial and spatiotemporal effects. Sharing the mesh
   // between effects means that this only needs to be passed once.
   DATA_STRUCT(spde, spde_t);
@@ -35,24 +44,37 @@ Type objective_function<Type>::operator() () {
   // PARAMETER section
   // ---------------------------------------------------------------------------
   // Abundance fixed effects
-  PARAMETER_VECTOR(beta_n);       // number of fixed effects
-  PARAMETER_VECTOR(beta_w);       // number of fixed effects
+  PARAMETER_VECTOR(beta_n);        // number of fixed effects
+  PARAMETER_VECTOR(beta_w);        // number of fixed effects
 
   // Abundance spatial effects
-  PARAMETER_VECTOR(omega_n);      // N_vert
-  PARAMETER_VECTOR(omega_w);      // N_vert
+  PARAMETER_VECTOR(omega_n);       // N_vert
+  PARAMETER_VECTOR(omega_w);       // N_vert
 
   // Abundance spatiotemporal effects
-  PARAMETER_MATRIX(epsilon_n);    // N_vert × N_yrs
-  PARAMETER_MATRIX(epsilon_w);    // N_vert × N_yrs
+  PARAMETER_MATRIX(epsilon_n);     // N_vert × N_yrs
+  PARAMETER_MATRIX(epsilon_w);     // N_vert × N_yrs
+
+  // ---------------------------------------------------------------------------
+  // Catchability fixed effects
+  PARAMETER_VECTOR(lambda_n);      // number of fixed effects
+  PARAMETER_VECTOR(lambda_w);      // number of fixed effects
+
+  // Catchability spatial effects
+  PARAMETER_VECTOR(phi_n);         // N_vert
+  PARAMETER_VECTOR(phi_w);         // N_vert
+
+  // Catchability spatiotemporal effects
+  PARAMETER_MATRIX(psi_n);         // N_vert × N_yrs
+  PARAMETER_MATRIX(psi_w);         // N_vert × N_yrs
 
   // ---------------------------------------------------------------------------
   // Spatial and spatiotemporal field parameters
-  PARAMETER_VECTOR(log_kappa);    // 8
-  PARAMETER_VECTOR(log_tau);      // 8
+  PARAMETER_VECTOR(log_kappa);     // 8
+  PARAMETER_VECTOR(log_tau);       // 8
 
   // Log catch variation parameter
-  PARAMETER(log_sigma);           // 1
+  PARAMETER(log_sigma);            // 1
 
   // ===========================================================================
   // Derived values
@@ -126,8 +148,8 @@ Type objective_function<Type>::operator() () {
   // TODO Implement (optional?) sum-to-zero constraint
   vector<Type> sptemp_n(N_obs);
   vector<Type> sptemp_w(N_obs);
-  sptemp_n = A_sptemp * epsilon_n;
-  sptemp_w = A_sptemp * epsilon_w;
+  sptemp_n = A_sptemp * epsilon_n.value();
+  sptemp_w = A_sptemp * epsilon_w.value();
 
   // Get density of spatial random effects, repeated for each process. Scale the
   // precision matrix by τ² to match the usual (Lindgren et al. 2011)
@@ -153,8 +175,84 @@ Type objective_function<Type>::operator() () {
     sptemp_n = A_sptemp * epsilon_n.value();
     sptemp_w = A_sptemp * epsilon_w.value();
 
-    REPORT(omega_n);
-    REPORT(omega_w);
+    REPORT(epsilon_n);
+    REPORT(epsilon_w);
+  }
+
+  // ===========================================================================
+  // Catchability fixed effects
+  // ---------------------------------------------------------------------------
+  vector<Type> qfixef_n(N_obs);
+  vector<Type> qfixef_w(N_obs);
+  qfixef_n = R_n * lambda_n;
+  qfixef_w = R_w * lambda_w;
+
+  // ===========================================================================
+  // Catchability spatial effects
+  // ---------------------------------------------------------------------------
+  // Project spatial effects from mesh nodes to observation locations
+  vector<Type> qspat_n(N_obs);
+  vector<Type> qspat_w(N_obs);
+  qspat_n = A_qspat * phi_n;
+  qspat_w = A_qspat * phi_w;
+
+  // Get density of spatial random effects, repeated for each process. Scale the
+  // precision matrix by τ² to match the usual (Lindgren et al. 2011)
+  // formulation.
+  SparseMatrix<Type> Q_n_ph = tau(4) * Q_spde(spde, kappa(4)) * tau(4);
+  SparseMatrix<Type> Q_w_ph = tau(5) * Q_spde(spde, kappa(5)) * tau(5);
+  jnll(4) += GMRF(Q_n_ph)(phi_n);
+  jnll(5) += GMRF(Q_w_ph)(phi_w);
+
+  // Simulate spatial random effects using given precision matrices. Then
+  // project them to the provided locations. Can't simulate new locations
+  // without recomputing the A matrix, which requires the INLA package.
+  SIMULATE {
+    phi_n = GMRF(Q_n_ph).simulate();
+    qspat_n = A_qspat * phi_n;
+    phi_w = GMRF(Q_w_ph).simulate();
+    qspat_w = A_qspat * phi_w;
+
+    REPORT(phi_n);
+    REPORT(phi_w);
+  }
+
+  // ===========================================================================
+  // Catchability spatiotemporal effects
+  // ---------------------------------------------------------------------------
+  // Project spatial effects from mesh nodes to observation locations
+  // TODO Implement (optional?) sum-to-zero constraint
+  vector<Type> qsptemp_n(N_obs);
+  vector<Type> qsptemp_w(N_obs);
+  qsptemp_n = A_qsptemp * psi_n.value();
+  qsptemp_w = A_qsptemp * psi_w.value();
+
+  // Get density of spatial random effects, repeated for each process. Scale the
+  // precision matrix by τ² to match the usual (Lindgren et al. 2011)
+  // formulation.
+  SparseMatrix<Type> Q_n_ps = tau(6) * Q_spde(spde, kappa(6)) * tau(6);
+  GMRF_t<Type> gmrf_n_ps(Q_n_ps);
+  SparseMatrix<Type> Q_w_ps = tau(7) * Q_spde(spde, kappa(7)) * tau(7);
+  GMRF_t<Type> gmrf_w_ps(Q_w_ps);
+  for (int yr = 0; yr < N_yrs; yr++) {
+    jnll(6) += gmrf_n_ps(psi_n.col(yr));
+    jnll(7) += gmrf_w_ps(psi_w.col(yr));
+  }
+
+  // Simulate spatiotemporal random effects using given precision matrices. Then
+  // project them to the provided locations. Can't simulate new locations
+  // without recomputing the A matrix, which requires the INLA package.
+  SIMULATE {
+    for (int yr = 0; yr < N_yrs; yr++) {
+      // TODO Figure out if these can be `gmrf_n_ep.simulate(psi_n)`
+      psi_n.col(yr) = gmrf_n_ps.simulate();
+      psi_w.col(yr) = gmrf_w_ps.simulate();
+    }
+    qsptemp_n = A_qsptemp * psi_n.value();
+    qsptemp_w = A_qsptemp * psi_w.value();
+
+    REPORT(psi_n);
+    REPORT(psi_w);
   }
 
   // ===========================================================================
@@ -163,8 +261,8 @@ Type objective_function<Type>::operator() () {
   // Get group density (n) and weight per group (w) for each observation
   vector<Type> log_n(N_obs);
   vector<Type> log_w(N_obs);
-  log_n = fixef_n + spat_n + sptemp_n;
-  log_w = fixef_w + spat_w + sptemp_w;
+  log_n = fixef_n + spat_n + sptemp_n + qfixef_n + qspat_n + qsptemp_n;
+  log_w = fixef_w + spat_w + sptemp_w + qfixef_w + qspat_w + qsptemp_w;
 
   // ===========================================================================
   // Apply link function
