@@ -3,6 +3,8 @@ context("Test TMB model")
 ## Set number of observations, generate observation locations
 n_obs <- 1000L
 loc <- matrix(runif(2 * n_obs), ncol = 2)
+n_years <- 5L
+years <- rep(1:n_years, each = 200L)
 
 ## Discretize spatial domain into mesh
 unit_boundary <- INLA::inla.mesh.segment(matrix(c(0, 0, 1, 1, 0,
@@ -22,7 +24,8 @@ fem <- INLA::inla.mesh.fem(mesh)
 names(fem) <- c("M0", "c1", "M1", "M2", "va", "ta")
 
 ## Make the projection matrix from the vertices to the observation locations
-A <- INLA::inla.spde.make.A(mesh, loc)
+A_spat <- INLA::inla.spde.make.A(mesh, loc)
+A_sptemp <- INLA::inla.spde.make.A(mesh, loc, group = years)
 
 ## Set simulation parameter values. `beta_n` at 0.75 gives roughly 12% zero
 ## catches, and `beta_w` of 5.0 gives a mean positive catch of about 150. A rho
@@ -31,8 +34,8 @@ A <- INLA::inla.spde.make.A(mesh, loc)
 rho <- 0.4
 sigma_spat <- 0.5
 kappa <- sqrt(8) / rho
-pars_gen <- list(beta_n = 0.75,
-                 beta_w = 5.0,
+pars_gen <- list(beta_n = rep(0.75, n_years),
+                 beta_w = rep(5.0, n_years),
                  rho = rho,
                  sigma_spat = sigma_spat,
                  kappa = kappa,
@@ -43,26 +46,45 @@ pars_gen <- list(beta_n = 0.75,
 ## simulated data, then do the same with the parameters. The design matrix for
 ## fixed effects contains only an intercept term for each process.
 data <- list(catch_obs = rep(0, n_obs),
-             X_n = matrix(rep(1, n_obs)),
-             X_w = matrix(rep(1, n_obs)),
+             X_n = model.matrix(~ factor(years) + 0),
+             X_w = model.matrix(~ factor(years) + 0),
              spde = fem,
-             A = A)
+             A_spat = A_spat,
+             A_sptemp = A_sptemp)
+
 ## Spatial random effects (`spat_n` and `spat_w`) are set to zero vectors of
 ## appropriate length, as these are simulated.
 pars <- list(beta_n = pars_gen$beta_n,
              beta_w = pars_gen$beta_w,
-             log_kappa = rep(log(pars_gen$kappa), 2),
-             log_tau = rep(log(pars_gen$tau), 2),
-             log_sigma = log(pars_gen$sigma_c),
-             spat_n = rep(0.0, mesh$n),
-             spat_w = rep(0.0, mesh$n))
+             omega_n = rep(0.0, mesh$n),
+             omega_w = rep(0.0, mesh$n),
+             epsilon_n = matrix(0.0, nrow = mesh$n, ncol = n_years),
+             epsilon_w = matrix(0.0, nrow = mesh$n, ncol = n_years),
+             log_kappa = rep(log(pars_gen$kappa), 8),
+             log_tau = rep(log(pars_gen$tau), 8),
+             log_sigma = log(pars_gen$sigma_c))
+
+## Map off parameters not currently used
+spatq_map <- list(log_kappa = factor(c(1, 2, 3, 4, NA, NA, NA, NA)),
+                  log_tau = factor(c(1, 2, 3, 4, NA, NA, NA, NA)))
 
 ## A TMB model object that can be used to simulate
 obj <- TMB::MakeADFun(data = data,
                       parameters = pars,
-                      map = list(),
-                      random = c("spat_n", "spat_w"),
+                      map = spatq_map,
+                      random = c("omega_n", "omega_w",
+                                 "epsilon_n", "epsilon_w"),
                       DLL = "spatq")
+
+test_that("Can get values, gradients, and simulations", {
+  fneval <- obj$fn()
+  greval <- obj$gr()
+  sim <- obj$simulate()
+
+  expect_true(is.finite(fneval))
+  expect_true(all(is.finite(greval)))
+  expect_true(all(is.finite(unlist(sim))))
+})
 
 test_that("Initial values usually don't fail", {
   ## Takes too long to run (probably)

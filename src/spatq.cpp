@@ -8,65 +8,168 @@ Type objective_function<Type>::operator() () {
   using namespace density;
   using namespace Eigen;
 
-  DATA_VECTOR(catch_obs);         // observed catches
-  DATA_MATRIX(X_n);               // fixed effect design matrices
+  // ===========================================================================
+  // DATA section
+  // ---------------------------------------------------------------------------
+  // Vector of observed catches; zero or positive
+  DATA_VECTOR(catch_obs);
+
+  // Abundnce fixed effects design matrix
+  DATA_MATRIX(X_n);
   DATA_MATRIX(X_w);
-  DATA_STRUCT(spde, spde_t);      // FEM matrices for spatial effects
-  DATA_SPARSE_MATRIX(A);          // Projection matrix from mesh to obs
 
-  PARAMETER_VECTOR(beta_n);       // mean log group density
-  PARAMETER_VECTOR(beta_w);       // mean log weight per group
-  PARAMETER_VECTOR(log_kappa);    // kappa parameter for each spatial field
-  PARAMETER_VECTOR(log_tau);      // tau parameter for each spatial field
-  PARAMETER(log_sigma);           // log catch variation
-  PARAMETER_VECTOR(spat_n);       // spatial random effects on log group density
-  PARAMETER_VECTOR(spat_w);       // spatial on log group weight
+  // Abundance projection matrices
+  DATA_SPARSE_MATRIX(A_spat);      // Spatial
+  DATA_SPARSE_MATRIX(A_sptemp);    // Spatiotemporal
 
-  // Get number of observations for later
+  // ---------------------------------------------------------------------------
+  // FEM matrices for SPDE spatial and spatiotemporal effects. Sharing the mesh
+  // between effects means that this only needs to be passed once.
+  DATA_STRUCT(spde, spde_t);
+
+  // Need up to four projection matrices; one for spatial effects, one for
+  // spatiotemporal effects, and the same two but that only apply the effects to
+  // fishery-dependent observations
+
+  // ===========================================================================
+  // PARAMETER section
+  // ---------------------------------------------------------------------------
+  // Abundance fixed effects
+  PARAMETER_VECTOR(beta_n);       // number of fixed effects
+  PARAMETER_VECTOR(beta_w);       // number of fixed effects
+
+  // Abundance spatial effects
+  PARAMETER_VECTOR(omega_n);      // N_vert
+  PARAMETER_VECTOR(omega_w);      // N_vert
+
+  // Abundance spatiotemporal effects
+  PARAMETER_MATRIX(epsilon_n);    // N_vert × N_yrs
+  PARAMETER_MATRIX(epsilon_w);    // N_vert × N_yrs
+
+  // ---------------------------------------------------------------------------
+  // Spatial and spatiotemporal field parameters
+  PARAMETER_VECTOR(log_kappa);    // 8
+  PARAMETER_VECTOR(log_tau);      // 8
+
+  // Log catch variation parameter
+  PARAMETER(log_sigma);           // 1
+
+  // ===========================================================================
+  // Derived values
+  // ---------------------------------------------------------------------------
+  // Get number of observations
   int N_obs = catch_obs.size();
-
-  // Initialize joint negative log-likelihood accumulator
-  vector<Type> jnll(3);
-  jnll.setZero();
+  // Get number of years
+  int N_yrs = epsilon_n.cols();
 
   // Put unconstrained parameters on their natural (constrained) scales
   vector<Type> kappa = exp(log_kappa);
   vector<Type> tau = exp(log_tau);
   Type sigma = exp(log_sigma);
 
+  // ===========================================================================
+  // Log-likelihood accumulator
+  // ---------------------------------------------------------------------------
+  // Initialize joint negative log-likelihood accumulator; accumulate spatial
+  // and spatiotemporal effects in indices corresponding to indices of kappa and
+  // tau.
+  // 0,1: Abundance spatial
+  // 2,3: Abundance spatiotemporal
+  // 4,5: Catchability spatial
+  // 6,7: Catchability spatiotemporal
+  // 8: Observation likelihood
+  vector<Type> jnll(9);
+  jnll.setZero();
+
+  // ===========================================================================
+  // Abundance fixed effects
+  // ---------------------------------------------------------------------------
+  vector<Type> fixef_n(N_obs);
+  vector<Type> fixef_w(N_obs);
+  fixef_n = X_n * beta_n;
+  fixef_w = X_w * beta_w;
+
+  // ===========================================================================
+  // Abundance spatial effects
+  // ---------------------------------------------------------------------------
   // Project spatial effects from mesh nodes to observation locations
-  vector<Type> omega_n(N_obs);
-  vector<Type> omega_w(N_obs);
-  omega_n = A * spat_n;
-  omega_w = A * spat_w;
+  vector<Type> spat_n(N_obs);
+  vector<Type> spat_w(N_obs);
+  spat_n = A_spat * omega_n;
+  spat_w = A_spat * omega_w;
 
   // Get density of spatial random effects, repeated for each process. Scale the
   // precision matrix by τ² to match the usual (Lindgren et al. 2011)
   // formulation.
-  SparseMatrix<Type> Q_n = tau(0) * Q_spde(spde, kappa(0)) * tau(0);
-  SparseMatrix<Type> Q_w = tau(1) * Q_spde(spde, kappa(1)) * tau(1);
-  jnll(1) += GMRF(Q_n)(spat_n);
-  jnll(2) += GMRF(Q_w)(spat_w);
+  SparseMatrix<Type> Q_n_om = tau(0) * Q_spde(spde, kappa(0)) * tau(0);
+  SparseMatrix<Type> Q_w_om = tau(1) * Q_spde(spde, kappa(1)) * tau(1);
+  jnll(0) += GMRF(Q_n_om)(omega_n);
+  jnll(1) += GMRF(Q_w_om)(omega_w);
 
   // Simulate spatial random effects using given precision matrices. Then
   // project them to the provided locations. Can't simulate new locations
   // without recomputing the A matrix, which requires the INLA package.
   SIMULATE {
-    spat_n = GMRF(Q_n).simulate();
-    omega_n = A * spat_n;
-    spat_w = GMRF(Q_w).simulate();
-    omega_w = A * spat_w;
+    omega_n = GMRF(Q_n_om).simulate();
+    spat_n = A_spat * omega_n;
+    omega_w = GMRF(Q_w_om).simulate();
+    spat_w = A_spat * omega_w;
 
-    REPORT(spat_n);
-    REPORT(spat_w);
+    REPORT(omega_n);
+    REPORT(omega_w);
   }
 
+  // ===========================================================================
+  // Abundance spatiotemporal effects
+  // ---------------------------------------------------------------------------
+  // Project spatial effects from mesh nodes to observation locations
+  // TODO Implement (optional?) sum-to-zero constraint
+  vector<Type> sptemp_n(N_obs);
+  vector<Type> sptemp_w(N_obs);
+  sptemp_n = A_sptemp * epsilon_n;
+  sptemp_w = A_sptemp * epsilon_w;
+
+  // Get density of spatial random effects, repeated for each process. Scale the
+  // precision matrix by τ² to match the usual (Lindgren et al. 2011)
+  // formulation.
+  SparseMatrix<Type> Q_n_ep = tau(2) * Q_spde(spde, kappa(2)) * tau(2);
+  GMRF_t<Type> gmrf_n_ep(Q_n_ep);
+  SparseMatrix<Type> Q_w_ep = tau(3) * Q_spde(spde, kappa(3)) * tau(3);
+  GMRF_t<Type> gmrf_w_ep(Q_w_ep);
+  for (int yr = 0; yr < N_yrs; yr++) {
+    jnll(2) += gmrf_n_ep(epsilon_n.col(yr));
+    jnll(3) += gmrf_w_ep(epsilon_w.col(yr));
+  }
+
+  // Simulate spatiotemporal random effects using given precision matrices. Then
+  // project them to the provided locations. Can't simulate new locations
+  // without recomputing the A matrix, which requires the INLA package.
+  SIMULATE {
+    for (int yr = 0; yr < N_yrs; yr++) {
+      // TODO Figure out if these can be `gmrf_n_ep.simulate(epsilon_n)`
+      epsilon_n.col(yr) = gmrf_n_ep.simulate();
+      epsilon_w.col(yr) = gmrf_w_ep.simulate();
+    }
+    sptemp_n = A_sptemp * epsilon_n.value();
+    sptemp_w = A_sptemp * epsilon_w.value();
+
+    REPORT(omega_n);
+    REPORT(omega_w);
+  }
+
+  // ===========================================================================
+  // Calculate linear predictor
+  // ---------------------------------------------------------------------------
   // Get group density (n) and weight per group (w) for each observation
   vector<Type> log_n(N_obs);
   vector<Type> log_w(N_obs);
-  log_n = X_n * beta_n + omega_n;
-  log_w = X_w * beta_w + omega_w;
+  log_n = fixef_n + spat_n + sptemp_n;
+  log_w = fixef_w + spat_w + sptemp_w;
 
+  // ===========================================================================
+  // Apply link function
+  // ---------------------------------------------------------------------------
+  // Get group density (n) and weight per group (w) for each observation
   // Convert to log-probability encounter (p), log-probability of zero catch
   // (1mp) and positive catch rate (r)
   // TODO Use a N_obs×3 matrix here instead of three vectors. Maybe transpose
@@ -86,12 +189,14 @@ Type objective_function<Type>::operator() () {
     log_r(i) = log_ppr_tmp(2);
   }
 
-  // Calculate likelihood
+  // ===========================================================================
+  // Observation likelihood
+  // ---------------------------------------------------------------------------
   for (int i = 0; i < N_obs; i++) {
     if (catch_obs(i) == 0) {
-      jnll(0) -= log_p_zero(i);
+      jnll(8) -= log_p_zero(i);
     } else {
-      jnll(0) -= log_p_enc(i) +
+      jnll(8) -= log_p_enc(i) +
         dlnorm(catch_obs(i), log_r(i) - sigma * sigma / Type(2.0), sigma, true);
     }
   }
@@ -110,6 +215,9 @@ Type objective_function<Type>::operator() () {
     REPORT(catch_obs);
   }
 
+  // ===========================================================================
+  // Reports
+  // ---------------------------------------------------------------------------
   REPORT(jnll);
 
   return jnll.sum();
