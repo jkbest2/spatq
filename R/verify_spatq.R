@@ -36,7 +36,8 @@ verify_spatq <- function(data, parameters, map = list()) {
 ##' @export
 verify_spatq_names <- function(data, parameters, map = list()) {
   ## Check that all required elements are present
-  datanames <- c("catch_obs", "X_n", "X_w", "A_spat", "A_sptemp",
+  datanames <- c("catch_obs", "X_n", "X_w", "IX_n", "IX_w",
+                 "A_spat", "A_sptemp", "IA_spat", "IA_sptemp", "Ih",
                  "R_n", "R_w", "A_qspat", "A_qsptemp", "spde")
   parnames <- c("beta_n", "beta_w", "omega_n", "omega_w",
                 "epsilon_n", "epsilon_w",
@@ -77,6 +78,13 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
     ddims$catch_obs == ddims$A_qsptemp[1]
   })
 
+  ## Check that index components are the correct length
+  stopifnot(exprs = {
+    ddims$IX_n[1] == ddims$IX_w[1]
+    ddims$IX_n[1] == ddims$IA_spat[1]
+    ddims$IX_n[1] == ddims$IA_sptemp[1]
+  })
+
   ## Check that matrices conform
   stopifnot(exprs = {
     ddims$X_n[2] == pdims$beta_n
@@ -98,6 +106,21 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
     pdims$epsilon_w[2] == pdims$epsilon_n[2]
     pdims$psi_n[2] == pdims$epsilon_n[2]
     pdims$psi_w[2] == pdims$epsilon_n[2]
+  }
+
+  ## Check that index design matrices have same number of cols as data design
+  ## matrices
+  stopifnot(exprs = {
+    ddims$IX_n[2] == ddims$X_n[2]
+    ddims$IX_w[2] == ddims$X_w[2]
+    ddims$IA_spat[2] == ddims$A_spat[2]
+    ddims$IX_sptemp[2] == ddims$A_sptemp[2]
+  })
+
+  ## Check that total index locations are exact multiple of number of
+  ## integration weights
+  stopifnot(exprs = {
+    ddims$Ih %% ddims$X_n[2] == 0
   })
 
   ## Check that log_kappa and log_tau are each length 8

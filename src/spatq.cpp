@@ -14,13 +14,22 @@ Type objective_function<Type>::operator() () {
   // Vector of observed catches; zero or positive
   DATA_VECTOR(catch_obs);
 
-  // Abundnce fixed effects design matrix
+  // Abundance fixed effects design matrix
   DATA_MATRIX(X_n);
   DATA_MATRIX(X_w);
+  // Index fixed effects design matrix
+  DATA_MATRIX(IX_n);
+  DATA_MATRIX(IX_w);
 
   // Abundance projection matrices
   DATA_SPARSE_MATRIX(A_spat);      // Spatial
   DATA_SPARSE_MATRIX(A_sptemp);    // Spatiotemporal
+  // Index projection matrices
+  DATA_SPARSE_MATRIX(IA_spat);     // Spatial
+  DATA_SPARSE_MATRIX(IA_sptemp);   // Spatiotemporal
+
+  // Index integration weights
+  DATA_VECTOR(Ih);
 
   // ---------------------------------------------------------------------------
   // Fixed effects design matrix
@@ -29,7 +38,7 @@ Type objective_function<Type>::operator() () {
 
   // Catchability projection matrices
   DATA_SPARSE_MATRIX(A_qspat);     // Spatial fishery-dependent
-  DATA_SPARSE_MATRIX(A_qsptemp);    // Spatiotemporal fishery-dependent
+  DATA_SPARSE_MATRIX(A_qsptemp);   // Spatiotemporal fishery-dependent
 
   // ---------------------------------------------------------------------------
   // FEM matrices for SPDE spatial and spatiotemporal effects. Sharing the mesh
@@ -83,6 +92,8 @@ Type objective_function<Type>::operator() () {
   int N_obs = catch_obs.size();
   // Get number of years
   int N_yrs = epsilon_n.cols();
+  // Get number of integration locations for each index year
+  int N_I = Ih.size();
 
   // Put unconstrained parameters on their natural (constrained) scales
   vector<Type> kappa = exp(log_kappa);
@@ -110,6 +121,12 @@ Type objective_function<Type>::operator() () {
   vector<Type> fixef_w(N_obs);
   fixef_n = X_n * beta_n;
   fixef_w = X_w * beta_w;
+
+  // Index fixed effects
+  vector<Type> Ifixef_n(N_obs);
+  vector<Type> Ifixef_w(N_obs);
+  Ifixef_n = IX_n * beta_n;
+  Ifixef_w = IX_w * beta_w;
 
   // ===========================================================================
   // Abundance spatial effects
@@ -140,6 +157,12 @@ Type objective_function<Type>::operator() () {
     REPORT(omega_n);
     REPORT(omega_w);
   }
+
+  // Index spatial effects
+  vector<Type> Ispat_n(N_obs);
+  vector<Type> Ispat_w(N_obs);
+  Ispat_n = IA_spat * omega_n;
+  Ispat_w = IA_spat * omega_w;
 
   // ===========================================================================
   // Abundance spatiotemporal effects
@@ -178,6 +201,12 @@ Type objective_function<Type>::operator() () {
     REPORT(epsilon_n);
     REPORT(epsilon_w);
   }
+
+  // Index spatiotemporal effects
+  vector<Type> Isptemp_n(N_obs);
+  vector<Type> Isptemp_w(N_obs);
+  Isptemp_n = IA_sptemp * epsilon_n.value();
+  Isptemp_w = IA_sptemp * epsilon_w.value();
 
   // ===========================================================================
   // Catchability fixed effects
@@ -264,6 +293,12 @@ Type objective_function<Type>::operator() () {
   log_n = fixef_n + spat_n + sptemp_n + qfixef_n + qspat_n + qsptemp_n;
   log_w = fixef_w + spat_w + sptemp_w + qfixef_w + qspat_w + qsptemp_w;
 
+  // Index linear predictor
+  vector<Type> Ilog_n(N_obs);
+  vector<Type> Ilog_w(N_obs);
+  Ilog_n = Ifixef_n + Ispat_n + Isptemp_n;
+  Ilog_w = Ifixef_w + Ispat_w + Isptemp_w;
+
   // ===========================================================================
   // Apply link function
   // ---------------------------------------------------------------------------
@@ -314,9 +349,27 @@ Type objective_function<Type>::operator() () {
   }
 
   // ===========================================================================
+  // Index of abundance
+  // ---------------------------------------------------------------------------
+  vector<Type> Index(N_yrs);
+  Index.setZero();
+  int i0 = 0;
+  int i1 = N_yrs;
+
+  for (int yr = 0; yr < N_yrs; yr++) {
+    i0 += N_yrs;
+    i1 += N_yrs;
+    for (int i = i0; i < i1; i++) {
+      Index(yr) += Ih(i) * exp(Ilog_n(i) + Ilog_w(i));
+    }
+  }
+
+  // ===========================================================================
   // Reports
   // ---------------------------------------------------------------------------
   REPORT(jnll);
+
+  ADREPORT(Index);
 
   return jnll.sum();
 }

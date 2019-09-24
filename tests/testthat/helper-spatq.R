@@ -4,6 +4,18 @@ loc <- matrix(runif(2 * n_obs), ncol = 2)
 n_years <- 5L
 years <- rep(1:n_years, each = 200L)
 
+## Generate index locations
+## TODO Extract index grid-making to a function
+index_step <- 0.05
+index_start <- index_step / 2
+index_end <- 1 - index_start
+index_vec <- seq(index_start, index_end, index_step)
+index_years <- rep(1:n_years, each = length(index_vec)^2)
+index_loc <- as.matrix(expand.grid(s1 = index_vec,
+                                   s2 = index_vec,
+                                   year = 1:n_years)[, 1:2])
+Ih <- rep(index_step^2, length(index_vec)^2 * n_years)
+
 ## Discretize spatial domain into mesh
 unit_boundary <- INLA::inla.mesh.segment(matrix(c(0, 0, 1, 1, 0,
                                                   0, 1, 1, 0, 0),
@@ -24,6 +36,9 @@ names(fem) <- c("M0", "c1", "M1", "M2", "va", "ta")
 ## Make the projection matrix from the vertices to the observation locations
 A_spat <- INLA::inla.spde.make.A(mesh, loc)
 A_sptemp <- INLA::inla.spde.make.A(mesh, loc, group = years)
+## And the index projection matrices
+IA_spat <- INLA::inla.spde.make.A(mesh, index_loc)
+IA_sptemp <- INLA::inla.spde.make.A(mesh, index_loc, group = index_years)
 
 ## Select observations that are fishery-dependent and generate projection matrix
 ## to only those locaitons
@@ -54,8 +69,13 @@ pars_gen <- list(beta_n = rep(0.75, n_years),
 dat <- list(catch_obs = rep(0, n_obs),
             X_n = model.matrix(~ factor(years) + 0),
             X_w = model.matrix(~ factor(years) + 0),
+            IX_n = model.matrix(~ factor(index_years) + 0),
+            IX_w = model.matrix(~ factor(index_years) + 0),
             A_spat = A_spat,
             A_sptemp = A_sptemp,
+            IA_spat = IA_spat,
+            IA_sptemp = IA_sptemp,
+            Ih = Ih,
             R_n = matrix(rnorm(n_obs), ncol = 1L),
             R_w = matrix(rnorm(n_obs), ncol = 1L),
             A_qspat = A_qspat,
