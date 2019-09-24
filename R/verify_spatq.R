@@ -36,7 +36,8 @@ verify_spatq <- function(data, parameters, map = list()) {
 ##' @export
 verify_spatq_names <- function(data, parameters, map = list()) {
   ## Check that all required elements are present
-  datanames <- c("catch_obs", "X_n", "X_w", "IX_n", "IX_w",
+  datanames <- c("catch_obs", "area_swept",
+                 "X_n", "X_w", "IX_n", "IX_w",
                  "A_spat", "A_sptemp", "IA_spat", "IA_sptemp", "Ih",
                  "R_n", "R_w", "A_qspat", "A_qsptemp", "spde")
   parnames <- c("beta_n", "beta_w", "omega_n", "omega_w",
@@ -68,6 +69,7 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
   ## Check that all vector multiplies will result in vector same length as
   ## number of obserations
   stopifnot(exprs = {
+    ddims$catch_obs == ddims$area_swept
     ddims$catch_obs == ddims$X_n[1]
     ddims$catch_obs == ddims$X_w[1]
     ddims$catch_obs == ddims$A_spat[1]
@@ -106,7 +108,7 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
     pdims$epsilon_w[2] == pdims$epsilon_n[2]
     pdims$psi_n[2] == pdims$epsilon_n[2]
     pdims$psi_w[2] == pdims$epsilon_n[2]
-  }
+  })
 
   ## Check that index design matrices have same number of cols as data design
   ## matrices

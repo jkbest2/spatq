@@ -13,6 +13,8 @@ Type objective_function<Type>::operator() () {
   // ---------------------------------------------------------------------------
   // Vector of observed catches; zero or positive
   DATA_VECTOR(catch_obs);
+  // Area swept offset for each observation
+  DATA_VECTOR(area_swept);
 
   // Abundance fixed effects design matrix
   DATA_MATRIX(X_n);
@@ -316,7 +318,7 @@ Type objective_function<Type>::operator() () {
   for (int i = 0; i < N_obs; i++) {
     // TODO VECTORIZE2_tt poislink function? Not sure if this will work if it
     // returns a vector. Probably better to pass in views to p and r here.
-    log_ppr_tmp = logpoislink(log_n(i), log_w(i));
+    log_ppr_tmp = logpoislink(log_n(i), log_w(i), area_swept(i));
     log_p_enc(i) = log_ppr_tmp(0);
     log_p_zero(i) = log_ppr_tmp(1);
     log_r(i) = log_ppr_tmp(2);

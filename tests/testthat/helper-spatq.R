@@ -67,6 +67,7 @@ pars_gen <- list(beta_n = rep(0.75, n_years),
 ## simulated data, then do the same with the parameters. The design matrix for
 ## fixed effects contains only an intercept term for each process.
 dat <- list(catch_obs = rep(0, n_obs),
+            area_swept = rep(1, n_obs),
             X_n = model.matrix(~ factor(years) + 0),
             X_w = model.matrix(~ factor(years) + 0),
             IX_n = model.matrix(~ factor(index_years) + 0),
