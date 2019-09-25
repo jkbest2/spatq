@@ -23,6 +23,13 @@ Type objective_function<Type>::operator() () {
   DATA_MATRIX(IX_n);
   DATA_MATRIX(IX_w);
 
+  // Abundance random effects design matrix
+  DATA_MATRIX(Z_n);
+  DATA_MATRIX(Z_w);
+  // Index random effects
+  DATA_MATRIX(IZ_n);
+  DATA_MATRIX(IZ_w);
+
   // Abundance projection matrices
   DATA_SPARSE_MATRIX(A_spat);      // Spatial
   DATA_SPARSE_MATRIX(A_sptemp);    // Spatiotemporal
@@ -37,6 +44,10 @@ Type objective_function<Type>::operator() () {
   // Fixed effects design matrix
   DATA_MATRIX(R_n);
   DATA_MATRIX(R_w);
+
+  // Random effects design matrix
+  DATA_MATRIX(V_n);
+  DATA_MATRIX(V_w);
 
   // Catchability projection matrices
   DATA_SPARSE_MATRIX(A_qspat);     // Spatial fishery-dependent
@@ -58,6 +69,10 @@ Type objective_function<Type>::operator() () {
   PARAMETER_VECTOR(beta_n);        // number of fixed effects
   PARAMETER_VECTOR(beta_w);        // number of fixed effects
 
+  // Abundance random effects
+  PARAMETER_VECTOR(gamma_n);       // number of random effects
+  PARAMETER_VECTOR(gamma_w);       // number of random effects
+
   // Abundance spatial effects
   PARAMETER_VECTOR(omega_n);       // N_vert
   PARAMETER_VECTOR(omega_w);       // N_vert
@@ -71,6 +86,10 @@ Type objective_function<Type>::operator() () {
   PARAMETER_VECTOR(lambda_n);      // number of fixed effects
   PARAMETER_VECTOR(lambda_w);      // number of fixed effects
 
+  // Catchability random effects
+  PARAMETER_VECTOR(eta_n);         // number of random effects
+  PARAMETER_VECTOR(eta_w);         // number of random effects
+
   // Catchability spatial effects
   PARAMETER_VECTOR(phi_n);         // N_vert
   PARAMETER_VECTOR(phi_w);         // N_vert
@@ -80,6 +99,9 @@ Type objective_function<Type>::operator() () {
   PARAMETER_MATRIX(psi_w);         // N_vert × N_yrs
 
   // ---------------------------------------------------------------------------
+  // Random effects variance parameters
+  PARAMETER_VECTOR(log_xi);
+
   // Spatial and spatiotemporal field parameters
   PARAMETER_VECTOR(log_kappa);     // 8
   PARAMETER_VECTOR(log_tau);       // 8
@@ -98,6 +120,7 @@ Type objective_function<Type>::operator() () {
   int N_I = Ih.size();
 
   // Put unconstrained parameters on their natural (constrained) scales
+  vector<Type> xi = exp(log_xi);
   vector<Type> kappa = exp(log_kappa);
   vector<Type> tau = exp(log_tau);
   Type sigma = exp(log_sigma);
@@ -112,8 +135,10 @@ Type objective_function<Type>::operator() () {
   // 2,3: Abundance spatiotemporal
   // 4,5: Catchability spatial
   // 6,7: Catchability spatiotemporal
-  // 8: Observation likelihood
-  vector<Type> jnll(9);
+  // 8:   Abundance random effects
+  // 9:   Catchability random effects
+  // 10:  Observation likelihood
+  vector<Type> jnll(11);
   jnll.setZero();
 
   // ===========================================================================
@@ -129,6 +154,34 @@ Type objective_function<Type>::operator() () {
   vector<Type> Ifixef_w(N_obs);
   Ifixef_n = IX_n * beta_n;
   Ifixef_w = IX_w * beta_w;
+
+  // ===========================================================================
+  // Abundance random effects
+  // ---------------------------------------------------------------------------
+  vector<Type> ranef_n(N_obs);
+  vector<Type> ranef_w(N_obs);
+  ranef_n = Z_n * gamma_n;
+  ranef_w = Z_w * gamma_w;
+
+  // Index fixed effects
+  vector<Type> Iranef_n(N_obs);
+  vector<Type> Iranef_w(N_obs);
+  Iranef_n = IZ_n * gamma_n;
+  Iranef_w = IZ_w * gamma_w;
+
+  // Include random effects likelihood; currently only iid is implemented
+  jnll(8) -= sum(dnorm(gamma_n, Type(0), xi(0), true));
+  jnll(8) -= sum(dnorm(gamma_w, Type(0), xi(1), true));
+
+  SIMULATE {
+    gamma_n = rnorm(Z_n.cols(), Type(0), xi(0));
+    ranef_n = Z_n * gamma_n;
+    gamma_w = rnorm(Z_w.cols(), Type(0), xi(1));
+    ranef_w = Z_w * gamma_w;
+
+    REPORT(gamma_n);
+    REPORT(gamma_w);
+  }
 
   // ===========================================================================
   // Abundance spatial effects
@@ -219,6 +272,27 @@ Type objective_function<Type>::operator() () {
   qfixef_w = R_w * lambda_w;
 
   // ===========================================================================
+  // Catchability random effects
+  // ---------------------------------------------------------------------------
+  vector<Type> qranef_n(N_obs);
+  vector<Type> qranef_w(N_obs);
+  qranef_n = V_n * eta_n;
+  qranef_w = V_w * eta_w;
+
+  // Include random effects likelihood; currently only iid is implemented
+  jnll(9) -= sum(dnorm(eta_n, Type(0), xi(2), true));
+  jnll(9) -= sum(dnorm(eta_w, Type(0), xi(3), true));
+
+  SIMULATE {
+    eta_n = rnorm(V_n.cols(), Type(0), xi(2));
+    qranef_n = V_n * eta_n;
+    eta_w = rnorm(V_w.cols(), Type(0), xi(3));
+    qranef_w = V_w * eta_w;
+
+    REPORT(eta_n);
+    REPORT(eta_w);
+  }
+  // ===========================================================================
   // Catchability spatial effects
   // ---------------------------------------------------------------------------
   // Project spatial effects from mesh nodes to observation locations
@@ -292,14 +366,16 @@ Type objective_function<Type>::operator() () {
   // Get group density (n) and weight per group (w) for each observation
   vector<Type> log_n(N_obs);
   vector<Type> log_w(N_obs);
-  log_n = fixef_n + spat_n + sptemp_n + qfixef_n + qspat_n + qsptemp_n;
-  log_w = fixef_w + spat_w + sptemp_w + qfixef_w + qspat_w + qsptemp_w;
+  log_n = fixef_n + ranef_n + spat_n + sptemp_n +
+    qfixef_n + qranef_n + qspat_n + qsptemp_n;
+  log_w = fixef_w + ranef_w + spat_w + sptemp_w +
+    qfixef_w + qranef_w + qspat_w + qsptemp_w;
 
   // Index linear predictor
   vector<Type> Ilog_n(N_obs);
   vector<Type> Ilog_w(N_obs);
-  Ilog_n = Ifixef_n + Ispat_n + Isptemp_n;
-  Ilog_w = Ifixef_w + Ispat_w + Isptemp_w;
+  Ilog_n = Ifixef_n + Iranef_n + Ispat_n + Isptemp_n;
+  Ilog_w = Ifixef_w + Iranef_w + Ispat_w + Isptemp_w;
 
   // ===========================================================================
   // Apply link function
@@ -329,9 +405,9 @@ Type objective_function<Type>::operator() () {
   // ---------------------------------------------------------------------------
   for (int i = 0; i < N_obs; i++) {
     if (catch_obs(i) == 0) {
-      jnll(8) -= log_p_zero(i);
+      jnll(10) -= log_p_zero(i);
     } else {
-      jnll(8) -= log_p_enc(i) +
+      jnll(10) -= log_p_enc(i) +
         dlnorm(catch_obs(i), log_r(i) - sigma * sigma / Type(2.0), sigma, true);
     }
   }
@@ -355,12 +431,12 @@ Type objective_function<Type>::operator() () {
   // ---------------------------------------------------------------------------
   vector<Type> Index(N_yrs);
   Index.setZero();
-  int i0 = 0;
-  int i1 = N_yrs;
+  int i0;
+  int i1;
 
   for (int yr = 0; yr < N_yrs; yr++) {
-    i0 += N_yrs;
-    i1 += N_yrs;
+    i0 += yr * N_yrs;
+    i1 += (yr + 1) * N_yrs;
     for (int i = i0; i < i1; i++) {
       Index(yr) += Ih(i) * exp(Ilog_n(i) + Ilog_w(i));
     }

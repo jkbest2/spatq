@@ -38,12 +38,14 @@ verify_spatq_names <- function(data, parameters, map = list()) {
   ## Check that all required elements are present
   datanames <- c("catch_obs", "area_swept",
                  "X_n", "X_w", "IX_n", "IX_w",
+                 "Z_n", "Z_w", "IZ_n", "IZ_w",
                  "A_spat", "A_sptemp", "IA_spat", "IA_sptemp", "Ih",
-                 "R_n", "R_w", "A_qspat", "A_qsptemp", "spde")
-  parnames <- c("beta_n", "beta_w", "omega_n", "omega_w",
-                "epsilon_n", "epsilon_w",
-                "lambda_n", "lambda_w", "phi_n", "phi_w",
-                "psi_n", "psi_w",
+                 "R_n", "R_w", "V_n", "V_w",
+                 "A_qspat", "A_qsptemp", "spde")
+  parnames <- c("beta_n", "beta_w", "gamma_n", "gamma_w",
+                "omega_n", "omega_w", "epsilon_n", "epsilon_w",
+                "lambda_n", "lambda_w", "eta_n", "eta_w",
+                "phi_n", "phi_w", "psi_n", "psi_w",
                 "log_kappa", "log_tau", "log_sigma")
   ## print(parameters)
   stopifnot(exprs = {
@@ -72,10 +74,14 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
     ddims$catch_obs == ddims$area_swept
     ddims$catch_obs == ddims$X_n[1]
     ddims$catch_obs == ddims$X_w[1]
+    ddims$catch_obs == ddims$X_n[1]
+    ddims$catch_obs == ddims$X_w[1]
     ddims$catch_obs == ddims$A_spat[1]
     ddims$catch_obs == ddims$A_sptemp[1]
     ddims$catch_obs == ddims$R_n[1]
     ddims$catch_obs == ddims$R_w[1]
+    ddims$catch_obs == ddims$V_n[1]
+    ddims$catch_obs == ddims$V_w[1]
     ddims$catch_obs == ddims$A_qspat[1]
     ddims$catch_obs == ddims$A_qsptemp[1]
   })
@@ -83,6 +89,8 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
   ## Check that index components are the correct length
   stopifnot(exprs = {
     ddims$IX_n[1] == ddims$IX_w[1]
+    ddims$IX_n[1] == ddims$IZ_n[1]
+    ddims$IX_n[1] == ddims$IZ_w[1]
     ddims$IX_n[1] == ddims$IA_spat[1]
     ddims$IX_n[1] == ddims$IA_sptemp[1]
   })
@@ -91,12 +99,16 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
   stopifnot(exprs = {
     ddims$X_n[2] == pdims$beta_n
     ddims$X_w[2] == pdims$beta_w
+    ddims$Z_n[2] == pdims$gamma_n
+    ddims$Z_w[2] == pdims$gamma_w
     ddims$A_spat[2] == pdims$omega_n
     ddims$A_spat[2] == pdims$omega_w
     ddims$A_sptemp[2] == prod(pdims$epsilon_n)
     ddims$A_sptemp[2] == prod(pdims$epsilon_w)
     ddims$R_n[2] == pdims$lambda_n
     ddims$R_w[2] == pdims$lambda_w
+    ddims$V_n[2] == pdims$eta_n
+    ddims$V_w[2] == pdims$eta_w
     ddims$A_qspat[2] == pdims$phi_n
     ddims$A_qspat[2] == pdims$phi_w
     ddims$A_qsptemp[2] == prod(pdims$psi_n)
@@ -115,6 +127,8 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
   stopifnot(exprs = {
     ddims$IX_n[2] == ddims$X_n[2]
     ddims$IX_w[2] == ddims$X_w[2]
+    ddims$IX_n[2] == ddims$X_n[2]
+    ddims$IX_w[2] == ddims$X_w[2]
     ddims$IA_spat[2] == ddims$A_spat[2]
     ddims$IX_sptemp[2] == ddims$A_sptemp[2]
   })
@@ -125,8 +139,10 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
     ddims$Ih %% ddims$X_n[2] == 0
   })
 
-  ## Check that log_kappa and log_tau are each length 8
+  ## Check that random effects parameters are correct length
   stopifnot(exprs = {
+    pdims$log_xi_gamma == 2
+    pdims$log_xi_eta == 2
     pdims$log_kappa == 8
     pdims$log_tau == 8
   })
@@ -149,6 +165,23 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
 ##' @return `TRUE` if all checks pass.
 ##' @export
 verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
+  ## Check that iid random effects parameters are map'd if corresponding fields
+  ## are
+  ranef_names <- c("gamma_n", "gamma_w", "eta_n", "eta_w")
+  for (nm in names(map)) {
+    if (nm %in% ranef_names) {
+      idx <- which(ranef_names == nm)
+      stopifnot(exprs = {
+        ## Check that map includes the field parametes and the correct indices
+        ## are NA
+        !is.null(map$log_xi) && is.na(map$log_xi[idx])
+      })
+      ## if (any(parameters[[nm]] != 0)) {
+      ##   warn(nm, " is map'd but not all zeros.")
+      ## }
+    }
+  }
+
   ## Check that spat/sptemp field parameters are map'd if corresponding fields
   ## are
   spattemp_names <- c("omega_n", "omega_w", "epsilon_n", "epsilon_w",
@@ -162,9 +195,9 @@ verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
         !is.null(map$log_tau) && is.na(map$log_tau[idx])
         !is.null(map$log_kappa) && is.na(map$log_kappa[idx])
       })
-      if (any(parameters[[nm]] != 0)) {
-        warn(nm, " is map'd but not all zeros.")
-      }
+      ## if (any(parameters[[nm]] != 0)) {
+      ##   warn(nm, " is map'd but not all zeros.")
+      ## }
     }
   }
   return(TRUE)
