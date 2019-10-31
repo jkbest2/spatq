@@ -4,7 +4,8 @@
 dim_or_len <- function(x) {
   d <- dim(x)
   if (is.null(d)) {
-    d <- length(x)
+    ## Always return two dimensions
+    d <- c(length(x), 1)
   }
   d
 }
@@ -71,19 +72,19 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
   ## Check that all vector multiplies will result in vector same length as
   ## number of obserations
   stopifnot(exprs = {
-    ddims$catch_obs == ddims$area_swept
-    ddims$catch_obs == ddims$X_n[1]
-    ddims$catch_obs == ddims$X_w[1]
-    ddims$catch_obs == ddims$X_n[1]
-    ddims$catch_obs == ddims$X_w[1]
-    ddims$catch_obs == ddims$A_spat[1]
-    ddims$catch_obs == ddims$A_sptemp[1]
-    ddims$catch_obs == ddims$R_n[1]
-    ddims$catch_obs == ddims$R_w[1]
-    ddims$catch_obs == ddims$V_n[1]
-    ddims$catch_obs == ddims$V_w[1]
-    ddims$catch_obs == ddims$A_qspat[1]
-    ddims$catch_obs == ddims$A_qsptemp[1]
+    ddims$catch_obs[1] == ddims$area_swept[1]
+    ddims$catch_obs[1] == ddims$X_n[1]
+    ddims$catch_obs[1] == ddims$X_w[1]
+    ddims$catch_obs[1] == ddims$X_n[1]
+    ddims$catch_obs[1] == ddims$X_w[1]
+    ddims$catch_obs[1] == ddims$A_spat[1]
+    ddims$catch_obs[1] == ddims$A_sptemp[1]
+    ddims$catch_obs[1] == ddims$R_n[1]
+    ddims$catch_obs[1] == ddims$R_w[1]
+    ddims$catch_obs[1] == ddims$V_n[1]
+    ddims$catch_obs[1] == ddims$V_w[1]
+    ddims$catch_obs[1] == ddims$A_qspat[1]
+    ddims$catch_obs[1] == ddims$A_qsptemp[1]
   })
 
   ## Check that index components are the correct length
@@ -97,20 +98,20 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
 
   ## Check that matrices conform
   stopifnot(exprs = {
-    ddims$X_n[2] == pdims$beta_n
-    ddims$X_w[2] == pdims$beta_w
-    ddims$Z_n[2] == pdims$gamma_n
-    ddims$Z_w[2] == pdims$gamma_w
-    ddims$A_spat[2] == pdims$omega_n
-    ddims$A_spat[2] == pdims$omega_w
+    ddims$X_n[2] == pdims$beta_n[1]
+    ddims$X_w[2] == pdims$beta_w[1]
+    ddims$Z_n[2] == pdims$gamma_n[1]
+    ddims$Z_w[2] == pdims$gamma_w[1]
+    ddims$A_spat[2] == pdims$omega_n[1]
+    ddims$A_spat[2] == pdims$omega_w[1]
     ddims$A_sptemp[2] == prod(pdims$epsilon_n)
     ddims$A_sptemp[2] == prod(pdims$epsilon_w)
-    ddims$R_n[2] == pdims$lambda_n
-    ddims$R_w[2] == pdims$lambda_w
-    ddims$V_n[2] == pdims$eta_n
-    ddims$V_w[2] == pdims$eta_w
-    ddims$A_qspat[2] == pdims$phi_n
-    ddims$A_qspat[2] == pdims$phi_w
+    ddims$R_n[2] == pdims$lambda_n[1]
+    ddims$R_w[2] == pdims$lambda_w[1]
+    ddims$V_n[2] == pdims$eta_n[1]
+    ddims$V_w[2] == pdims$eta_w[1]
+    ddims$A_qspat[2] == pdims$phi_n[1]
+    ddims$A_qspat[2] == pdims$phi_w[1]
     ddims$A_qsptemp[2] == prod(pdims$psi_n)
     ddims$A_qsptemp[2] == prod(pdims$psi_w)
   })
@@ -135,16 +136,17 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
 
   ## Check that total index locations are exact multiple of number of
   ## integration weights
+  print(ddims$Ih)
+  print(ddims$IX_n)
   stopifnot(exprs = {
-    ddims$Ih %% ddims$X_n[2] == 0
+    ddims$Ih[1] == ddims$IX_n[1]
   })
 
   ## Check that random effects parameters are correct length
   stopifnot(exprs = {
-    pdims$log_xi_gamma == 2
-    pdims$log_xi_eta == 2
-    pdims$log_kappa == 8
-    pdims$log_tau == 8
+    pdims$log_xi[1] == 4
+    pdims$log_kappa[1] == 8
+    pdims$log_tau[1] == 8
   })
 
   lapply(names(map), function(mn) {
@@ -187,7 +189,7 @@ verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
   spattemp_names <- c("omega_n", "omega_w", "epsilon_n", "epsilon_w",
                       "phi_n", "phi_w", "psi_n", "psi_w")
   for (nm in names(map)) {
-    if (nm %in% spattemp_names) {
+    if (nm %in% spattemp_names & all(is.na(map[[nm]]))) {
       idx <- which(spattemp_names == nm)
       stopifnot(exprs = {
         ## Check that map includes the field parametes and the correct indices
@@ -195,9 +197,6 @@ verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
         !is.null(map$log_tau) && is.na(map$log_tau[idx])
         !is.null(map$log_kappa) && is.na(map$log_kappa[idx])
       })
-      ## if (any(parameters[[nm]] != 0)) {
-      ##   warn(nm, " is map'd but not all zeros.")
-      ## }
     }
   }
   return(TRUE)
