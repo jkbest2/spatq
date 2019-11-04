@@ -1,6 +1,6 @@
 ## Set number of observations, generate observation locations
 n_obs_year <- 100L
-n_years <- 5L
+n_years <- 25L
 n_obs <- n_obs_year * n_years
 loc <- matrix(runif(2 * n_obs), ncol = 2)
 years <- rep(1:n_years, each = n_obs_year)
@@ -11,13 +11,14 @@ index_step <- 0.05
 index_start <- index_step / 2
 index_end <- 1 - index_start
 index_vec <- seq(index_start, index_end, index_step)
-index_coords <- as.matrix(expand.grid(s1 = index_vec,
-                                      s2 = index_vec,
-                                      year = 1:n_years))
-index_years <- index_coords[, 3]
-index_loc <- index_coords[, 1:2]
-n_I <- nrow(index_loc)
-Ih <- rep(index_step^2, n_I)
+index_coords <- expand.grid(s1 = index_vec,
+                            s2 = index_vec,
+                            year = 1:n_years)
+n_index <- nrow(index_coords)
+index_years <- index_coords$year
+index_loc <- as.matrix(index_coords[c("s1", "s2")])
+
+Ih <- rep_len(index_step ^ 2, n_index)
 
 ## Discretize spatial domain into mesh
 unit_boundary <- INLA::inla.mesh.segment(matrix(c(0, 0, 1, 1, 0,
@@ -81,8 +82,8 @@ dat <- list(catch_obs = rep(0, n_obs),
             IX_w = model.matrix(~ factor(index_years) + 0),
             Z_n = model.matrix(~ factor(sample(1:10, n_obs, TRUE)) + 0),
             Z_w = model.matrix(~ factor(sample(1:10, n_obs, TRUE)) + 0),
-            IZ_n = model.matrix(~ factor(sample(1:10, n_I, TRUE)) + 0),
-            IZ_w = model.matrix(~ factor(sample(1:10, n_I, TRUE)) + 0),
+            IZ_n = model.matrix(~ factor(sample(1:10, n_index, TRUE)) + 0),
+            IZ_w = model.matrix(~ factor(sample(1:10, n_index, TRUE)) + 0),
             A_spat = A_spat,
             A_sptemp = A_sptemp,
             IA_spat = IA_spat,
