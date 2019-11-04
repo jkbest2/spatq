@@ -1,8 +1,9 @@
 ## Set number of observations, generate observation locations
-n_obs <- 1000L
-loc <- matrix(runif(2 * n_obs), ncol = 2)
+n_obs_year <- 100L
 n_years <- 5L
-years <- rep(1:n_years, each = 200L)
+n_obs <- n_obs_year * n_years
+loc <- matrix(runif(2 * n_obs), ncol = 2)
+years <- rep(1:n_years, each = n_obs_year)
 
 ## Generate index locations
 ## TODO Extract index grid-making to a function
@@ -10,12 +11,13 @@ index_step <- 0.05
 index_start <- index_step / 2
 index_end <- 1 - index_start
 index_vec <- seq(index_start, index_end, index_step)
-index_years <- rep(1:n_years, each = length(index_vec)^2)
-index_loc <- as.matrix(expand.grid(s1 = index_vec,
-                                   s2 = index_vec,
-                                   year = 1:n_years)[, 1:2])
+index_coords <- as.matrix(expand.grid(s1 = index_vec,
+                                      s2 = index_vec,
+                                      year = 1:n_years))
+index_years <- index_coords[, 3]
+index_loc <- index_coords[, 1:2]
 n_I <- nrow(index_loc)
-Ih <- rep(index_step^2, n_I * n_years)
+Ih <- rep(index_step^2, n_I)
 
 ## Discretize spatial domain into mesh
 unit_boundary <- INLA::inla.mesh.segment(matrix(c(0, 0, 1, 1, 0,
@@ -42,7 +44,7 @@ IA_spat <- INLA::inla.spde.make.A(mesh, index_loc)
 IA_sptemp <- INLA::inla.spde.make.A(mesh, index_loc, group = index_years)
 
 ## Select observations that are fishery-dependent and generate projection matrix
-## to only those locaitons
+## to only those locations
 fishdep <- rbinom(n_obs, 1, 0.75)
 A_qspat <- INLA::inla.spde.make.A(mesh, loc, weights = fishdep)
 A_qsptemp <- INLA::inla.spde.make.A(mesh, loc, group = years, weights = fishdep)
@@ -118,6 +120,8 @@ pars <- list(beta_n = pars_gen$beta_n,
              log_sigma = log(pars_gen$sigma_c))
 
 map_empty <- list()
+
+verify_spatq(dat, pars, map_empty)
 
 ## A TMB model object that can be used to simulate
 obj <- TMB::MakeADFun(data = dat,
