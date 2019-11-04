@@ -131,15 +131,18 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
     ddims$IX_n[2] == ddims$X_n[2]
     ddims$IX_w[2] == ddims$X_w[2]
     ddims$IA_spat[2] == ddims$A_spat[2]
-    ddims$IX_sptemp[2] == ddims$A_sptemp[2]
+    ddims$IA_sptemp[2] == ddims$A_sptemp[2]
   })
 
-  ## Check that total index locations are exact multiple of number of
-  ## integration weights
-  print(ddims$Ih)
-  print(ddims$IX_n)
+  ## Check that number of index locations is consistent for each component of
+  ## linear predictors
   stopifnot(exprs = {
     ddims$Ih[1] == ddims$IX_n[1]
+    ddims$Ih[1] == ddims$IX_w[1]
+    ddims$Ih[1] == ddims$IZ_n[1]
+    ddims$Ih[1] == ddims$IZ_w[1]
+    ddims$Ih[1] == ddims$IA_spat[1]
+    ddims$Ih[1] == ddims$IA_sptemp[1]
   })
 
   ## Check that random effects parameters are correct length
