@@ -192,14 +192,20 @@ verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
   spattemp_names <- c("omega_n", "omega_w", "epsilon_n", "epsilon_w",
                       "phi_n", "phi_w", "psi_n", "psi_w")
   for (nm in names(map)) {
-    if (nm %in% spattemp_names & all(is.na(map[[nm]]))) {
+    ## Only check spat-temp field parameters if spat-temp fields are map'd.
+    ## Allows all parameters to be included in `map` even when not actually
+    ## map'd.
+    if ((nm %in% spattemp_names) && all(is.na(map[[nm]]))) {
       idx <- which(spattemp_names == nm)
       stopifnot(exprs = {
-        ## Check that map includes the field parametes and the correct indices
+        ## Check that map includes the field parameters and the correct indices
         ## are NA
         !is.null(map$log_tau) && is.na(map$log_tau[idx])
         !is.null(map$log_kappa) && is.na(map$log_kappa[idx])
       })
+      if (warn_not_zero && any(parameters[[nm]] != 0)) {
+        warn(nm, " is map'd but not all zeros.")
+      }
     }
   }
   return(TRUE)
