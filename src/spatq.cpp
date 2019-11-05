@@ -431,12 +431,12 @@ Type objective_function<Type>::operator() () {
   // ---------------------------------------------------------------------------
   vector<Type> Index(N_yrs);
   Index.setZero();
-  int i0;
-  int i1;
+  int i0 = 0;
+  int i1 = 0;
 
   for (int yr = 0; yr < N_yrs; yr++) {
-    i0 += yr * N_yrs;
-    i1 += (yr + 1) * N_yrs;
+    i0 = yr * N_yrs;
+    i1 = (yr + 1) * N_yrs;
     for (int i = i0; i < i1; i++) {
       Index(yr) += Ih(i) * exp(Ilog_n(i) + Ilog_w(i));
     }
