@@ -7,22 +7,23 @@
 ##' @param dir Directory to work in; defaults to current working directory
 ##' @return A \code{tibble} with catch observations
 ##' @author John Best
+##' @importFrom dplyr %>%
 ##' @export
 read_catch <- function(repl, sc, dir = ".") {
   sc %in% c("naive", "simple", "scaled", "shared")
   ## File names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two
   ## digits.
-  repl_str <- str_pad(repl, 2, pad = "0")
+  repl_str <- stringr::str_pad(repl, 2, pad = "0")
   flnm <- paste0(dir, "repl_", repl_str, "/catch_", repl_str, "_", sc, ".csv")
-  read_csv(flnm,
-           col_types =cols(
-             time =col_integer(),
-             vessel_idx =col_integer(),
-             loc_idx =col_integer(),
-             coordinates =col_character(),
-             effort =col_double(),
-             catch_biomass =col_double())) %>%
-   left_join(get_coordref(), by = "loc_idx")
+  readr::read_csv(flnm,
+                  col_types = readr::cols(
+                    time = readr::col_integer(),
+                    vessel_idx = readr::col_integer(),
+                    loc_idx = readr::col_integer(),
+                    coordinates = readr::col_character(),
+                    effort = readr::col_double(),
+                    catch_biomass = readr::col_double())) %>%
+   dplyr::left_join(get_coordref(), by = "loc_idx")
 }
 
 ##' Randomly choose a subset of observations for some or all vessels etc.
@@ -48,6 +49,7 @@ read_catch <- function(repl, sc, dir = ".") {
 ##'                   tibble(vessel_idx = c(1, 2),
 ##'                          n = c(200, 1000)))
 ##' }
+##' @importFrom dplyr %>%
 ##' @export
 subsample_catch <- function(catch_df, n_df = NULL) {
   if (is.null(n_df)) return(catch_df)
@@ -55,12 +57,12 @@ subsample_catch <- function(catch_df, n_df = NULL) {
   "n" %in% names(n_df) || stop("Need column \`n\`")
   nms_join <- nms[nms != "n"]
   catch_df %>%
-    nest(data = c(-vessel_idx, -time)) %>%
-   left_join(n_df, by = nms_join) %>%
-   mutate(n = coalesce(n, map_dbl(data, nrow))) %>%
-   mutate(data = map2(data, n, sample_n)) %>%
-    select(-n) %>%
-    unnest(data)
+    tidyr::nest(data = c(-vessel_idx, -time)) %>%
+    dplyr::left_join(n_df, by = nms_join) %>%
+    dplyr::mutate(n = dplyr::coalesce(n, purrr::map_dbl(data, nrow))) %>%
+    dplyr::mutate(data = purrr::map2(data, n, sample_n)) %>%
+    dplyr::select(-n) %>%
+    tidyr::unnest(data)
 }
 
 ##' Read true population total from file
@@ -68,7 +70,6 @@ subsample_catch <- function(catch_df, n_df = NULL) {
 ##' @title Read true population state for each year
 ##' @param repl Replicate number
 ##' @param sc Scenario; one of "naive", "simple", "scaled", or "shared"
-##' @param dir Directory to start from; defaults to current directory
 ##' @return A \code{tibble} with population and year, starting from 1
 ##' @author John Best
 ##' @export
@@ -76,13 +77,14 @@ read_popstate <- function(repl, sc) {
   sc %in% c("naive", "simple", "scaled", "shared")
   ## File names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two
   ## digits.
-  repl_str <-str_pad(repl, 2, pad = "0")
+  repl_str <- stringr::str_pad(repl, 2, pad = "0")
   flnm <- paste0("repl_", repl_str, "/popstate_", repl_str, "_", sc, ".csv")
-  pop <-read_csv(flnm, col_types =cols(pop =col_double()))
- mutate(pop, time = seq_along(pop))
+  pop <- readr::read_csv(flnm,
+                         col_types = readr::cols(pop = readr::col_double()))
+  dplyr::mutate(pop, time = seq_along(pop))
 }
 
-##' Assumes the simulation [0, 100] x [0, 100] domain.
+##' Assumes the simulation \eqn{[0, 100]×[0, 100]} domain.
 ##'
 ##' @title Define the domain boundary
 ##' @return An \code{inla.mesh.segment} giving the boundary of the 100 by 100
@@ -95,8 +97,8 @@ domain_boundary <- function() {
                                              ncol = 2))
 }
 
-##' Generate the coordinates of a regular grid on a [0, 100] x [0, 100] domain
-##' with steps in both direction of \code{step}.
+##' Generate the coordinates of a regular grid on a \eqn{[0, 100]×[0, 100]}
+##' domain with steps in both direction of \code{step}.
 ##'
 ##' @title Generate a location grid
 ##' @param step Distance between subsequent locations; defaults to 1
@@ -195,7 +197,7 @@ generate_empty_projection <- function(mesh, data_df, group = NULL, ...) {
   if (!is.null(group)) {
     n_years <- length(unique(group))
   } else {
-    n_years = 1
+    n_years <- 1
   }
   Matrix::Matrix(0, nrow = mesh$n, ncol = n_obs * n_years)
 }
@@ -210,8 +212,8 @@ generate_empty_projection <- function(mesh, data_df, group = NULL, ...) {
 ##' @author John Best
 ##' @export
 parse_coords <- function(coord_tuple) {
-  coord_str <- str_sub(coord_tuple, start = 2L, end = -2L)
-  coords <- as.numeric(str_split_fixed(coord_str, ", ", 2))
+  coord_str <- stringr::str_sub(coord_tuple, start = 2L, end = -2L)
+  coords <- as.numeric(stringr::str_split_fixed(coord_str, ", ", 2))
   coords
 }
 
@@ -228,11 +230,11 @@ get_coordref <- function() {
   if (!file.exists("coordref.csv")) {
     stop("The file \'coordref.csv\' is not in the current working directory")
   }
- read_csv("coordref.csv",
-                  col_types =cols(
-                    loc_idx =col_integer(),
-                    s1 =col_double(),
-                    s2 =col_double()))
+  readr::read_csv("coordref.csv",
+                  col_types = readr::cols(
+                    loc_idx = readr::col_integer(),
+                    s1 = readr::col_double(),
+                    s2 = readr::col_double()))
 }
 
 ##' Create a data frame with a regular grid over the spatial domain for each
@@ -246,11 +248,12 @@ get_coordref <- function() {
 ##' @author John Best
 ##' @export
 create_index_df <- function(step = 1.0, T = 25) {
-  loc_df <- as_tibble(loc_grid(step)) %>%
-   mutate(loc_idx = seq_along(s1))
-  index_df <- cross_df(list(loc_idx = loc_df$loc_idx, time = seq_len(T))) %>%
-    full_join(loc_df, by = "loc_idx") %>%
-    select(-loc_idx)
+  loc_df <- tibble::as_tibble(loc_grid(step)) %>%
+   dplyr::mutate(loc_idx = seq_along(s1))
+  index_df <- purrr::cross_df(list(loc_idx = loc_df$loc_idx,
+                                   time = seq_len(T))) %>%
+    dplyr::full_join(loc_df, by = "loc_idx") %>%
+    dplyr::select(-loc_idx)
   attr(index_df, "step") <- step
   index_df
 }
@@ -274,10 +277,10 @@ prepare_data <- function(catch_df, index_df, mesh, fem) {
   dat <- list(catch_obs = catch_df$catch_biomass,
               area_swept = catch_df$effort,
               ## Abundance fixed effect design matrices
-              X_n = model.matrix(~ factor(time) + 0, data = catch_df),
-              X_w = model.matrix(~ factor(time) + 0, data = catch_df),
-              IX_n = model.matrix(~ factor(time) + 0, data = index_df),
-              IX_w = model.matrix(~ factor(time) + 0, data = index_df),
+              X_n = stats::model.matrix(~ factor(time) + 0, data = catch_df),
+              X_w = stats::model.matrix(~ factor(time) + 0, data = catch_df),
+              IX_n = stats::model.matrix(~ factor(time) + 0, data = index_df),
+              IX_w = stats::model.matrix(~ factor(time) + 0, data = index_df),
               ## Abundance random effect design matrices
               Z_n = matrix(0, nrow = nrow(catch_df), ncol = 1),
               Z_w = matrix(0, nrow = nrow(catch_df), ncol = 1),
@@ -294,16 +297,16 @@ prepare_data <- function(catch_df, index_df, mesh, fem) {
               Ih = rep_len(attr(index_df, "step")^2, nrow(index_df)),
 
               ## Catchability fixed effect design matrix
-              R_n = model.matrix(~ factor(vessel_idx), data = catch_df),
-              R_w = model.matrix(~ factor(vessel_idx), data = catch_df),
+              R_n = stats::model.matrix(~ factor(vessel_idx), data = catch_df),
+              R_w = stats::model.matrix(~ factor(vessel_idx), data = catch_df),
               ## Catchability random effect design matrix
               V_n = matrix(0.0, nrow = nrow(catch_df), ncol = 1),
               V_w = matrix(0.0, nrow = nrow(catch_df), ncol = 1),
               ## Catchability projection matrices
               A_qspat = generate_projection(mesh, catch_df, vessel_idx = 2),
               A_qsptemp = generate_projection(mesh, catch_df,
-                                            vessel_idx = 2,
-                                            group = catch_df$time),
+                                              vessel_idx = 2,
+                                              group = catch_df$time),
               ## FEM matrices for spatial/spatiotemporal effects
               spde = fem)
   ## Store the number of years as an attribute
@@ -516,7 +519,6 @@ prepare_adfun <- function(data, parameters, map, random,
 ##' @param sc Scenario; "naive", "simple", "scaled", or "shared"
 ##' @param sub_df Data frame indicating subsampling strategy; see
 ##'   \code{subsample_catch}
-##' @param map A \code{map} list, as from \code{prepare_map}
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
@@ -537,7 +539,7 @@ make_sim_adfun <- function(repl, sc, sub_df = NULL) {
   data <- prepare_data(catch_df, index_df, mesh, fem)
   parameters <- prepare_pars(data, mesh)
   map <- prepare_map(parameters,
-                     map_list = c("gamma_n", "gamma_w",
+                     map_pars = c("gamma_n", "gamma_w",
                                   "epsilon_n", "epsilon_w",
                                   "eta_n", "eta_w",
                                   "psi_n", "psi_w"))

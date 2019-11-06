@@ -204,7 +204,7 @@ verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
         !is.null(map$log_kappa) && is.na(map$log_kappa[idx])
       })
       if (warn_not_zero && any(parameters[[nm]] != 0)) {
-        warn(nm, " is map'd but not all zeros.")
+        warning(nm, " is map'd but not all zeros.")
       }
     }
   }
