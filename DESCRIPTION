@@ -33,7 +33,6 @@ LinkingTo:
     RcppEigen
 Suggests: 
     testthat (>= 2.1.0),
-    sp,
     covr,
     knitr,
     rmarkdown
