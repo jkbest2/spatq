@@ -10,3 +10,13 @@
 #' @useDynLib spatq
 NULL
 
+## These variable names are used in NSE functions and throw R CMD check warnings
+## if they're not declared here. They could probably be converted to standard
+## evaluation using `rlang`, but that's for later.
+globalVariables(c("s1",
+                  "loc_idx",
+                  "n",
+                  "sample_n",
+                  "time",
+                  "vessel_idx",
+                  "data"))
