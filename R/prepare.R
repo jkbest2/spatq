@@ -126,10 +126,11 @@ generate_mesh <- function() {
   loc <- loc_grid(2.0)
   INLA::inla.mesh.2d(loc,
                      boundary = boundary,
-                     offset = c(5.0, 25.0),
-                     max.edge = c(3 * sqrt(2), 6 * sqrt(2)),
+                     offset = c(5.0, 20.0),
+                     # Shortest correlation range should be ~30
+                     max.edge = c(5, 10),
                      min.angle = c(30, 21),
-                     cutoff = 0.5)
+                     cutoff = 5)
 }
 
 ##' Generate the FEM matrices with appropriate names to pass to TMB as a
