@@ -452,7 +452,7 @@ re_par_idx <- function(par_name) {
 ##' @author John Best
 ##' @export
 prepare_map <- function(pars, map_pars) {
-  map <- lapply(names(pars), function(par) par[] <- factor(seq_along(par)))
+  map <- lapply(pars, function(par) par[] <- factor(seq_along(par)))
   names(map) <- names(pars)
   for (par in map_pars) {
     map[[par]][] <- NA
