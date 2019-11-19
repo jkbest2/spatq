@@ -4,7 +4,8 @@
 \alias{generate_projection}
 \title{Generate a projection matrix}
 \usage{
-generate_projection(mesh, data_df, vessel_idx = NULL, group = NULL)
+generate_projection(mesh, data_df, vessel_idx = NULL, group = NULL,
+  zero = FALSE)
 }
 \arguments{
 \item{mesh}{INLA mesh to project}

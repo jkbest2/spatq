@@ -501,8 +501,13 @@ prepare_random <- function(map) {
                "eta_n", "eta_w",
                "phi_n", "phi_w",
                "psi_n", "psi_w")
-  is_mapd <- unlist(lapply(re_pars, function(par) all(is.na(map[[par]]))))
-  re_pars[!is_mapd]
+  ## Check that all `map` random effects parameter entries are all NAs; check
+  ## that none are included but not actually map'd
+  if (!all(vapply(re_pars, function(p) all(is.na(map[[p]])),
+                  FUN.VALUE = TRUE)))
+    stop("Map'd random effects parameters must be all NAs")
+  ## Return vector of random effects names with map'd parameter names removed
+  setdiff(re_pars, names(map))
 }
 
 ##' Verify data, parameters, and map, then contruct the ADFun.
