@@ -547,12 +547,13 @@ prepare_adfun <- function(data, parameters, map, random,
 ##' @param sc Scenario; "naive", "simple", "scaled", or "shared"
 ##' @param sub_df Data frame indicating subsampling strategy; see
 ##'   \code{subsample_catch}
+##' @param dir Directory to load data from
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
-make_sim_adfun <- function(repl, sc, sub_df = NULL) {
+make_sim_adfun <- function(repl, sc, sub_df = NULL, dir = ".") {
   ## Read in data
-  catch_df <- read_catch(repl, sc)
+  catch_df <- read_catch(repl, sc, dir)
   ## Subset observations
   catch_df <- subsample_catch(catch_df, sub_df)
 
