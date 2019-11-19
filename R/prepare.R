@@ -14,7 +14,7 @@ read_catch <- function(repl, sc, dir = ".") {
   ## File names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two
   ## digits.
   repl_str <- stringr::str_pad(repl, 2, pad = "0")
-  flnm <- paste0(dir, "repl_", repl_str, "/catch_", repl_str, "_", sc, ".csv")
+  flnm <- paste0(dir, "/repl_", repl_str, "/catch_", repl_str, "_", sc, ".csv")
   readr::read_csv(flnm,
                   col_types = readr::cols(
                     time = readr::col_integer(),
@@ -60,7 +60,7 @@ subsample_catch <- function(catch_df, n_df = NULL) {
     tidyr::nest(data = c(-vessel_idx, -time)) %>%
     dplyr::left_join(n_df, by = nms_join) %>%
     dplyr::mutate(n = dplyr::coalesce(n, purrr::map_dbl(data, nrow))) %>%
-    dplyr::mutate(data = purrr::map2(data, n, sample_n)) %>%
+    dplyr::mutate(data = purrr::map2(data, n, dplyr::sample_n)) %>%
     dplyr::select(-n) %>%
     tidyr::unnest(data)
 }
@@ -449,25 +449,44 @@ re_par_idx <- function(par_name) {
 ##' @author John Best
 ##' @export
 prepare_map <- function(pars, map_pars) {
-  map <- lapply(pars, function(par) par[] <- factor(seq_along(par)))
+  map <- lapply(names(pars), function(par) par[] <- factor(seq_along(par)))
+  names(map) <- names(pars)
   for (par in map_pars) {
     map[[par]][] <- NA
+    ## Check for xi first, because it is before the kappa and tau parameters in
+    ## the template
+    re_idx <- re_par_idx(par)
+    if (length(re_idx) > 0) {
+      map$log_xi[re_idx] <- NA
+    }
     sp_idx <- spat_par_idx(par)
     if (length(sp_idx) > 0) {
       map$log_kappa[sp_idx] <- NA
       map$log_tau[sp_idx] <- NA
     }
-    re_idx <- re_par_idx(par)
-    if (length(re_idx) > 0) {
-      map$log_xi[re_idx] <- NA
-    }
   }
+  ## Remove any list elements that include no NAs (i.e. no parameter values are
+  ## map'd)
+  map[sapply(map, function(p) !anyNA(p))] <- NULL
+  ## Remove unused factor levels; seems to be what was causing NOT A VECTOR
+  ## error
+  map <- lapply(map, factor)
   map
 }
 
 ##' Prepare a character vector indicating which parameters should be
 ##' marginalized out using the Laplace approximation. Does not include
-##' parameters that are \code{map}d.
+##' parameters that are \code{map}'d.
+##'
+##' Parameters in this model that are typically marginalized are:
+##' \begin{itemize}
+##'   \item \code{gamma_n}, \code{gamma_w}
+##'   \item \code{omega_n}, \code{omega_w}
+##'   \item \code{epsilon_n}, \code{epsilon_w}
+##'   \item \code{eta_n}, \code{eta_w}
+##'   \item \code{phi_n}, \code{phi_w}
+##'   \item \code{psi_n}, \code{psi_w}
+##' \end{itemize}
 ##'
 ##' @title Prepare \code{random}
 ##' @param map A \code{map} list, as from \code{prepare_map}
