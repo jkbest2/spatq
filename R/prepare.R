@@ -162,13 +162,16 @@ generate_fem <- function(mesh) {
 ##' @param vessel_idx Vessel index to project to; others receive zero weight and
 ##'   are dropped
 ##' @param group Year of observation for spatiotemporal effect
+##' @param zero Is this an empty projection matrix? (May be useful if e.g. the
+##'   random effects parameters associated with it are map'd to zeros.)
 ##' @return A sparse projection matrix
 ##' @author John Best
 ##' @export
-generate_projection <- function(mesh,
-                                data_df,
-                                vessel_idx = NULL,
-                                group = NULL) {
+generate_projection <- function(mesh, data_df, vessel_idx = NULL, group = NULL,
+                                zero = FALSE) {
+  ## If effect is map'd, return an all-zero projection matrix. Should save some
+  ## unnecessary multiplications?
+  if (zero) return(generate_empty_projection(mesh, data_df, group))
   if (is.null(vessel_idx)) {
     wts <- NULL
   } else {
@@ -180,7 +183,8 @@ generate_projection <- function(mesh,
 }
 
 ##' When spatial or spatiotemporal effects are map'd to zero, pass an empty
-##' projection matrix.
+##' projection matrix. Not exported, use `zero = TRUE` in `generate_projection`
+##' instead.
 ##'
 ##' @title Generate an empty project matrix
 ##' @param mesh INLA mesh to project
@@ -192,8 +196,7 @@ generate_projection <- function(mesh,
 ##' @return Sparse \code{Matrix::Matrx} of the appropriate dimensions, but
 ##'   filled with zeros
 ##' @author John Best
-##' @export
-generate_empty_projection <- function(mesh, data_df, group = NULL, ...) {
+generate_empty_projection <- function(mesh, data_df, group = NULL) {
   n_obs <- nrow(data_df)
   if (!is.null(group)) {
     n_years <- length(unique(group))
