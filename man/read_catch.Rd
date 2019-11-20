@@ -4,14 +4,14 @@
 \alias{read_catch}
 \title{Read simulated data}
 \usage{
-read_catch(repl, sc, dir = ".")
+read_catch(repl, sc, root_dir = ".")
 }
 \arguments{
 \item{repl}{Replicate number}
 
 \item{sc}{Scenario; one of "naive", "simple", "scaled", or "shared"}
 
-\item{dir}{Directory to work in; defaults to current working directory}
+\item{root_dir}{Directory to work in; defaults to current working directory}
 }
 \value{
 A \code{tibble} with catch observations

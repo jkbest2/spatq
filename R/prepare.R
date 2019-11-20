@@ -4,17 +4,19 @@
 ##' @title Read simulated data
 ##' @param repl Replicate number
 ##' @param sc Scenario; one of "naive", "simple", "scaled", or "shared"
-##' @param dir Directory to work in; defaults to current working directory
+##' @param root_dir Directory to work in; defaults to current working directory
 ##' @return A \code{tibble} with catch observations
 ##' @author John Best
 ##' @importFrom dplyr %>%
 ##' @export
-read_catch <- function(repl, sc, dir = ".") {
-  sc %in% c("naive", "simple", "scaled", "shared")
+read_catch <- function(repl, sc, root_dir = ".") {
+  ## sc %in% c("naive", "simple", "scaled", "shared")
   ## File names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two
   ## digits.
   repl_str <- stringr::str_pad(repl, 2, pad = "0")
-  flnm <- paste0(dir, "repl_", repl_str, "/catch_", repl_str, "_", sc, ".csv")
+  repl_dir <- paste0("repl_", repl_str)
+  sc_file <- paste0("catch_", repl_str, "_", sc, ".csv")
+  flnm <- file.path(root_dir, repl_dir, sc_file)
   readr::read_csv(flnm,
                   col_types = readr::cols(
                     time = readr::col_integer(),
@@ -23,7 +25,7 @@ read_catch <- function(repl, sc, dir = ".") {
                     coordinates = readr::col_character(),
                     effort = readr::col_double(),
                     catch_biomass = readr::col_double())) %>%
-   dplyr::left_join(get_coordref(), by = "loc_idx")
+   dplyr::left_join(get_coordref(root_dir), by = "loc_idx")
 }
 
 ##' Randomly choose a subset of observations for some or all vessels etc.
@@ -60,7 +62,7 @@ subsample_catch <- function(catch_df, n_df = NULL) {
     tidyr::nest(data = c(-vessel_idx, -time)) %>%
     dplyr::left_join(n_df, by = nms_join) %>%
     dplyr::mutate(n = dplyr::coalesce(n, purrr::map_dbl(data, nrow))) %>%
-    dplyr::mutate(data = purrr::map2(data, n, sample_n)) %>%
+    dplyr::mutate(data = purrr::map2(data, n, dplyr::sample_n)) %>%
     dplyr::select(-n) %>%
     tidyr::unnest(data)
 }
@@ -162,13 +164,16 @@ generate_fem <- function(mesh) {
 ##' @param vessel_idx Vessel index to project to; others receive zero weight and
 ##'   are dropped
 ##' @param group Year of observation for spatiotemporal effect
+##' @param zero Is this an empty projection matrix? (May be useful if e.g. the
+##'   random effects parameters associated with it are map'd to zeros.)
 ##' @return A sparse projection matrix
 ##' @author John Best
 ##' @export
-generate_projection <- function(mesh,
-                                data_df,
-                                vessel_idx = NULL,
-                                group = NULL) {
+generate_projection <- function(mesh, data_df, vessel_idx = NULL, group = NULL,
+                                zero = FALSE) {
+  ## If effect is map'd, return an all-zero projection matrix. Should save some
+  ## unnecessary multiplications?
+  if (zero) return(generate_empty_projection(mesh, data_df, group))
   if (is.null(vessel_idx)) {
     wts <- NULL
   } else {
@@ -180,7 +185,8 @@ generate_projection <- function(mesh,
 }
 
 ##' When spatial or spatiotemporal effects are map'd to zero, pass an empty
-##' projection matrix.
+##' projection matrix. Not exported, use `zero = TRUE` in `generate_projection`
+##' instead.
 ##'
 ##' @title Generate an empty project matrix
 ##' @param mesh INLA mesh to project
@@ -192,8 +198,7 @@ generate_projection <- function(mesh,
 ##' @return Sparse \code{Matrix::Matrx} of the appropriate dimensions, but
 ##'   filled with zeros
 ##' @author John Best
-##' @export
-generate_empty_projection <- function(mesh, data_df, group = NULL, ...) {
+generate_empty_projection <- function(mesh, data_df, group = NULL) {
   n_obs <- nrow(data_df)
   if (!is.null(group)) {
     n_years <- length(unique(group))
@@ -223,15 +228,14 @@ parse_coords <- function(coord_tuple) {
 ##' Assumes that the table is in the file \code{coordref.csv} in the working
 ##' directory, as saved by \code{FisherySim.jl}
 ##' @title Read the index to coordinate reference table
+##' @param root_dir Directory containing the file "coordref.csv"
 ##' @return A \code{tibble} with columns \code{loc_idx}, \code{s1}, and
 ##'   \code{s2}.
 ##' @author John Best
 ##' @export
-get_coordref <- function() {
-  if (!file.exists("coordref.csv")) {
-    stop("The file \'coordref.csv\' is not in the current working directory")
-  }
-  readr::read_csv("coordref.csv",
+get_coordref <- function(root_dir = ".") {
+  cr_file <- normalizePath(file.path(root_dir, "coordref.csv"), mustWork = TRUE)
+  readr::read_csv(cr_file,
                   col_types = readr::cols(
                     loc_idx = readr::col_integer(),
                     s1 = readr::col_double(),
@@ -450,24 +454,43 @@ re_par_idx <- function(par_name) {
 ##' @export
 prepare_map <- function(pars, map_pars) {
   map <- lapply(pars, function(par) par[] <- factor(seq_along(par)))
+  names(map) <- names(pars)
   for (par in map_pars) {
     map[[par]][] <- NA
+    ## Check for xi first, because it is before the kappa and tau parameters in
+    ## the template
+    re_idx <- re_par_idx(par)
+    if (length(re_idx) > 0) {
+      map$log_xi[re_idx] <- NA
+    }
     sp_idx <- spat_par_idx(par)
     if (length(sp_idx) > 0) {
       map$log_kappa[sp_idx] <- NA
       map$log_tau[sp_idx] <- NA
     }
-    re_idx <- re_par_idx(par)
-    if (length(re_idx) > 0) {
-      map$log_xi[re_idx] <- NA
-    }
   }
+  ## Remove any list elements that include no NAs (i.e. no parameter values are
+  ## map'd)
+  map[sapply(map, function(p) !anyNA(p))] <- NULL
+  ## Remove unused factor levels; seems to be what was causing NOT A VECTOR
+  ## error
+  map <- lapply(map, factor)
   map
 }
 
 ##' Prepare a character vector indicating which parameters should be
 ##' marginalized out using the Laplace approximation. Does not include
-##' parameters that are \code{map}d.
+##' parameters that are \code{map}'d.
+##'
+##' Parameters in this model that are typically marginalized are:
+##' \itemize{
+##'   \item \code{gamma_n}, \code{gamma_w}
+##'   \item \code{omega_n}, \code{omega_w}
+##'   \item \code{epsilon_n}, \code{epsilon_w}
+##'   \item \code{eta_n}, \code{eta_w}
+##'   \item \code{phi_n}, \code{phi_w}
+##'   \item \code{psi_n}, \code{psi_w}
+##' }
 ##'
 ##' @title Prepare \code{random}
 ##' @param map A \code{map} list, as from \code{prepare_map}
@@ -482,8 +505,13 @@ prepare_random <- function(map) {
                "eta_n", "eta_w",
                "phi_n", "phi_w",
                "psi_n", "psi_w")
-  is_mapd <- unlist(lapply(re_pars, function(par) all(is.na(map[[par]]))))
-  re_pars[!is_mapd]
+  ## Check that all `map` random effects parameter entries are all NAs; check
+  ## that none are included but not actually map'd
+  if (!all(vapply(re_pars, function(p) all(is.na(map[[p]])),
+                  FUN.VALUE = TRUE)))
+    stop("Map'd random effects parameters must be all NAs")
+  ## Return vector of random effects names with map'd parameter names removed
+  setdiff(re_pars, names(map))
 }
 
 ##' Verify data, parameters, and map, then contruct the ADFun.
@@ -520,12 +548,13 @@ prepare_adfun <- function(data, parameters, map, random,
 ##' @param sc Scenario; "naive", "simple", "scaled", or "shared"
 ##' @param sub_df Data frame indicating subsampling strategy; see
 ##'   \code{subsample_catch}
+##' @param root_dir Directory to load data from
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
-make_sim_adfun <- function(repl, sc, sub_df = NULL) {
+make_sim_adfun <- function(repl, sc, sub_df = NULL, root_dir = ".") {
   ## Read in data
-  catch_df <- read_catch(repl, sc)
+  catch_df <- read_catch(repl, sc, root_dir)
   ## Subset observations
   catch_df <- subsample_catch(catch_df, sub_df)
 

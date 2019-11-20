@@ -4,7 +4,7 @@
 \alias{generate_empty_projection}
 \title{Generate an empty project matrix}
 \usage{
-generate_empty_projection(mesh, data_df, group = NULL, ...)
+generate_empty_projection(mesh, data_df, group = NULL)
 }
 \arguments{
 \item{mesh}{INLA mesh to project}
@@ -23,7 +23,8 @@ filled with zeros
 }
 \description{
 When spatial or spatiotemporal effects are map'd to zero, pass an empty
-projection matrix.
+projection matrix. Not exported, use \code{zero = TRUE} in \code{generate_projection}
+instead.
 }
 \author{
 John Best
