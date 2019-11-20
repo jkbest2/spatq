@@ -4,7 +4,7 @@
 \alias{make_sim_adfun}
 \title{Create ADFun from simulated data}
 \usage{
-make_sim_adfun(repl, sc, sub_df = NULL)
+make_sim_adfun(repl, sc, sub_df = NULL, root_dir = ".")
 }
 \arguments{
 \item{repl}{Replicate number}
@@ -13,6 +13,8 @@ make_sim_adfun(repl, sc, sub_df = NULL)
 
 \item{sub_df}{Data frame indicating subsampling strategy; see
 \code{subsample_catch}}
+
+\item{root_dir}{Directory to load data from}
 }
 \value{
 A TMB ADFun suitable for optimization

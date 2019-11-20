@@ -228,6 +228,7 @@ parse_coords <- function(coord_tuple) {
 ##' Assumes that the table is in the file \code{coordref.csv} in the working
 ##' directory, as saved by \code{FisherySim.jl}
 ##' @title Read the index to coordinate reference table
+##' @param root_dir Directory containing the file "coordref.csv"
 ##' @return A \code{tibble} with columns \code{loc_idx}, \code{s1}, and
 ##'   \code{s2}.
 ##' @author John Best
@@ -482,14 +483,14 @@ prepare_map <- function(pars, map_pars) {
 ##' parameters that are \code{map}'d.
 ##'
 ##' Parameters in this model that are typically marginalized are:
-##' \begin{itemize}
+##' \itemize{
 ##'   \item \code{gamma_n}, \code{gamma_w}
 ##'   \item \code{omega_n}, \code{omega_w}
 ##'   \item \code{epsilon_n}, \code{epsilon_w}
 ##'   \item \code{eta_n}, \code{eta_w}
 ##'   \item \code{phi_n}, \code{phi_w}
 ##'   \item \code{psi_n}, \code{psi_w}
-##' \end{itemize}
+##' }
 ##'
 ##' @title Prepare \code{random}
 ##' @param map A \code{map} list, as from \code{prepare_map}

@@ -4,7 +4,10 @@
 \alias{get_coordref}
 \title{Read the index to coordinate reference table}
 \usage{
-get_coordref()
+get_coordref(root_dir = ".")
+}
+\arguments{
+\item{root_dir}{Directory containing the file "coordref.csv"}
 }
 \value{
 A \code{tibble} with columns \code{loc_idx}, \code{s1}, and
