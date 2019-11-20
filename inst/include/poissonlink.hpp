@@ -9,7 +9,7 @@
 //'   log-probability of zero catch, and log-positive catch rate (particularly
 //'   useful when using a log-normal catch distribution).
 template<class Type>
-vector<Type> logpoislink(Type log_n, Type log_w, Type a = Type(1.0)) {
+vector<Type> logpoislink(Type &log_n, Type &log_w, Type a = Type(1.0)) {
   // Initialize 3-vector that will contain probability of zero catch,
   // probability of encounter, and positive catch rate
   // TODO Can this be done in-place by passing in a view on a matrix or similar?
@@ -40,7 +40,7 @@ vector<Type> logpoislink(Type log_n, Type log_w, Type a = Type(1.0)) {
 //' @return A vector of length 2 containing the probability of encounter and
 //'   positive catch rate
 template<class Type>
-vector<Type> poislink(Type log_n, Type log_w, Type a = Type(1.0)) {
+vector<Type> poislink(Type &log_n, Type &log_w, Type a = Type(1.0)) {
   Type n = exp(log_n);
   Type w = exp(log_w);
 
