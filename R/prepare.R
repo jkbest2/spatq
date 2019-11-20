@@ -563,14 +563,17 @@ prepare_adfun <- function(data, parameters, map, random,
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
-make_sim_adfun <- function(repl, sc, sub_df = NULL, root_dir = ".") {
+make_sim_adfun <- function(repl, sc, sub_df = NULL,
+                           root_dir = ".", max_T = NULL) {
   ## Read in data
   catch_df <- read_catch(repl, sc, root_dir)
+  if (!is.null(max_T))
+    catch_df <- dplyr::filter(catch_df, time <= max_T)
   ## Subset observations
   catch_df <- subsample_catch(catch_df, sub_df)
 
   ## Create index integration reference
-  index_df <- create_index_df(step = 5, T = 25)
+  index_df <- create_index_df(step = 5, T = attr(catch_df, "T"))
 
   ## Discretize space
   mesh <- generate_mesh()
