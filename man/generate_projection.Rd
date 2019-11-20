@@ -4,7 +4,8 @@
 \alias{generate_projection}
 \title{Generate a projection matrix}
 \usage{
-generate_projection(mesh, data_df, vessel_idx = NULL, group = NULL)
+generate_projection(mesh, data_df, vessel_idx = NULL, group = NULL,
+  zero = FALSE)
 }
 \arguments{
 \item{mesh}{INLA mesh to project}
@@ -16,6 +17,9 @@ coordinates to project to}
 are dropped}
 
 \item{group}{Year of observation for spatiotemporal effect}
+
+\item{zero}{Is this an empty projection matrix? (May be useful if e.g. the
+random effects parameters associated with it are map'd to zeros.)}
 }
 \value{
 A sparse projection matrix
