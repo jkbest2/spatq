@@ -17,15 +17,19 @@ read_catch <- function(repl, sc, root_dir = ".") {
   repl_dir <- paste0("repl_", repl_str)
   sc_file <- paste0("catch_", repl_str, "_", sc, ".csv")
   flnm <- file.path(root_dir, repl_dir, sc_file)
-  readr::read_csv(flnm,
-                  col_types = readr::cols(
-                    time = readr::col_integer(),
-                    vessel_idx = readr::col_integer(),
-                    loc_idx = readr::col_integer(),
-                    coordinates = readr::col_character(),
-                    effort = readr::col_double(),
-                    catch_biomass = readr::col_double())) %>%
-   dplyr::left_join(get_coordref(root_dir), by = "loc_idx")
+  catch_df <- readr::read_csv(flnm,
+                              col_types = readr::cols(
+                                time = readr::col_integer(),
+                                vessel_idx = readr::col_integer(),
+                                loc_idx = readr::col_integer(),
+                                coordinates = readr::col_character(),
+                                effort = readr::col_double(),
+                                catch_biomass = readr::col_double())) %>%
+    dplyr::left_join(get_coordref(root_dir), by = "loc_idx")
+  ## Number of years and store as an attribute for later use in constructing
+  ## projection matrices etc.
+  attr(catch_df, "T") <- length(unique(catch_df$time))
+  catch_df
 }
 
 ##' Randomly choose a subset of observations for some or all vessels etc.
@@ -65,6 +69,9 @@ subsample_catch <- function(catch_df, n_df = NULL) {
     dplyr::mutate(data = purrr::map2(data, n, dplyr::sample_n)) %>%
     dplyr::select(-n) %>%
     tidyr::unnest(data)
+  ## Double check that T is correct here
+  attr(catch_df, "T") <- length(unique(catch_df$time))
+  catch_df
 }
 
 ##' Read true population total from file
