@@ -213,7 +213,7 @@ generate_empty_projection <- function(mesh, data_df, group = NULL) {
   } else {
     n_years <- 1
   }
-  Matrix::Matrix(0, nrow = mesh$n, ncol = n_obs * n_years)
+  Matrix::Matrix(0, nrow = n_obs, ncol = mesh$n * n_years)
 }
 
 ##' Parse coordinates that were saved as a tuple of \code{Float64} and read in
@@ -302,10 +302,12 @@ prepare_data <- function(catch_df, index_df, mesh, fem) {
               ## Abundance projection matrices
               A_spat = generate_projection(mesh, catch_df),
               A_sptemp = generate_projection(mesh, catch_df,
-                                             group = catch_df$time),
+                                             group = catch_df$time,
+                                             zero = TRUE),
               IA_spat = generate_projection(mesh, index_df),
               IA_sptemp = generate_projection(mesh, index_df,
-                                              group = index_df$time),
+                                              group = index_df$time,
+                                              zero = TRUE),
               ## Integration weights
               Ih = rep_len(attr(index_df, "step")^2, nrow(index_df)),
 
@@ -319,7 +321,8 @@ prepare_data <- function(catch_df, index_df, mesh, fem) {
               A_qspat = generate_projection(mesh, catch_df, vessel_idx = 2),
               A_qsptemp = generate_projection(mesh, catch_df,
                                               vessel_idx = 2,
-                                              group = catch_df$time),
+                                              group = catch_df$time,
+                                              zero = TRUE),
               ## FEM matrices for spatial/spatiotemporal effects
               spde = fem)
   ## Store the number of years as an attribute
