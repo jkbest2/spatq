@@ -135,9 +135,10 @@ generate_mesh <- function() {
   loc <- loc_grid(2.0)
   INLA::inla.mesh.2d(loc,
                      boundary = boundary,
-                     offset = c(5.0, 20.0),
+                     offset = c(0.0, 30.0),
                      # Shortest correlation range should be ~30
-                     max.edge = c(5, 10),
+                     max.edge = c(5, 20),
+                     max.n = c(400, 100),
                      min.angle = c(30, 21),
                      cutoff = 5)
 }
