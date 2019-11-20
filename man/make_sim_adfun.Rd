@@ -4,7 +4,7 @@
 \alias{make_sim_adfun}
 \title{Create ADFun from simulated data}
 \usage{
-make_sim_adfun(repl, sc, sub_df = NULL, root_dir = ".")
+make_sim_adfun(repl, sc, sub_df = NULL, root_dir = ".", max_T = NULL)
 }
 \arguments{
 \item{repl}{Replicate number}
@@ -15,6 +15,8 @@ make_sim_adfun(repl, sc, sub_df = NULL, root_dir = ".")
 \code{subsample_catch}}
 
 \item{root_dir}{Directory to load data from}
+
+\item{max_T}{Last year of data to include}
 }
 \value{
 A TMB ADFun suitable for optimization
