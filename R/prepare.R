@@ -560,6 +560,7 @@ prepare_adfun <- function(data, parameters, map, random,
 ##' @param sub_df Data frame indicating subsampling strategy; see
 ##'   \code{subsample_catch}
 ##' @param root_dir Directory to load data from
+##' @param max_T Last year of data to include
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
