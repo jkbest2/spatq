@@ -4,17 +4,19 @@
 ##' @title Read simulated data
 ##' @param repl Replicate number
 ##' @param sc Scenario; one of "naive", "simple", "scaled", or "shared"
-##' @param dir Directory to work in; defaults to current working directory
+##' @param root_dir Directory to work in; defaults to current working directory
 ##' @return A \code{tibble} with catch observations
 ##' @author John Best
 ##' @importFrom dplyr %>%
 ##' @export
-read_catch <- function(repl, sc, dir = ".") {
-  sc %in% c("naive", "simple", "scaled", "shared")
+read_catch <- function(repl, sc, root_dir = ".") {
+  ## sc %in% c("naive", "simple", "scaled", "shared")
   ## File names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two
   ## digits.
   repl_str <- stringr::str_pad(repl, 2, pad = "0")
-  flnm <- paste0(dir, "/repl_", repl_str, "/catch_", repl_str, "_", sc, ".csv")
+  repl_dir <- paste0("repl_", repl_str)
+  sc_file <- paste0("catch_", repl_str, "_", sc, ".csv")
+  flnm <- file.path(root_dir, repl_dir, sc_file)
   readr::read_csv(flnm,
                   col_types = readr::cols(
                     time = readr::col_integer(),
@@ -23,7 +25,7 @@ read_catch <- function(repl, sc, dir = ".") {
                     coordinates = readr::col_character(),
                     effort = readr::col_double(),
                     catch_biomass = readr::col_double())) %>%
-   dplyr::left_join(get_coordref(), by = "loc_idx")
+   dplyr::left_join(get_coordref(root_dir), by = "loc_idx")
 }
 
 ##' Randomly choose a subset of observations for some or all vessels etc.
@@ -230,11 +232,9 @@ parse_coords <- function(coord_tuple) {
 ##'   \code{s2}.
 ##' @author John Best
 ##' @export
-get_coordref <- function() {
-  if (!file.exists("coordref.csv")) {
-    stop("The file \'coordref.csv\' is not in the current working directory")
-  }
-  readr::read_csv("coordref.csv",
+get_coordref <- function(root_dir = ".") {
+  cr_file <- normalizePath(file.path(root_dir, "coordref.csv"), mustWork = TRUE)
+  readr::read_csv(cr_file,
                   col_types = readr::cols(
                     loc_idx = readr::col_integer(),
                     s1 = readr::col_double(),
@@ -547,13 +547,13 @@ prepare_adfun <- function(data, parameters, map, random,
 ##' @param sc Scenario; "naive", "simple", "scaled", or "shared"
 ##' @param sub_df Data frame indicating subsampling strategy; see
 ##'   \code{subsample_catch}
-##' @param dir Directory to load data from
+##' @param root_dir Directory to load data from
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
-make_sim_adfun <- function(repl, sc, sub_df = NULL, dir = ".") {
+make_sim_adfun <- function(repl, sc, sub_df = NULL, root_dir = ".") {
   ## Read in data
-  catch_df <- read_catch(repl, sc, dir)
+  catch_df <- read_catch(repl, sc, root_dir)
   ## Subset observations
   catch_df <- subsample_catch(catch_df, sub_df)
 
