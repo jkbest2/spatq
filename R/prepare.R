@@ -535,19 +535,25 @@ prepare_random <- function(map) {
 ##'   \code{prepare_random}
 ##' @param ... Additional arguments to pass to \code{MakeADFun}
 ##' @param silent Output TMB progress?
+##' @param runSymbolicAnalysis Use Metis reorderings? (Requires special
+##'   installation of TMB; see documentation.)
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
 prepare_adfun <- function(data, parameters, map, random,
-                          ..., silent = TRUE) {
+                          ..., silent = TRUE,
+                          runSymbolicAnalysis = TRUE) {
   verify_spatq(data, parameters, map)
-  TMB::MakeADFun(data = data,
-                 parameters = parameters,
-                 map = map,
-                 random = random,
-                 DLL = "spatq",
-                 ...,
-                 silent = silent)
+  obj <- TMB::MakeADFun(data = data,
+                        parameters = parameters,
+                        map = map,
+                        random = random,
+                        DLL = "spatq",
+                        ...,
+                        silent = silent)
+  if (runSymbolicAnalysis)
+    TMB::runSymbolicAnalysis(obj)
+  obj
 }
 
 ##' Read in a simulated data set and construct a TMB ADFun for model fitting.
@@ -561,11 +567,12 @@ prepare_adfun <- function(data, parameters, map, random,
 ##'   \code{subsample_catch}
 ##' @param root_dir Directory to load data from
 ##' @param max_T Last year of data to include
+##' @param ... Additional options ot pass to \link{\code{prepare_adfun}}
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
 make_sim_adfun <- function(repl, sc, sub_df = NULL,
-                           root_dir = ".", max_T = NULL) {
+                           root_dir = ".", max_T = NULL, ...) {
   ## Read in data
   catch_df <- read_catch(repl, sc, root_dir)
   if (!is.null(max_T))
@@ -585,11 +592,13 @@ make_sim_adfun <- function(repl, sc, sub_df = NULL,
   parameters <- prepare_pars(data, mesh)
   map <- prepare_map(parameters,
                      map_pars = c("gamma_n", "gamma_w",
+                                  ## "omega_n", "omega_w",
                                   "epsilon_n", "epsilon_w",
                                   "eta_n", "eta_w",
+                                  ## "phi_n", "phi_w",
                                   "psi_n", "psi_w"))
   random <- prepare_random(map)
 
   ## Verify and construct ADFun
-  prepare_adfun(data, parameters, map, random)
+  prepare_adfun(data, parameters, map, random, ...)
 }
