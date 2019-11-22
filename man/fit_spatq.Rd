@@ -6,7 +6,7 @@
 \alias{sdreport_spatq}
 \title{Fit a spatq model by maximum likelihood}
 \usage{
-fit_spatq(obj, ...)
+fit_spatq(obj, ..., method = "BFGS")
 
 report_spatq(obj)
 
@@ -17,6 +17,9 @@ sdreport_spatq(obj)
 \code{make_sim_adfun}}
 
 \item{...}{Additional options to pass to \code{optim}, e.g. \code{control}}
+
+\item{method}{Optimization method to uses (see \code{optim} for available
+options)}
 }
 \value{
 An optimization object, report list, or sdreport list
