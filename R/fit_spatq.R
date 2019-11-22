@@ -21,5 +21,5 @@ report_spatq <- function(obj) {
 
 ##' @describeIn fit_spatq Get object sdreport
 sdreport_spatq <- function(obj) {
-  sdreport(obj)
+  TMB::sdreport(obj)
 }
