@@ -79,15 +79,19 @@ subsample_catch <- function(catch_df, n_df = NULL) {
 ##' @title Read true population state for each year
 ##' @param repl Replicate number
 ##' @param sc Scenario; one of "naive", "simple", "scaled", or "shared"
+##' @param root_dir Directory with e.g. \code{repl_01} subdirectory that
+##'   contains \code{popstate_*.csv}
 ##' @return A \code{tibble} with population and year, starting from 1
 ##' @author John Best
 ##' @export
-read_popstate <- function(repl, sc) {
+read_popstate <- function(repl, sc, root_dir = ".") {
   sc %in% c("naive", "simple", "scaled", "shared")
   ## File names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two
   ## digits.
   repl_str <- stringr::str_pad(repl, 2, pad = "0")
-  flnm <- paste0("repl_", repl_str, "/popstate_", repl_str, "_", sc, ".csv")
+  repl_dir <- paste0("repl_", repl_str)
+  sc_file <- paste0("popstate_", repl_str, "_", sc, ".csv")
+  flnm <- file.path(root_dir, repl_dir, sc_file)
   pop <- readr::read_csv(flnm,
                          col_types = readr::cols(pop = readr::col_double()))
   dplyr::mutate(pop, time = seq_along(pop))
