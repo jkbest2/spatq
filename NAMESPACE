@@ -2,6 +2,7 @@
 
 export(create_index_df)
 export(domain_boundary)
+export(fit_spatq)
 export(generate_fem)
 export(generate_mesh)
 export(generate_projection)

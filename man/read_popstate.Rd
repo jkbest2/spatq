@@ -4,12 +4,15 @@
 \alias{read_popstate}
 \title{Read true population state for each year}
 \usage{
-read_popstate(repl, sc)
+read_popstate(repl, sc, root_dir = ".")
 }
 \arguments{
 \item{repl}{Replicate number}
 
 \item{sc}{Scenario; one of "naive", "simple", "scaled", or "shared"}
+
+\item{root_dir}{Directory with e.g. \code{repl_01} subdirectory that
+contains \code{popstate_*.csv}}
 }
 \value{
 A \code{tibble} with population and year, starting from 1

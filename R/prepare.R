@@ -17,15 +17,19 @@ read_catch <- function(repl, sc, root_dir = ".") {
   repl_dir <- paste0("repl_", repl_str)
   sc_file <- paste0("catch_", repl_str, "_", sc, ".csv")
   flnm <- file.path(root_dir, repl_dir, sc_file)
-  readr::read_csv(flnm,
-                  col_types = readr::cols(
-                    time = readr::col_integer(),
-                    vessel_idx = readr::col_integer(),
-                    loc_idx = readr::col_integer(),
-                    coordinates = readr::col_character(),
-                    effort = readr::col_double(),
-                    catch_biomass = readr::col_double())) %>%
-   dplyr::left_join(get_coordref(root_dir), by = "loc_idx")
+  catch_df <- readr::read_csv(flnm,
+                              col_types = readr::cols(
+                                time = readr::col_integer(),
+                                vessel_idx = readr::col_integer(),
+                                loc_idx = readr::col_integer(),
+                                coordinates = readr::col_character(),
+                                effort = readr::col_double(),
+                                catch_biomass = readr::col_double())) %>%
+    dplyr::left_join(get_coordref(root_dir), by = "loc_idx")
+  ## Number of years and store as an attribute for later use in constructing
+  ## projection matrices etc.
+  attr(catch_df, "T") <- length(unique(catch_df$time))
+  catch_df
 }
 
 ##' Randomly choose a subset of observations for some or all vessels etc.
@@ -65,6 +69,9 @@ subsample_catch <- function(catch_df, n_df = NULL) {
     dplyr::mutate(data = purrr::map2(data, n, dplyr::sample_n)) %>%
     dplyr::select(-n) %>%
     tidyr::unnest(data)
+  ## Double check that T is correct here
+  attr(catch_df, "T") <- length(unique(catch_df$time))
+  catch_df
 }
 
 ##' Read true population total from file
@@ -72,15 +79,19 @@ subsample_catch <- function(catch_df, n_df = NULL) {
 ##' @title Read true population state for each year
 ##' @param repl Replicate number
 ##' @param sc Scenario; one of "naive", "simple", "scaled", or "shared"
+##' @param root_dir Directory with e.g. \code{repl_01} subdirectory that
+##'   contains \code{popstate_*.csv}
 ##' @return A \code{tibble} with population and year, starting from 1
 ##' @author John Best
 ##' @export
-read_popstate <- function(repl, sc) {
+read_popstate <- function(repl, sc, root_dir = ".") {
   sc %in% c("naive", "simple", "scaled", "shared")
   ## File names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two
   ## digits.
   repl_str <- stringr::str_pad(repl, 2, pad = "0")
-  flnm <- paste0("repl_", repl_str, "/popstate_", repl_str, "_", sc, ".csv")
+  repl_dir <- paste0("repl_", repl_str)
+  sc_file <- paste0("popstate_", repl_str, "_", sc, ".csv")
+  flnm <- file.path(root_dir, repl_dir, sc_file)
   pop <- readr::read_csv(flnm,
                          col_types = readr::cols(pop = readr::col_double()))
   dplyr::mutate(pop, time = seq_along(pop))
@@ -128,9 +139,10 @@ generate_mesh <- function() {
   loc <- loc_grid(2.0)
   INLA::inla.mesh.2d(loc,
                      boundary = boundary,
-                     offset = c(5.0, 20.0),
+                     offset = c(0.0, 30.0),
                      # Shortest correlation range should be ~30
-                     max.edge = c(5, 10),
+                     max.edge = c(5, 20),
+                     max.n = c(400, 100),
                      min.angle = c(30, 21),
                      cutoff = 5)
 }
@@ -205,7 +217,7 @@ generate_empty_projection <- function(mesh, data_df, group = NULL) {
   } else {
     n_years <- 1
   }
-  Matrix::Matrix(0, nrow = mesh$n, ncol = n_obs * n_years)
+  Matrix::Matrix(0, nrow = n_obs, ncol = mesh$n * n_years)
 }
 
 ##' Parse coordinates that were saved as a tuple of \code{Float64} and read in
@@ -294,10 +306,12 @@ prepare_data <- function(catch_df, index_df, mesh, fem) {
               ## Abundance projection matrices
               A_spat = generate_projection(mesh, catch_df),
               A_sptemp = generate_projection(mesh, catch_df,
-                                             group = catch_df$time),
+                                             group = catch_df$time,
+                                             zero = TRUE),
               IA_spat = generate_projection(mesh, index_df),
               IA_sptemp = generate_projection(mesh, index_df,
-                                              group = index_df$time),
+                                              group = index_df$time,
+                                              zero = TRUE),
               ## Integration weights
               Ih = rep_len(attr(index_df, "step")^2, nrow(index_df)),
 
@@ -311,7 +325,8 @@ prepare_data <- function(catch_df, index_df, mesh, fem) {
               A_qspat = generate_projection(mesh, catch_df, vessel_idx = 2),
               A_qsptemp = generate_projection(mesh, catch_df,
                                               vessel_idx = 2,
-                                              group = catch_df$time),
+                                              group = catch_df$time,
+                                              zero = TRUE),
               ## FEM matrices for spatial/spatiotemporal effects
               spde = fem)
   ## Store the number of years as an attribute
@@ -524,19 +539,25 @@ prepare_random <- function(map) {
 ##'   \code{prepare_random}
 ##' @param ... Additional arguments to pass to \code{MakeADFun}
 ##' @param silent Output TMB progress?
+##' @param runSymbolicAnalysis Use Metis reorderings? (Requires special
+##'   installation of TMB; see documentation.)
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
 prepare_adfun <- function(data, parameters, map, random,
-                          ..., silent = TRUE) {
+                          ..., silent = TRUE,
+                          runSymbolicAnalysis = TRUE) {
   verify_spatq(data, parameters, map)
-  TMB::MakeADFun(data = data,
-                 parameters = parameters,
-                 map = map,
-                 random = random,
-                 DLL = "spatq",
-                 ...,
-                 silent = silent)
+  obj <- TMB::MakeADFun(data = data,
+                        parameters = parameters,
+                        map = map,
+                        random = random,
+                        DLL = "spatq",
+                        ...,
+                        silent = silent)
+  if (runSymbolicAnalysis)
+    TMB::runSymbolicAnalysis(obj)
+  obj
 }
 
 ##' Read in a simulated data set and construct a TMB ADFun for model fitting.
@@ -549,17 +570,22 @@ prepare_adfun <- function(data, parameters, map, random,
 ##' @param sub_df Data frame indicating subsampling strategy; see
 ##'   \code{subsample_catch}
 ##' @param root_dir Directory to load data from
+##' @param max_T Last year of data to include
+##' @param ... Additional options to pass to \code{prepare_adfun}
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
-make_sim_adfun <- function(repl, sc, sub_df = NULL, root_dir = ".") {
+make_sim_adfun <- function(repl, sc, sub_df = NULL,
+                           root_dir = ".", max_T = NULL, ...) {
   ## Read in data
   catch_df <- read_catch(repl, sc, root_dir)
+  if (!is.null(max_T))
+    catch_df <- dplyr::filter(catch_df, time <= max_T)
   ## Subset observations
   catch_df <- subsample_catch(catch_df, sub_df)
 
   ## Create index integration reference
-  index_df <- create_index_df(step = 5, T = 25)
+  index_df <- create_index_df(step = 5, T = attr(catch_df, "T"))
 
   ## Discretize space
   mesh <- generate_mesh()
@@ -570,11 +596,13 @@ make_sim_adfun <- function(repl, sc, sub_df = NULL, root_dir = ".") {
   parameters <- prepare_pars(data, mesh)
   map <- prepare_map(parameters,
                      map_pars = c("gamma_n", "gamma_w",
+                                  ## "omega_n", "omega_w",
                                   "epsilon_n", "epsilon_w",
                                   "eta_n", "eta_w",
+                                  ## "phi_n", "phi_w",
                                   "psi_n", "psi_w"))
   random <- prepare_random(map)
 
   ## Verify and construct ADFun
-  prepare_adfun(data, parameters, map, random)
+  prepare_adfun(data, parameters, map, random, ...)
 }

@@ -3,7 +3,6 @@
 \docType{package}
 \name{spatq}
 \alias{spatq}
-\alias{spatq-package}
 \title{Spatially varying catchability for fishery-dependent observations}
 \description{
 A package for fitting index standardization models that combine
