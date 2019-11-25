@@ -1,6 +1,6 @@
 Package: spatq
 Title: Use spatially varying catchability to standardize fishery-dependent data
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: 
     person(given = "John",
            family = "Best",
@@ -16,7 +16,7 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.1
 Imports:
     dplyr,
     Matrix,

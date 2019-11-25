@@ -79,15 +79,19 @@ subsample_catch <- function(catch_df, n_df = NULL) {
 ##' @title Read true population state for each year
 ##' @param repl Replicate number
 ##' @param sc Scenario; one of "naive", "simple", "scaled", or "shared"
+##' @param root_dir Directory with e.g. \code{repl_01} subdirectory that
+##'   contains \code{popstate_*.csv}
 ##' @return A \code{tibble} with population and year, starting from 1
 ##' @author John Best
 ##' @export
-read_popstate <- function(repl, sc) {
+read_popstate <- function(repl, sc, root_dir = ".") {
   sc %in% c("naive", "simple", "scaled", "shared")
   ## File names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two
   ## digits.
   repl_str <- stringr::str_pad(repl, 2, pad = "0")
-  flnm <- paste0("repl_", repl_str, "/popstate_", repl_str, "_", sc, ".csv")
+  repl_dir <- paste0("repl_", repl_str)
+  sc_file <- paste0("popstate_", repl_str, "_", sc, ".csv")
+  flnm <- file.path(root_dir, repl_dir, sc_file)
   pop <- readr::read_csv(flnm,
                          col_types = readr::cols(pop = readr::col_double()))
   dplyr::mutate(pop, time = seq_along(pop))
@@ -535,19 +539,25 @@ prepare_random <- function(map) {
 ##'   \code{prepare_random}
 ##' @param ... Additional arguments to pass to \code{MakeADFun}
 ##' @param silent Output TMB progress?
+##' @param runSymbolicAnalysis Use Metis reorderings? (Requires special
+##'   installation of TMB; see documentation.)
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
 prepare_adfun <- function(data, parameters, map, random,
-                          ..., silent = TRUE) {
+                          ..., silent = TRUE,
+                          runSymbolicAnalysis = TRUE) {
   verify_spatq(data, parameters, map)
-  TMB::MakeADFun(data = data,
-                 parameters = parameters,
-                 map = map,
-                 random = random,
-                 DLL = "spatq",
-                 ...,
-                 silent = silent)
+  obj <- TMB::MakeADFun(data = data,
+                        parameters = parameters,
+                        map = map,
+                        random = random,
+                        DLL = "spatq",
+                        ...,
+                        silent = silent)
+  if (runSymbolicAnalysis)
+    TMB::runSymbolicAnalysis(obj)
+  obj
 }
 
 ##' Read in a simulated data set and construct a TMB ADFun for model fitting.
@@ -561,11 +571,12 @@ prepare_adfun <- function(data, parameters, map, random,
 ##'   \code{subsample_catch}
 ##' @param root_dir Directory to load data from
 ##' @param max_T Last year of data to include
+##' @param ... Additional options to pass to \code{prepare_adfun}
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
 make_sim_adfun <- function(repl, sc, sub_df = NULL,
-                           root_dir = ".", max_T = NULL) {
+                           root_dir = ".", max_T = NULL, ...) {
   ## Read in data
   catch_df <- read_catch(repl, sc, root_dir)
   if (!is.null(max_T))
@@ -585,11 +596,13 @@ make_sim_adfun <- function(repl, sc, sub_df = NULL,
   parameters <- prepare_pars(data, mesh)
   map <- prepare_map(parameters,
                      map_pars = c("gamma_n", "gamma_w",
+                                  ## "omega_n", "omega_w",
                                   "epsilon_n", "epsilon_w",
                                   "eta_n", "eta_w",
+                                  ## "phi_n", "phi_w",
                                   "psi_n", "psi_w"))
   random <- prepare_random(map)
 
   ## Verify and construct ADFun
-  prepare_adfun(data, parameters, map, random)
+  prepare_adfun(data, parameters, map, random, ...)
 }

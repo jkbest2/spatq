@@ -4,7 +4,15 @@
 \alias{prepare_adfun}
 \title{Make a TMB ADFun}
 \usage{
-prepare_adfun(data, parameters, map, random, ..., silent = TRUE)
+prepare_adfun(
+  data,
+  parameters,
+  map,
+  random,
+  ...,
+  silent = TRUE,
+  runSymbolicAnalysis = TRUE
+)
 }
 \arguments{
 \item{data}{Data list, as from \code{prepare_data}}
@@ -19,6 +27,9 @@ prepare_adfun(data, parameters, map, random, ..., silent = TRUE)
 \item{...}{Additional arguments to pass to \code{MakeADFun}}
 
 \item{silent}{Output TMB progress?}
+
+\item{runSymbolicAnalysis}{Use Metis reorderings? (Requires special
+installation of TMB; see documentation.)}
 }
 \value{
 A TMB ADFun suitable for optimization
