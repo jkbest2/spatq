@@ -567,7 +567,7 @@ prepare_adfun <- function(data, parameters, map, random,
 ##'   \code{subsample_catch}
 ##' @param root_dir Directory to load data from
 ##' @param max_T Last year of data to include
-##' @param ... Additional options ot pass to \link{\code{prepare_adfun}}
+##' @param ... Additional options to pass to \code{prepare_adfun}
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export

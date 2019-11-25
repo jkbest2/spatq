@@ -4,8 +4,15 @@
 \alias{prepare_adfun}
 \title{Make a TMB ADFun}
 \usage{
-prepare_adfun(data, parameters, map, random, ..., silent = TRUE,
-  runSymbolicAnalysis = TRUE)
+prepare_adfun(
+  data,
+  parameters,
+  map,
+  random,
+  ...,
+  silent = TRUE,
+  runSymbolicAnalysis = TRUE
+)
 }
 \arguments{
 \item{data}{Data list, as from \code{prepare_data}}
