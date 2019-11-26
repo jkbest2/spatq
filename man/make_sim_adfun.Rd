@@ -18,7 +18,7 @@ make_sim_adfun(repl, sc, sub_df = NULL, root_dir = ".", max_T = NULL, ...)
 
 \item{max_T}{Last year of data to include}
 
-\item{...}{Additional options ot pass to \code{prepare_adfun}}
+\item{...}{Additional options to pass to \code{prepare_adfun}}
 }
 \value{
 A TMB ADFun suitable for optimization
