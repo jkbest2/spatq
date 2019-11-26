@@ -3,7 +3,6 @@
 ##' where one indicates unbiasedness. Requires a data frame with columns
 ##' 'est_index', 'true_biomass', and 'repl'.
 ##'
-##' .. content for \details{} ..
 ##' @title Estimate bias of estimation models
 ##' @param fit_df Data frame with estimated indices, true biomass, and replicate
 ##'   number
@@ -13,15 +12,15 @@
 ##' @author John Best
 ##' @export
 bias_metric <- function(fit_df) {
-  if (any(c("est_index", "true_biomass", "repl") %ni% names(fit_df)))
+  if (!all(c("est_index", "true_biomass", "repl") %in% names(fit_df)))
     stop("Data frame must have columns \'est_index\', \'true_biomass\', and \'repl\'")
-  mod <- lm(log(est_index) ~ 0 + factor(repl) + log(true_biomass),
+  mod <- stats::lm(log(est_index) ~ 0 + factor(repl) + log(true_biomass),
             data = fit_df)
-  mod_coef <- coef(mod)
+  mod_coef <- stats::coef(mod)
   list(alpha = mod_coef[!grepl("true_biomass", names(mod_coef))],
        delta = mod_coef[grepl("true_biomass", names(mod_coef))],
-       epsilon = resid(mod),
-       sigma = sigma(mod))
+       epsilon = stats::resid(mod),
+       sigma = stats::sigma(mod))
 
 }
 
@@ -67,5 +66,5 @@ rmse_metric <- function(est_index, true_index) {
 ##' @author John Best
 ##' @export
 true_percentile <- function(true_index, est_index, est_sd) {
-  pnorm(true_index, est_index, est_sd)
+  stats::pnorm(true_index, est_index, est_sd)
 }

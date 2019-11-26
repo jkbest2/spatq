@@ -21,9 +21,6 @@ simulated data sets. Uses linear regression to estimate their relationship,
 where one indicates unbiasedness. Requires a data frame with columns
 'est_index', 'true_biomass', and 'repl'.
 }
-\details{
-.. content for \details{} ..
-}
 \author{
 John Best
 }
