@@ -438,7 +438,9 @@ Type objective_function<Type>::operator() () {
     i0 = yr * N_yrs;
     i1 = (yr + 1) * N_yrs;
     for (int i = i0; i < i1; i++) {
-      Index(yr) += Ih(i) * exp(Ilog_n(i) + Ilog_w(i));
+      // Should prevent some numerical issues; cribbed from VAST index
+      // calculation.
+      Index(yr) += Ih(i) * exp(Ilog_n(i)) * exp(Ilog_w(i));
     }
   }
 
