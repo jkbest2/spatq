@@ -35,9 +35,9 @@ bias_metric <- function(fit_df) {
 ##' @export
 rescale_index <- function(b) {
   scale <- exp(mean(log(b)))
-  i <- b / i
-  attr(i, "scale") <- scale
-  i
+  index <- b / scale
+  attr(index, "scale") <- scale
+  index
 }
 
 ##' Calculate the root mean square error of the estimated indices of abundance

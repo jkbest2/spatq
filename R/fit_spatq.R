@@ -15,11 +15,13 @@ fit_spatq <- function(obj, ..., method = "BFGS") {
 }
 
 ##' @describeIn fit_spatq Get object report
+##' @export
 report_spatq <- function(obj) {
   obj$report()
 }
 
 ##' @describeIn fit_spatq Get object sdreport
+##' @export
 sdreport_spatq <- function(obj) {
   TMB::sdreport(obj)
 }
