@@ -579,8 +579,10 @@ make_sim_adfun <- function(repl, sc, sub_df = NULL,
                            root_dir = ".", max_T = NULL, ...) {
   ## Read in data
   catch_df <- read_catch(repl, sc, root_dir)
-  if (!is.null(max_T))
+  if (!is.null(max_T)) {
     catch_df <- dplyr::filter(catch_df, time <= max_T)
+    attr(catch_df, "T") <- max_T
+  }
   ## Subset observations
   catch_df <- subsample_catch(catch_df, sub_df)
 
