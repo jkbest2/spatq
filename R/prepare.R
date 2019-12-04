@@ -571,12 +571,14 @@ prepare_adfun <- function(data, parameters, map, random,
 ##'   \code{subsample_catch}
 ##' @param root_dir Directory to load data from
 ##' @param max_T Last year of data to include
+##' @param map_pars Vector of parameters names to map
 ##' @param ... Additional options to pass to \code{prepare_adfun}
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
 make_sim_adfun <- function(repl, sc, sub_df = NULL,
-                           root_dir = ".", max_T = NULL, ...) {
+                           root_dir = ".", max_T = NULL,
+                           map_pars = c(), ...) {
   ## Read in data
   catch_df <- read_catch(repl, sc, root_dir)
   if (!is.null(max_T)) {
@@ -597,12 +599,7 @@ make_sim_adfun <- function(repl, sc, sub_df = NULL,
   data <- prepare_data(catch_df, index_df, mesh, fem)
   parameters <- prepare_pars(data, mesh)
   map <- prepare_map(parameters,
-                     map_pars = c("gamma_n", "gamma_w",
-                                  ## "omega_n", "omega_w",
-                                  "epsilon_n", "epsilon_w",
-                                  "eta_n", "eta_w",
-                                  ## "phi_n", "phi_w",
-                                  "psi_n", "psi_w"))
+                     map_pars = map_pars)
   random <- prepare_random(map)
 
   ## Verify and construct ADFun
