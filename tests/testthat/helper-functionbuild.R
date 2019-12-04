@@ -2,9 +2,16 @@ obj_fbuild <- make_sim_adfun(repl = 1, sc = "naive",
                              root_dir = normalizePath(
                                system.file("testdata", package = "spatq")),
                              max_T = 15,
-                             runSymbolicAnalysis = FALSE)
+                             map_pars = c("gamma_n", "gamma_w",
+                                          ## "omega_n", "omega_w",
+                                          "epsilon_n", "epsilon_w",
+                                          "eta_n", "eta_w",
+                                          "phi_n", "phi_w",
+                                          "psi_n", "psi_w"),
+                             runSymbolicAnalysis = TRUE,
+                             silent = FALSE)
 
-## fit <- fit_spatq(obj_fbuild, control = list(trace = 2L))
+## fit <- fit_spatq(obj_fbuild)#, control = list(trace = 2L))
 ## rep <- report_spatq(obj_fbuild)
 ## sdr <- sdreport_spatq(obj_fbuild)
 
