@@ -150,8 +150,8 @@ Type objective_function<Type>::operator() () {
   fixef_w = X_w * beta_w;
 
   // Index fixed effects
-  vector<Type> Ifixef_n(N_obs);
-  vector<Type> Ifixef_w(N_obs);
+  vector<Type> Ifixef_n(N_I);
+  vector<Type> Ifixef_w(N_I);
   Ifixef_n = IX_n * beta_n;
   Ifixef_w = IX_w * beta_w;
 
@@ -211,11 +211,11 @@ Type objective_function<Type>::operator() () {
 
     REPORT(omega_n);
     REPORT(omega_w);
-  }
+    }
 
   // Index spatial effects
-  vector<Type> Ispat_n(N_obs);
-  vector<Type> Ispat_w(N_obs);
+  vector<Type> Ispat_n(N_I);
+  vector<Type> Ispat_w(N_I);
   Ispat_n = IA_spat * omega_n;
   Ispat_w = IA_spat * omega_w;
 
@@ -372,8 +372,8 @@ Type objective_function<Type>::operator() () {
     qfixef_w + qranef_w + qspat_w + qsptemp_w;
 
   // Index linear predictor
-  vector<Type> Ilog_n(N_obs);
-  vector<Type> Ilog_w(N_obs);
+  vector<Type> Ilog_n(N_I);
+  vector<Type> Ilog_w(N_I);
   Ilog_n = Ifixef_n + Iranef_n + Ispat_n + Isptemp_n;
   Ilog_w = Ifixef_w + Iranef_w + Ispat_w + Isptemp_w;
 
@@ -434,9 +434,11 @@ Type objective_function<Type>::operator() () {
   int i0 = 0;
   int i1 = 0;
 
+  int N_I_per_yr = N_I / N_yrs;
+
   for (int yr = 0; yr < N_yrs; yr++) {
-    i0 = yr * N_yrs;
-    i1 = (yr + 1) * N_yrs;
+    i0 = yr * N_I_per_yr;
+    i1 = (yr + 1) * N_I_per_yr;
     for (int i = i0; i < i1; i++) {
       // Should prevent some numerical issues; cribbed from VAST index
       // calculation.
