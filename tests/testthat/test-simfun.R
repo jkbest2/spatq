@@ -1,9 +1,9 @@
 context("Test simulation ADFun")
 
 test_that("Can get values, gradients, and simulations", {
-  fneval <- obj_fbuild$fn()
-  greval <- obj_fbuild$gr()
-  sim <- obj_fbuild$simulate()
+  fneval <- obj_sim$fn()
+  greval <- obj_sim$gr()
+  sim <- obj_sim$simulate()
 
   expect_true(is.finite(fneval))
   expect_true(all(is.finite(greval)))
