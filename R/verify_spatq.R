@@ -24,6 +24,7 @@ verify_spatq <- function(data, parameters, map = list()) {
   verify_spatq_names(data, parameters, map)
   verify_spatq_dims(data, parameters, map)
   verify_spatq_map(parameters, map)
+  verify_ident_fixef(data)
 }
 
 ##' Check that all the required data and parameter names are included. Currently
@@ -208,5 +209,27 @@ verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
       }
     }
   }
+  return(TRUE)
+}
+
+##' Check that the combined fixed effect design matrices for abundance and
+##' catchability are full rank.
+##'
+##' @title Verify that fixed effects are identifiable
+##' @param data Data list, as produced by \code{prepare_data}
+##' @return TRUE if it passes, error otherwise
+##' @author John Best
+##' @export
+verify_ident_fixef <- function(data) {
+  fix_n <- cbind(data$X_n, data$R_n)
+  np_n <- ncol(fix_n)
+  rank_n <- Matrix::rankMatrix(fix_n)
+  if (rank_n < np_n) stop("Numbers density fixed effects are not identifiable")
+
+  fix_w <- cbind(data$X_w, data$R_w)
+  np_w <- ncol(fix_w)
+  rank_w <- Matrix::rankMatrix(fix_w)
+  if (rank_w < np_w) stop("Weight per group fixed effects are not identifiable")
+
   return(TRUE)
 }
