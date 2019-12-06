@@ -315,9 +315,14 @@ prepare_data <- function(catch_df, index_df, mesh, fem) {
               ## Integration weights
               Ih = rep_len(attr(index_df, "step")^2, nrow(index_df)),
 
-              ## Catchability fixed effect design matrix
-              R_n = stats::model.matrix(~ factor(vessel_idx), data = catch_df),
-              R_w = stats::model.matrix(~ factor(vessel_idx), data = catch_df),
+              ## Catchability fixed effect design matrix. Drop first column so
+              ## that fixed effects are identifiable (e.g. if only two vessels,
+              ## only adjust catchability for second.) Use `drop = FALSE` so the
+              ## result is a matrix if only one column is left.
+              R_n = stats::model.matrix(~ factor(vessel_idx),
+                                        data = catch_df)[, -1, drop = FALSE],
+              R_w = stats::model.matrix(~ factor(vessel_idx),
+                                        data = catch_df)[, -1, drop = FALSE],
               ## Catchability random effect design matrix
               V_n = matrix(0.0, nrow = nrow(catch_df), ncol = 1),
               V_w = matrix(0.0, nrow = nrow(catch_df), ncol = 1),
