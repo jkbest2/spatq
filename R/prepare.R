@@ -3,14 +3,14 @@
 ##' Requires that catch files are e.g. \code{repl_01/catch_simple.csv}.
 ##' @title Read simulated data
 ##' @param repl Replicate number
-##' @param sc Scenario; one of "naive", "simple", "scaled", or "shared"
+##' @param sc Scenario; one of "pref", "spat", or "combo"
 ##' @param root_dir Directory to work in; defaults to current working directory
 ##' @return A \code{tibble} with catch observations
 ##' @author John Best
 ##' @importFrom dplyr %>%
 ##' @export
 read_catch <- function(repl, sc, root_dir = ".") {
-  ## sc %in% c("naive", "simple", "scaled", "shared")
+  check_scenario(sc)
   ## File names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two
   ## digits.
   repl_str <- stringr::str_pad(repl, 2, pad = "0")
@@ -62,7 +62,7 @@ subsample_catch <- function(catch_df, n_df = NULL) {
   nms <- names(n_df)
   "n" %in% names(n_df) || stop("Need column \`n\`")
   nms_join <- nms[nms != "n"]
-  catch_df %>%
+  catch_df <- catch_df %>%
     tidyr::nest(data = c(-vessel_idx, -time)) %>%
     dplyr::left_join(n_df, by = nms_join) %>%
     dplyr::mutate(n = dplyr::coalesce(n, purrr::map_dbl(data, nrow))) %>%
@@ -74,18 +74,32 @@ subsample_catch <- function(catch_df, n_df = NULL) {
   catch_df
 }
 
+##' Check that scenario name is correct. Available options are "pref", "spat",
+##' or "combo". Any other string will throw an error.
+##'
+##' @title Check scenario name
+##' @param sc Scenario name, as a string
+##' @return \code{TRUE} if scenario is correct
+##' @author John Best
+##' @export
+check_scenario <- function(sc) {
+  sc %in% c("pref", "spat", "combo") ||
+    stop("Scenario must be one of \"pref\", \"spat\", or \"combo\"")
+  TRUE
+}
+
 ##' Read true population total from file
 ##'
 ##' @title Read true population state for each year
 ##' @param repl Replicate number
-##' @param sc Scenario; one of "naive", "simple", "scaled", or "shared"
+##' @param sc Scenario; one of "pref", "spat", or "combo"
 ##' @param root_dir Directory with e.g. \code{repl_01} subdirectory that
 ##'   contains \code{popstate_*.csv}
 ##' @return A \code{tibble} with population and year, starting from 1
 ##' @author John Best
 ##' @export
 read_popstate <- function(repl, sc, root_dir = ".") {
-  sc %in% c("naive", "simple", "scaled", "shared")
+  check_scenario(sc)
   ## File names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two
   ## digits.
   repl_str <- stringr::str_pad(repl, 2, pad = "0")
@@ -631,7 +645,7 @@ prepare_adfun <- function(data, parameters, map, random,
 ##'
 ##' @title Create ADFun from simulated data
 ##' @param repl Replicate number
-##' @param sc Scenario; "naive", "simple", "scaled", or "shared"
+##' @param sc Scenario; "pref", "spat", or "combo"
 ##' @param sub_df Data frame indicating subsampling strategy; see
 ##'   \code{subsample_catch}
 ##' @param root_dir Directory to load data from

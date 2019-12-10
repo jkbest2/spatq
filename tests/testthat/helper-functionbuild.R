@@ -1,4 +1,6 @@
-obj_sim <- make_sim_adfun(repl = 1, sc = "naive",
+obj_sim <- make_sim_adfun(repl = 1, sc = "pref",
+                          sub_df = data.frame(vessel_idx = 2,
+                                              n = 50),
                           root_dir = normalizePath(
                             system.file("testdata", package = "spatq")),
                           max_T = 15,

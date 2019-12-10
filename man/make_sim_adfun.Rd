@@ -17,7 +17,7 @@ make_sim_adfun(
 \arguments{
 \item{repl}{Replicate number}
 
-\item{sc}{Scenario; "naive", "simple", "scaled", or "shared"}
+\item{sc}{Scenario; "pref", "spat", or "combo"}
 
 \item{sub_df}{Data frame indicating subsampling strategy; see
 \code{subsample_catch}}
