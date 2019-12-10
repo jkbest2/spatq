@@ -9,18 +9,16 @@
 //'   log-probability of zero catch, and log-positive catch rate (particularly
 //'   useful when using a log-normal catch distribution).
 template<class Type>
-vector<Type> logpoislink(Type &log_n, Type &log_w, Type a = Type(1.0)) {
+vector<Type> logpoislink(Type log_n, Type log_w, Type a = Type(1.0)) {
   // Initialize 3-vector that will contain probability of zero catch,
   // probability of encounter, and positive catch rate
   // TODO Can this be done in-place by passing in a view on a matrix or similar?
   vector<Type> log_ppr(3);
 
-  // Exponentiate for use below
-  Type n = exp(log_n);
-
   // First calculate log-probability of zero catch, as it is used to calculated
   // the probability of zero catch.
-  log_ppr(1) = -a * n;
+  log_ppr(1) = -a * exp(log_n);
+  // First argument is `log(1) == 0`
   log_ppr(0) = logspace_sub(Type(0.0), log_ppr(1));
   log_ppr(2) = log_n - log_ppr(0) + log_w;
 
