@@ -450,6 +450,8 @@ Type objective_function<Type>::operator() () {
   // Reports
   // ---------------------------------------------------------------------------
   REPORT(jnll);
+  REPORT(Ilog_n);
+  REPORT(Ilog_w);
 
   ADREPORT(Index);
 
