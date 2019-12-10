@@ -19,4 +19,5 @@ globalVariables(c("s1",
                   "sample_n",
                   "time",
                   "vessel_idx",
-                  "data"))
+                  "data",
+                  "cloglog"))

@@ -1,6 +1,6 @@
 Package: spatq
 Title: Use spatially varying catchability to standardize fishery-dependent data
-Version: 0.2.1
+Version: 0.2.2
 Authors@R: 
     person(given = "John",
            family = "Best",

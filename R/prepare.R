@@ -407,45 +407,52 @@ pars_tau <- function(sig2, rho) {
 ##' @author John Best
 ##' @export
 init_fixef <- function(data) {
-  df_n <- tibble(enc = data$catch_obs > 0,
-                 X_n = data$X_n,
-                 R_n = data$R_n)
+  df_n <- tibble::tibble(enc = data$catch_obs > 0,
+                         X_n = data$X_n,
+                         R_n = data$R_n)
   ## Estimate each group density fixed effect with a simple GLM, using the
   ## complementary log-log link for encounter. This corresponds directly to
   ## group density in the Poisson link model.
-  mod_n <- glm(enc ~ 0 + ., data = df_n,
-               family = binomial(cloglog))
-  est_n <- coef(mod_n)
+  mod_n <- stats::glm(enc ~ 0 + ., data = df_n,
+                      family = stats::binomial(cloglog))
+  est_n <- stats::coef(mod_n)
+
   ## Using the estimated group density and probability of encounter, calculate
   ## the log mean weight per group, conditional on a positive catch.
-  df_w <- tibble(catch_obs = data$catch_obs,
-                 X_w = data$X_w,
-                 R_w = data$R_w) %>%
-    filter(catch_obs > 0)
-
+  enc <- df_n$enc
+  df_w <- tibble::tibble(catch_obs = data$catch_obs[enc],
+                         X_w = data$X_w[enc, ],
+                         R_w = data$R_w[enc, ])
   ## Log-positive catch rate is log(n) - log(p) + log(w), so the first two are
   ## used as an offset here.
-  offset_w <- predict(mod_n) - predict(mod_n, type = "response")
+  offset_w <- stats::predict(mod_n) -
+    log(stats::predict(mod_n, type = "response"))
   offset_w <- offset_w[data$catch_obs > 0]
-  mod_w <- glm(catch_obs ~ 0 + ., data = df_w, offset = offset_w,
-               family = gaussian(log))
+  ## mod_w <- glm(catch_obs ~ 0 + ., data = df_w, offset = offset_w,
+  ##              family = gaussian(log))
+  mod_w <- stats::lm(log(catch_obs) ~ 0 + ., data = df_w, offset = offset_w)
   ## Not going to worry about the bias correction for these initial values
-  est_w <- coef(mod_w)
+  est_w <- stats::coef(mod_w)
 
-  list(beta_n = est_n[1:ncol(data$X_n)],
-       beta_w = est_w[1:ncol(data$X_w)],
-       lambda_n = est_n[-(1:ncol(data$X_n))],
-       lambda_w = est_w[-(1:ncol(data$X_w))])
+  init <- list(beta_n = est_n[1:ncol(data$X_n)],
+               beta_w = est_w[1:ncol(data$X_w)],
+               lambda_n = est_n[-(1:ncol(data$X_n))],
+               lambda_w = est_w[-(1:ncol(data$X_w))])
+  lapply(init, unname)
 }
 
-##' Prepare a list of parameters of appropriate dimension. All starting values
-##' are zeros except kappa and tau, which use a correlation range of 50 (half
-##' the domain) and marginal variance of 1, tranformed to the kappa and tau
-##' parameterization.
+##' Prepare a list of parameters of appropriate dimension. Otherwise
+##' uninitialized parameter starting values are set to zeros except kappa and
+##' tau, which use a correlation range of 50 (half the domain) and marginal
+##' variance of 1, tranformed to the kappa and tau parameterization. Initial
+##' estimates of fixed effects can be estimated using GLMs with the
+##' \code{init_fixef = TRUE} argument. This is recommended.
 ##'
 ##' @title Prepare parameter list
 ##' @param data Data list, as from \code{prepare_data}
 ##' @param mesh SPDE mesh
+##' @param init_fixef Use GLMs to estimate fixed effect parameters for abundance
+##'   and catchability in both numbers density and weight per group processes
 ##' @return List with scalar, vector, or matrices of zeros as starting values
 ##'   for optimization
 ##' @author John Best
