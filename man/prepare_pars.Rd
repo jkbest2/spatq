@@ -10,16 +10,21 @@ prepare_pars(data, mesh, init_fixef = TRUE)
 \item{data}{Data list, as from \code{prepare_data}}
 
 \item{mesh}{SPDE mesh}
+
+\item{init_fixef}{Use GLMs to estimate fixed effect parameters for abundance
+and catchability in both numbers density and weight per group processes}
 }
 \value{
 List with scalar, vector, or matrices of zeros as starting values
 for optimization
 }
 \description{
-Prepare a list of parameters of appropriate dimension. All starting values
-are zeros except kappa and tau, which use a correlation range of 50 (half
-the domain) and marginal variance of 1, tranformed to the kappa and tau
-parameterization.
+Prepare a list of parameters of appropriate dimension. Otherwise
+uninitialized parameter starting values are set to zeros except kappa and
+tau, which use a correlation range of 50 (half the domain) and marginal
+variance of 1, tranformed to the kappa and tau parameterization. Initial
+estimates of fixed effects can be estimated using GLMs with the
+\code{init_fixef = TRUE} argument. This is recommended.
 }
 \author{
 John Best
