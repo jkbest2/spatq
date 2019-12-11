@@ -449,9 +449,16 @@ Type objective_function<Type>::operator() () {
   // ===========================================================================
   // Reports
   // ---------------------------------------------------------------------------
+  vector<Type> rho_sp;
+  vector<Type> sigma_sp;
+  rho_sp = sqrt(8) / kappa;
+  sigma_sp = 1 / (kappa * tau * 2 * sqrt(PI));
+
   REPORT(jnll);
   REPORT(Ilog_n);
   REPORT(Ilog_w);
+  REPORT(rho_sp);
+  REPORT(sigma_sp);
 
   ADREPORT(Index);
 
