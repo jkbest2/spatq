@@ -320,12 +320,10 @@ prepare_data <- function(catch_df, index_df, mesh, fem) {
               ## Abundance projection matrices
               A_spat = generate_projection(mesh, catch_df),
               A_sptemp = generate_projection(mesh, catch_df,
-                                             group = catch_df$time,
-                                             zero = TRUE),
+                                             group = catch_df$time),
               IA_spat = generate_projection(mesh, index_df),
               IA_sptemp = generate_projection(mesh, index_df,
-                                              group = index_df$time,
-                                              zero = TRUE),
+                                              group = index_df$time),
               ## Integration weights
               Ih = rep_len(attr(index_df, "step")^2, nrow(index_df)),
 
