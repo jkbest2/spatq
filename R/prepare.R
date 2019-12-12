@@ -345,7 +345,10 @@ prepare_data <- function(catch_df, index_df, mesh, fem) {
                                               group = catch_df$time,
                                               zero = TRUE),
               ## FEM matrices for spatial/spatiotemporal effects
-              spde = fem)
+              spde = fem,
+              ## Turn off random effects likelihood components. Start with all
+              ## on, turn off after map
+              proc_switch = rep(TRUE, 6))
   ## Store the number of years as an attribute
   attr(dat, "T") <- T
   dat
@@ -606,6 +609,24 @@ prepare_random <- function(map) {
   setdiff(re_pars, names(map))
 }
 
+##' Generates a vector of length 6 indicating whether each pair of numbers
+##' density and weight per group random processes should be included in the
+##' likelihood calculation; i.e. they are map'd.
+##'
+##' @title Prepare process switch
+##' @param random Character vector of random parameters; as from
+##'   \code{prepare_random}
+##' @return Logical vector of length 6 indicating which random processes are
+##'   *not* map'd off
+##' @author John Best
+prepare_proc_switch <- function(random) {
+  procs <- c("gamma_n", "gamma_w", "omega_n", "omega_w",
+             "epsilon_n", "epsilon_w", "eta_n", "eta_w",
+             "phi_n", "phi_w", "psi_n", "psi_w")
+  on <- procs %in% random
+  vapply(seq(1, 11, 2), function(i) on[i] || on[i + 1], TRUE)
+}
+
 ##' Verify data, parameters, and map, then contruct the ADFun.
 ##'
 ##' @title Make a TMB ADFun
@@ -624,6 +645,7 @@ prepare_random <- function(map) {
 prepare_adfun <- function(data, parameters, map, random,
                           ..., silent = TRUE,
                           runSymbolicAnalysis = TRUE) {
+  data$proc_switch <- prepare_proc_switch(random)
   verify_spatq(data, parameters, map)
   obj <- TMB::MakeADFun(data = data,
                         parameters = parameters,

@@ -95,7 +95,8 @@ dat <- list(catch_obs = rep(0, n_obs),
             V_w = model.matrix(~ factor(sample(1:10, n_obs, TRUE)) + 0),
             A_qspat = A_qspat,
             A_qsptemp = A_qsptemp,
-            spde = fem)
+            spde = fem,
+            proc_switch = rep(TRUE, 6))
 
 ## Spatial random effects (`spat_n` and `spat_w`) are set to zero vectors of
 ## appropriate length, as these are simulated.
