@@ -58,9 +58,17 @@ Type objective_function<Type>::operator() () {
   // between effects means that this only needs to be passed once.
   DATA_STRUCT(spde, spde_t);
 
-  // Need up to four projection matrices; one for spatial effects, one for
-  // spatiotemporal effects, and the same two but that only apply the effects to
-  // fishery-dependent observations
+  // ---------------------------------------------------------------------------
+  // Vector indicating which of the 12 random processes should be included.
+  // Currently takes a length-6 vector, and can only switch off pairs of numbers
+  // density and weight-per-group processes. Indexing is currently:
+  // 0: gamma_n, gamma_w
+  // 1: omega_n, omega_w
+  // 2: epsilon_n, epsilon_w
+  // 3: eta_n, eta_w
+  // 4: phi_n, phi_w
+  // 5: psi_n, psi_w
+  DATA_IVECTOR(proc_switch);
 
   // ===========================================================================
   // PARAMETER section
@@ -160,27 +168,35 @@ Type objective_function<Type>::operator() () {
   // ---------------------------------------------------------------------------
   vector<Type> ranef_n(N_obs);
   vector<Type> ranef_w(N_obs);
-  ranef_n = Z_n * gamma_n;
-  ranef_w = Z_w * gamma_w;
+  vector<Type> Iranef_n(N_I);
+  vector<Type> Iranef_w(N_I);
 
-  // Index fixed effects
-  vector<Type> Iranef_n(N_obs);
-  vector<Type> Iranef_w(N_obs);
-  Iranef_n = IZ_n * gamma_n;
-  Iranef_w = IZ_w * gamma_w;
-
-  // Include random effects likelihood; currently only iid is implemented
-  jnll(8) -= sum(dnorm(gamma_n, Type(0), xi(0), true));
-  jnll(8) -= sum(dnorm(gamma_w, Type(0), xi(1), true));
-
-  SIMULATE {
-    gamma_n = rnorm(Z_n.cols(), Type(0), xi(0));
+  if (proc_switch(0)) {
     ranef_n = Z_n * gamma_n;
-    gamma_w = rnorm(Z_w.cols(), Type(0), xi(1));
     ranef_w = Z_w * gamma_w;
 
-    REPORT(gamma_n);
-    REPORT(gamma_w);
+    // Index fixed effects
+    Iranef_n = IZ_n * gamma_n;
+    Iranef_w = IZ_w * gamma_w;
+
+    // Include random effects likelihood; currently only iid is implemented
+    jnll(8) -= sum(dnorm(gamma_n, Type(0), xi(0), true));
+    jnll(8) -= sum(dnorm(gamma_w, Type(0), xi(1), true));
+
+    SIMULATE {
+      gamma_n = rnorm(Z_n.cols(), Type(0), xi(0));
+      ranef_n = Z_n * gamma_n;
+      gamma_w = rnorm(Z_w.cols(), Type(0), xi(1));
+      ranef_w = Z_w * gamma_w;
+
+      REPORT(gamma_n);
+      REPORT(gamma_w);
+    }
+  } else {
+    ranef_n.setZero();
+    ranef_w.setZero();
+    Iranef_n.setZero();
+    Iranef_w.setZero();
   }
 
   // ===========================================================================
@@ -189,35 +205,43 @@ Type objective_function<Type>::operator() () {
   // Project spatial effects from mesh nodes to observation locations
   vector<Type> spat_n(N_obs);
   vector<Type> spat_w(N_obs);
-  spat_n = A_spat * omega_n;
-  spat_w = A_spat * omega_w;
-
-  // Get density of spatial random effects, repeated for each process. Scale the
-  // precision matrix by τ² to match the usual (Lindgren et al. 2011)
-  // formulation.
-  SparseMatrix<Type> Q_n_om = tau(0) * Q_spde(spde, kappa(0)) * tau(0);
-  SparseMatrix<Type> Q_w_om = tau(1) * Q_spde(spde, kappa(1)) * tau(1);
-  jnll(0) += GMRF(Q_n_om)(omega_n);
-  jnll(1) += GMRF(Q_w_om)(omega_w);
-
-  // Simulate spatial random effects using given precision matrices. Then
-  // project them to the provided locations. Can't simulate new locations
-  // without recomputing the A matrix, which requires the INLA package.
-  SIMULATE {
-    omega_n = GMRF(Q_n_om).simulate();
-    spat_n = A_spat * omega_n;
-    omega_w = GMRF(Q_w_om).simulate();
-    spat_w = A_spat * omega_w;
-
-    REPORT(omega_n);
-    REPORT(omega_w);
-    }
-
-  // Index spatial effects
   vector<Type> Ispat_n(N_I);
   vector<Type> Ispat_w(N_I);
-  Ispat_n = IA_spat * omega_n;
-  Ispat_w = IA_spat * omega_w;
+
+  if (proc_switch(1)) {
+    spat_n = A_spat * omega_n;
+    spat_w = A_spat * omega_w;
+
+    // Get density of spatial random effects, repeated for each process. Scale the
+    // precision matrix by τ² to match the usual (Lindgren et al. 2011)
+    // formulation.
+    SparseMatrix<Type> Q_n_om = tau(0) * Q_spde(spde, kappa(0)) * tau(0);
+    SparseMatrix<Type> Q_w_om = tau(1) * Q_spde(spde, kappa(1)) * tau(1);
+    jnll(0) += GMRF(Q_n_om)(omega_n);
+    jnll(1) += GMRF(Q_w_om)(omega_w);
+
+    // Simulate spatial random effects using given precision matrices. Then
+    // project them to the provided locations. Can't simulate new locations
+    // without recomputing the A matrix, which requires the INLA package.
+    SIMULATE {
+      omega_n = GMRF(Q_n_om).simulate();
+      spat_n = A_spat * omega_n;
+      omega_w = GMRF(Q_w_om).simulate();
+      spat_w = A_spat * omega_w;
+
+      REPORT(omega_n);
+      REPORT(omega_w);
+    }
+
+    // Index spatial effects
+    Ispat_n = IA_spat * omega_n;
+    Ispat_w = IA_spat * omega_w;
+  } else {
+    spat_n.setZero();
+    spat_w.setZero();
+    Ispat_n.setZero();
+    Ispat_w.setZero();
+  }
 
   // ===========================================================================
   // Abundance spatiotemporal effects
@@ -226,42 +250,50 @@ Type objective_function<Type>::operator() () {
   // TODO Implement (optional?) sum-to-zero constraint
   vector<Type> sptemp_n(N_obs);
   vector<Type> sptemp_w(N_obs);
-  sptemp_n = A_sptemp * epsilon_n.value();
-  sptemp_w = A_sptemp * epsilon_w.value();
+  vector<Type> Isptemp_n(N_I);
+  vector<Type> Isptemp_w(N_I);
 
-  // Get density of spatial random effects, repeated for each process. Scale the
-  // precision matrix by τ² to match the usual (Lindgren et al. 2011)
-  // formulation.
-  SparseMatrix<Type> Q_n_ep = tau(2) * Q_spde(spde, kappa(2)) * tau(2);
-  GMRF_t<Type> gmrf_n_ep(Q_n_ep);
-  SparseMatrix<Type> Q_w_ep = tau(3) * Q_spde(spde, kappa(3)) * tau(3);
-  GMRF_t<Type> gmrf_w_ep(Q_w_ep);
-  for (int yr = 0; yr < N_yrs; yr++) {
-    jnll(2) += gmrf_n_ep(epsilon_n.col(yr));
-    jnll(3) += gmrf_w_ep(epsilon_w.col(yr));
-  }
-
-  // Simulate spatiotemporal random effects using given precision matrices. Then
-  // project them to the provided locations. Can't simulate new locations
-  // without recomputing the A matrix, which requires the INLA package.
-  SIMULATE {
-    for (int yr = 0; yr < N_yrs; yr++) {
-      // TODO Figure out if these can be `gmrf_n_ep.simulate(epsilon_n)`
-      epsilon_n.col(yr) = gmrf_n_ep.simulate();
-      epsilon_w.col(yr) = gmrf_w_ep.simulate();
-    }
+  if (proc_switch(2)) {
     sptemp_n = A_sptemp * epsilon_n.value();
     sptemp_w = A_sptemp * epsilon_w.value();
 
-    REPORT(epsilon_n);
-    REPORT(epsilon_w);
-  }
+    // Get density of spatial random effects, repeated for each process. Scale the
+    // precision matrix by τ² to match the usual (Lindgren et al. 2011)
+    // formulation.
+    SparseMatrix<Type> Q_n_ep = tau(2) * Q_spde(spde, kappa(2)) * tau(2);
+    GMRF_t<Type> gmrf_n_ep(Q_n_ep);
+    SparseMatrix<Type> Q_w_ep = tau(3) * Q_spde(spde, kappa(3)) * tau(3);
+    GMRF_t<Type> gmrf_w_ep(Q_w_ep);
+    for (int yr = 0; yr < N_yrs; yr++) {
+      jnll(2) += gmrf_n_ep(epsilon_n.col(yr));
+      jnll(3) += gmrf_w_ep(epsilon_w.col(yr));
+    }
 
-  // Index spatiotemporal effects
-  vector<Type> Isptemp_n(N_obs);
-  vector<Type> Isptemp_w(N_obs);
-  Isptemp_n = IA_sptemp * epsilon_n.value();
-  Isptemp_w = IA_sptemp * epsilon_w.value();
+    // Simulate spatiotemporal random effects using given precision matrices. Then
+    // project them to the provided locations. Can't simulate new locations
+    // without recomputing the A matrix, which requires the INLA package.
+    SIMULATE {
+      for (int yr = 0; yr < N_yrs; yr++) {
+        // TODO Figure out if these can be `gmrf_n_ep.simulate(epsilon_n)`
+        epsilon_n.col(yr) = gmrf_n_ep.simulate();
+        epsilon_w.col(yr) = gmrf_w_ep.simulate();
+      }
+      sptemp_n = A_sptemp * epsilon_n.value();
+      sptemp_w = A_sptemp * epsilon_w.value();
+
+      REPORT(epsilon_n);
+      REPORT(epsilon_w);
+    }
+
+    // Index spatiotemporal effects
+    Isptemp_n = IA_sptemp * epsilon_n.value();
+    Isptemp_w = IA_sptemp * epsilon_w.value();
+  } else {
+    sptemp_n.setZero();
+    sptemp_w.setZero();
+    Isptemp_n.setZero();
+    Isptemp_w.setZero();
+  }
 
   // ===========================================================================
   // Catchability fixed effects
@@ -276,50 +308,63 @@ Type objective_function<Type>::operator() () {
   // ---------------------------------------------------------------------------
   vector<Type> qranef_n(N_obs);
   vector<Type> qranef_w(N_obs);
-  qranef_n = V_n * eta_n;
-  qranef_w = V_w * eta_w;
 
-  // Include random effects likelihood; currently only iid is implemented
-  jnll(9) -= sum(dnorm(eta_n, Type(0), xi(2), true));
-  jnll(9) -= sum(dnorm(eta_w, Type(0), xi(3), true));
-
-  SIMULATE {
-    eta_n = rnorm(V_n.cols(), Type(0), xi(2));
+  if (proc_switch(3)) {
     qranef_n = V_n * eta_n;
-    eta_w = rnorm(V_w.cols(), Type(0), xi(3));
     qranef_w = V_w * eta_w;
 
-    REPORT(eta_n);
-    REPORT(eta_w);
+    // Include random effects likelihood; currently only iid is implemented
+    jnll(9) -= sum(dnorm(eta_n, Type(0), xi(2), true));
+    jnll(9) -= sum(dnorm(eta_w, Type(0), xi(3), true));
+
+    SIMULATE {
+      eta_n = rnorm(V_n.cols(), Type(0), xi(2));
+      qranef_n = V_n * eta_n;
+      eta_w = rnorm(V_w.cols(), Type(0), xi(3));
+      qranef_w = V_w * eta_w;
+
+      REPORT(eta_n);
+      REPORT(eta_w);
+    }
+  } else {
+    qranef_n.setZero();
+    qranef_w.setZero();
   }
+
   // ===========================================================================
   // Catchability spatial effects
   // ---------------------------------------------------------------------------
   // Project spatial effects from mesh nodes to observation locations
   vector<Type> qspat_n(N_obs);
   vector<Type> qspat_w(N_obs);
-  qspat_n = A_qspat * phi_n;
-  qspat_w = A_qspat * phi_w;
 
-  // Get density of spatial random effects, repeated for each process. Scale the
-  // precision matrix by τ² to match the usual (Lindgren et al. 2011)
-  // formulation.
-  SparseMatrix<Type> Q_n_ph = tau(4) * Q_spde(spde, kappa(4)) * tau(4);
-  SparseMatrix<Type> Q_w_ph = tau(5) * Q_spde(spde, kappa(5)) * tau(5);
-  jnll(4) += GMRF(Q_n_ph)(phi_n);
-  jnll(5) += GMRF(Q_w_ph)(phi_w);
-
-  // Simulate spatial random effects using given precision matrices. Then
-  // project them to the provided locations. Can't simulate new locations
-  // without recomputing the A matrix, which requires the INLA package.
-  SIMULATE {
-    phi_n = GMRF(Q_n_ph).simulate();
+  if (proc_switch(4)) {
     qspat_n = A_qspat * phi_n;
-    phi_w = GMRF(Q_w_ph).simulate();
     qspat_w = A_qspat * phi_w;
 
-    REPORT(phi_n);
-    REPORT(phi_w);
+    // Get density of spatial random effects, repeated for each process. Scale the
+    // precision matrix by τ² to match the usual (Lindgren et al. 2011)
+    // formulation.
+    SparseMatrix<Type> Q_n_ph = tau(4) * Q_spde(spde, kappa(4)) * tau(4);
+    SparseMatrix<Type> Q_w_ph = tau(5) * Q_spde(spde, kappa(5)) * tau(5);
+    jnll(4) += GMRF(Q_n_ph)(phi_n);
+    jnll(5) += GMRF(Q_w_ph)(phi_w);
+
+    // Simulate spatial random effects using given precision matrices. Then
+    // project them to the provided locations. Can't simulate new locations
+    // without recomputing the A matrix, which requires the INLA package.
+    SIMULATE {
+      phi_n = GMRF(Q_n_ph).simulate();
+      qspat_n = A_qspat * phi_n;
+      phi_w = GMRF(Q_w_ph).simulate();
+      qspat_w = A_qspat * phi_w;
+
+      REPORT(phi_n);
+      REPORT(phi_w);
+    }
+  } else {
+    qspat_n.setZero();
+    qspat_w.setZero();
   }
 
   // ===========================================================================
@@ -329,35 +374,40 @@ Type objective_function<Type>::operator() () {
   // TODO Implement (optional?) sum-to-zero constraint
   vector<Type> qsptemp_n(N_obs);
   vector<Type> qsptemp_w(N_obs);
-  qsptemp_n = A_qsptemp * psi_n.value();
-  qsptemp_w = A_qsptemp * psi_w.value();
 
-  // Get density of spatial random effects, repeated for each process. Scale the
-  // precision matrix by τ² to match the usual (Lindgren et al. 2011)
-  // formulation.
-  SparseMatrix<Type> Q_n_ps = tau(6) * Q_spde(spde, kappa(6)) * tau(6);
-  GMRF_t<Type> gmrf_n_ps(Q_n_ps);
-  SparseMatrix<Type> Q_w_ps = tau(7) * Q_spde(spde, kappa(7)) * tau(7);
-  GMRF_t<Type> gmrf_w_ps(Q_w_ps);
-  for (int yr = 0; yr < N_yrs; yr++) {
-    jnll(6) += gmrf_n_ps(psi_n.col(yr));
-    jnll(7) += gmrf_w_ps(psi_w.col(yr));
-  }
-
-  // Simulate spatiotemporal random effects using given precision matrices. Then
-  // project them to the provided locations. Can't simulate new locations
-  // without recomputing the A matrix, which requires the INLA package.
-  SIMULATE {
-    for (int yr = 0; yr < N_yrs; yr++) {
-      // TODO Figure out if these can be `gmrf_n_ep.simulate(psi_n)`
-      psi_n.col(yr) = gmrf_n_ps.simulate();
-      psi_w.col(yr) = gmrf_w_ps.simulate();
-    }
+  if (proc_switch(5)) {
     qsptemp_n = A_qsptemp * psi_n.value();
     qsptemp_w = A_qsptemp * psi_w.value();
 
-    REPORT(psi_n);
-    REPORT(psi_w);
+    // Get density of spatial random effects, repeated for each process. Scale the
+    // precision matrix by τ² to match the usual (Lindgren et al. 2011)
+    // formulation.
+    SparseMatrix<Type> Q_n_ps = tau(6) * Q_spde(spde, kappa(6)) * tau(6);
+    GMRF_t<Type> gmrf_n_ps(Q_n_ps);
+    SparseMatrix<Type> Q_w_ps = tau(7) * Q_spde(spde, kappa(7)) * tau(7);
+    GMRF_t<Type> gmrf_w_ps(Q_w_ps);
+    for (int yr = 0; yr < N_yrs; yr++) {
+      jnll(6) += gmrf_n_ps(psi_n.col(yr));
+      jnll(7) += gmrf_w_ps(psi_w.col(yr));
+    }
+
+    // Simulate spatiotemporal random effects using given precision matrices. Then
+    // project them to the provided locations. Can't simulate new locations
+    // without recomputing the A matrix, which requires the INLA package.
+    SIMULATE {
+      for (int yr = 0; yr < N_yrs; yr++) {
+        psi_n.col(yr) = gmrf_n_ps.simulate();
+        psi_w.col(yr) = gmrf_w_ps.simulate();
+      }
+      qsptemp_n = A_qsptemp * psi_n.value();
+      qsptemp_w = A_qsptemp * psi_w.value();
+
+      REPORT(psi_n);
+      REPORT(psi_w);
+    }
+  } else {
+    qsptemp_n.setZero();
+    qsptemp_w.setZero();
   }
 
   // ===========================================================================
