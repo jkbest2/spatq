@@ -96,7 +96,9 @@ dat <- list(catch_obs = rep(0, n_obs),
             A_qspat = A_qspat,
             A_qsptemp = A_qsptemp,
             spde = fem,
-            proc_switch = rep(TRUE, 6))
+            proc_switch = rep(TRUE, 6),
+            norm_flag = FALSE,
+            incl_data = TRUE)
 
 ## Spatial random effects (`spat_n` and `spat_w`) are set to zero vectors of
 ## appropriate length, as these are simulated.

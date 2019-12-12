@@ -70,6 +70,11 @@ Type objective_function<Type>::operator() () {
   // 5: psi_n, psi_w
   DATA_IVECTOR(proc_switch);
 
+  // ---------------------------------------------------------------------------
+  // Flags to control GMRF normalization and return early for normalization
+  DATA_INTEGER(norm_flag);
+  DATA_INTEGER(incl_data);
+
   // ===========================================================================
   // PARAMETER section
   // ---------------------------------------------------------------------------
@@ -126,6 +131,9 @@ Type objective_function<Type>::operator() () {
   int N_yrs = epsilon_n.cols();
   // Get number of integration locations for each index year
   int N_I = Ih.size();
+  // Convert norm_flag incl_data to boolean
+  bool nrmlz = bool(norm_flag);
+  bool incl_datalik = bool(incl_data);
 
   // Put unconstrained parameters on their natural (constrained) scales
   vector<Type> xi = exp(log_xi);
@@ -217,8 +225,8 @@ Type objective_function<Type>::operator() () {
     // formulation.
     SparseMatrix<Type> Q_n_om = tau(0) * Q_spde(spde, kappa(0)) * tau(0);
     SparseMatrix<Type> Q_w_om = tau(1) * Q_spde(spde, kappa(1)) * tau(1);
-    jnll(0) += GMRF(Q_n_om)(omega_n);
-    jnll(1) += GMRF(Q_w_om)(omega_w);
+    jnll(0) += GMRF(Q_n_om, nrmlz)(omega_n);
+    jnll(1) += GMRF(Q_w_om, nrmlz)(omega_w);
 
     // Simulate spatial random effects using given precision matrices. Then
     // project them to the provided locations. Can't simulate new locations
@@ -261,9 +269,9 @@ Type objective_function<Type>::operator() () {
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
     SparseMatrix<Type> Q_n_ep = tau(2) * Q_spde(spde, kappa(2)) * tau(2);
-    GMRF_t<Type> gmrf_n_ep(Q_n_ep);
+    GMRF_t<Type> gmrf_n_ep(Q_n_ep, nrmlz);
     SparseMatrix<Type> Q_w_ep = tau(3) * Q_spde(spde, kappa(3)) * tau(3);
-    GMRF_t<Type> gmrf_w_ep(Q_w_ep);
+    GMRF_t<Type> gmrf_w_ep(Q_w_ep, nrmlz);
     for (int yr = 0; yr < N_yrs; yr++) {
       jnll(2) += gmrf_n_ep(epsilon_n.col(yr));
       jnll(3) += gmrf_w_ep(epsilon_w.col(yr));
@@ -347,8 +355,8 @@ Type objective_function<Type>::operator() () {
     // formulation.
     SparseMatrix<Type> Q_n_ph = tau(4) * Q_spde(spde, kappa(4)) * tau(4);
     SparseMatrix<Type> Q_w_ph = tau(5) * Q_spde(spde, kappa(5)) * tau(5);
-    jnll(4) += GMRF(Q_n_ph)(phi_n);
-    jnll(5) += GMRF(Q_w_ph)(phi_w);
+    jnll(4) += GMRF(Q_n_ph, nrmlz)(phi_n);
+    jnll(5) += GMRF(Q_w_ph, nrmlz)(phi_w);
 
     // Simulate spatial random effects using given precision matrices. Then
     // project them to the provided locations. Can't simulate new locations
@@ -383,9 +391,9 @@ Type objective_function<Type>::operator() () {
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
     SparseMatrix<Type> Q_n_ps = tau(6) * Q_spde(spde, kappa(6)) * tau(6);
-    GMRF_t<Type> gmrf_n_ps(Q_n_ps);
+    GMRF_t<Type> gmrf_n_ps(Q_n_ps, nrmlz);
     SparseMatrix<Type> Q_w_ps = tau(7) * Q_spde(spde, kappa(7)) * tau(7);
-    GMRF_t<Type> gmrf_w_ps(Q_w_ps);
+    GMRF_t<Type> gmrf_w_ps(Q_w_ps, nrmlz);
     for (int yr = 0; yr < N_yrs; yr++) {
       jnll(6) += gmrf_n_ps(psi_n.col(yr));
       jnll(7) += gmrf_w_ps(psi_w.col(yr));
@@ -408,6 +416,13 @@ Type objective_function<Type>::operator() () {
   } else {
     qsptemp_n.setZero();
     qsptemp_w.setZero();
+  }
+
+  // If normalizing externally, return the sum of the negative log-liklihood
+  // early (the data likelihood and any map'd random effects are set to zero in
+  // jnll, so the sum of the vector works).
+  if (!incl_datalik) {
+    return jnll.sum();
   }
 
   // ===========================================================================
