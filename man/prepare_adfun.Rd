@@ -11,7 +11,8 @@ prepare_adfun(
   random,
   ...,
   silent = TRUE,
-  runSymbolicAnalysis = TRUE
+  runSymbolicAnalysis = TRUE,
+  normalize = FALSE
 )
 }
 \arguments{
@@ -30,6 +31,8 @@ prepare_adfun(
 
 \item{runSymbolicAnalysis}{Use Metis reorderings? (Requires special
 installation of TMB; see documentation.)}
+
+\item{normalize}{Normalize GMRF likelihoods?}
 }
 \value{
 A TMB ADFun suitable for optimization

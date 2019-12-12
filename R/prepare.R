@@ -344,11 +344,17 @@ prepare_data <- function(catch_df, index_df, mesh, fem) {
                                               vessel_idx = 2,
                                               group = catch_df$time,
                                               zero = TRUE),
+
               ## FEM matrices for spatial/spatiotemporal effects
               spde = fem,
+
               ## Turn off random effects likelihood components. Start with all
               ## on, turn off after map
-              proc_switch = rep(TRUE, 6))
+              proc_switch = rep(TRUE, 6),
+              ## Normalize GMRFs externally, and include flag for returning
+              ## negative log-likelihood without data likelihood
+              norm_flag = FALSE,
+              incl_data = TRUE)
   ## Store the number of years as an attribute
   attr(dat, "T") <- T
   dat
@@ -639,13 +645,16 @@ prepare_proc_switch <- function(random) {
 ##' @param silent Output TMB progress?
 ##' @param runSymbolicAnalysis Use Metis reorderings? (Requires special
 ##'   installation of TMB; see documentation.)
+##' @param normalize Normalize GMRF likelihoods?
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
 prepare_adfun <- function(data, parameters, map, random,
                           ..., silent = TRUE,
-                          runSymbolicAnalysis = TRUE) {
+                          runSymbolicAnalysis = TRUE,
+                          normalize = FALSE) {
   data$proc_switch <- prepare_proc_switch(random)
+  data$norm_flag <- normalize
   verify_spatq(data, parameters, map)
   obj <- TMB::MakeADFun(data = data,
                         parameters = parameters,
@@ -654,6 +663,8 @@ prepare_adfun <- function(data, parameters, map, random,
                         DLL = "spatq",
                         ...,
                         silent = silent)
+  if (!normalize)
+    obj <- TMB::normalize(obj, flag = "incl_data", value = FALSE)
   if (runSymbolicAnalysis)
     TMB::runSymbolicAnalysis(obj)
   obj
