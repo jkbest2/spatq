@@ -1,6 +1,6 @@
 ## Set number of observations, generate observation locations
-n_obs_year <- 100L
-n_years <- 25L
+n_obs_year <- 1500L
+n_years <- 15L
 n_obs <- n_obs_year * n_years
 loc <- matrix(runif(2 * n_obs), ncol = 2)
 years <- rep(1:n_years, each = n_obs_year)
@@ -139,4 +139,5 @@ obj <- TMB::MakeADFun(data = dat,
                                  "psi_n", "psi_w"),
                       DLL = "spatq",
                       silent = TRUE)
+TMB::runSymbolicAnalysis(obj)
 
