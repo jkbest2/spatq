@@ -6,7 +6,7 @@
 \alias{sdreport_spatq}
 \title{Fit a spatq model by maximum likelihood}
 \usage{
-fit_spatq(obj, ..., method = "BFGS")
+fit_spatq(obj, fit = NULL, ..., grtol = 0.001, maxopts = 10)
 
 report_spatq(obj)
 
@@ -16,16 +16,23 @@ sdreport_spatq(obj)
 \item{obj}{A spatq \code{ADFun}, as returned by \code{prepare_adfun} or
 \code{make_sim_adfun}}
 
+\item{fit}{Previous fit to use as starting values}
+
 \item{...}{Additional options to pass to \code{optim}, e.g. \code{control}}
 
-\item{method}{Optimization method to uses (see \code{optim} for available
-options)}
+\item{grtol}{Gradient tolerance}
+
+\item{maxopts}{Maximum number of variable metric optimizations to run. 50
+iterations each and checking maximum gradient component.}
 }
 \value{
 An optimization object, report list, or sdreport list
 }
 \description{
-Use \code{optim} to estimate parameters of a \code{spatq} model.
+Use \code{optimx::Rcgmin} to find quickly improve, then
+\code{optimx::Rvmmin} to improve once closer to optimum. After each 50
+iterations of \code{optimx::Rvmmin} check the maximum gradient component,
+stopping if it is less than \code{grtol}.
 }
 \section{Functions}{
 \itemize{
