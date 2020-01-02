@@ -485,8 +485,10 @@ prepare_pars <- function(data, mesh, init_fixef = TRUE) {
                gamma_w = pars_data(data$Z_w),
                omega_n = pars_data(mesh),
                omega_w = pars_data(mesh),
-               epsilon_n = pars_data(mesh, T),
-               epsilon_w = pars_data(mesh, T),
+               ## Use one fewer year for epsilon1 sptemp effects to enforce
+               ## sum-to-zero constraint
+               epsilon1_n = pars_data(mesh, T - 1),
+               epsilon1_w = pars_data(mesh, T - 1),
 
                lambda_n = pars_data(data$R_n),
                lambda_w = pars_data(data$R_w),
@@ -494,8 +496,10 @@ prepare_pars <- function(data, mesh, init_fixef = TRUE) {
                eta_w = pars_data(data$V_w),
                phi_n = pars_data(mesh),
                phi_w = pars_data(mesh),
-               psi_n = pars_data(mesh, T),
-               psi_w = pars_data(mesh, T),
+               ## Use one fewer year for psi1 sptemp effects to enforce
+               ## sum-to-zero constraint
+               psi1_n = pars_data(mesh, T - 1),
+               psi1_w = pars_data(mesh, T - 1),
 
                log_xi = rep(0.0, 4L),
                log_kappa = rep(log(pars_kappa(50)), 8),
@@ -522,9 +526,9 @@ prepare_pars <- function(data, mesh, init_fixef = TRUE) {
 ##' @export
 spat_par_idx <- function(par_name) {
   spat_pars <- c("omega_n", "omega_w",
-                 "epsilon_n", "epsilon_w",
+                 "epsilon1_n", "epsilon1_w",
                  "phi_n", "phi_w",
-                 "psi_n", "psi_w")
+                 "psi1_n", "psi1_w")
   which(par_name == spat_pars)
 }
 
@@ -587,10 +591,10 @@ prepare_map <- function(pars, map_pars) {
 ##' \itemize{
 ##'   \item \code{gamma_n}, \code{gamma_w}
 ##'   \item \code{omega_n}, \code{omega_w}
-##'   \item \code{epsilon_n}, \code{epsilon_w}
+##'   \item \code{epsilon1_n}, \code{epsilon1_w}
 ##'   \item \code{eta_n}, \code{eta_w}
 ##'   \item \code{phi_n}, \code{phi_w}
-##'   \item \code{psi_n}, \code{psi_w}
+##'   \item \code{psi1_n}, \code{psi1_w}
 ##' }
 ##'
 ##' @title Prepare \code{random}
@@ -602,10 +606,10 @@ prepare_map <- function(pars, map_pars) {
 prepare_random <- function(map) {
   re_pars <- c("gamma_n", "gamma_w",
                "omega_n", "omega_w",
-               "epsilon_n", "epsilon_w",
+               "epsilon1_n", "epsilon1_w",
                "eta_n", "eta_w",
                "phi_n", "phi_w",
-               "psi_n", "psi_w")
+               "psi1_n", "psi1_w")
   ## Check that all `map` random effects parameter entries are all NAs; check
   ## that none are included but not actually map'd
   if (!all(vapply(re_pars, function(p) all(is.na(map[[p]])),
@@ -627,8 +631,8 @@ prepare_random <- function(map) {
 ##' @author John Best
 prepare_proc_switch <- function(random) {
   procs <- c("gamma_n", "gamma_w", "omega_n", "omega_w",
-             "epsilon_n", "epsilon_w", "eta_n", "eta_w",
-             "phi_n", "phi_w", "psi_n", "psi_w")
+             "epsilon1_n", "epsilon1_w", "eta_n", "eta_w",
+             "phi_n", "phi_w", "psi1_n", "psi1_w")
   on <- procs %in% random
   vapply(seq(1, 11, 2), function(i) on[i] || on[i + 1], TRUE)
 }
