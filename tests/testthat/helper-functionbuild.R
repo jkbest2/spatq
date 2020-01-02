@@ -6,10 +6,10 @@ obj_sim <- make_sim_adfun(repl = 1, sc = "pref",
                           max_T = 15,
                           map_pars = c("gamma_n", "gamma_w",
                                        ## "omega_n", "omega_w",
-                                       "epsilon_n", "epsilon_w",
+                                       "epsilon1_n", "epsilon1_w",
                                        "eta_n", "eta_w",
                                        "phi_n", "phi_w",
-                                       "psi_n", "psi_w"),
+                                       "psi1_n", "psi1_w"),
                           runSymbolicAnalysis = TRUE,
                           silent = FALSE)
 

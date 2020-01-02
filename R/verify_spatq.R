@@ -45,9 +45,9 @@ verify_spatq_names <- function(data, parameters, map = list()) {
                  "R_n", "R_w", "V_n", "V_w",
                  "A_qspat", "A_qsptemp", "spde")
   parnames <- c("beta_n", "beta_w", "gamma_n", "gamma_w",
-                "omega_n", "omega_w", "epsilon_n", "epsilon_w",
+                "omega_n", "omega_w", "epsilon1_n", "epsilon1_w",
                 "lambda_n", "lambda_w", "eta_n", "eta_w",
-                "phi_n", "phi_w", "psi_n", "psi_w",
+                "phi_n", "phi_w", "psi1_n", "psi1_w",
                 "log_kappa", "log_tau", "log_sigma")
   ## print(parameters)
   stopifnot(exprs = {
@@ -105,23 +105,25 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
     ddims$Z_w[2] == pdims$gamma_w[1]
     ddims$A_spat[2] == pdims$omega_n[1]
     ddims$A_spat[2] == pdims$omega_w[1]
-    ddims$A_sptemp[2] == prod(pdims$epsilon_n)
-    ddims$A_sptemp[2] == prod(pdims$epsilon_w)
+    ## epsilon1_* have one fewer column than years for sum-to-zero constraint
+    ddims$A_sptemp[2] == pdims$epsilon1_n[1] * (pdims$epsilon1_n[2] + 1)
+    ddims$A_sptemp[2] == pdims$epsilon1_w[1] * (pdims$epsilon1_w[2] + 1)
     ddims$R_n[2] == pdims$lambda_n[1]
     ddims$R_w[2] == pdims$lambda_w[1]
     ddims$V_n[2] == pdims$eta_n[1]
     ddims$V_w[2] == pdims$eta_w[1]
     ddims$A_qspat[2] == pdims$phi_n[1]
     ddims$A_qspat[2] == pdims$phi_w[1]
-    ddims$A_qsptemp[2] == prod(pdims$psi_n)
-    ddims$A_qsptemp[2] == prod(pdims$psi_w)
+    ## psi1_* have one fewer column than years for sum-to-zero constraint
+    ddims$A_sptemp[2] == pdims$psi1_n[1] * (pdims$psi1_n[2] + 1)
+    ddims$A_sptemp[2] == pdims$psi1_w[1] * (pdims$psi1_w[2] + 1)
   })
 
-  ## Check that all spatiotemporal processes have same number of years
+  ## Check that all spatiotemporal processes have same number of columns
   stopifnot(exprs = {
-    pdims$epsilon_w[2] == pdims$epsilon_n[2]
-    pdims$psi_n[2] == pdims$epsilon_n[2]
-    pdims$psi_w[2] == pdims$epsilon_n[2]
+    pdims$epsilon1_w[2] == pdims$epsilon1_n[2]
+    pdims$psi1_n[2] == pdims$epsilon1_n[2]
+    pdims$psi1_w[2] == pdims$epsilon1_n[2]
   })
 
   ## Check that index design matrices have same number of cols as data design
@@ -190,8 +192,8 @@ verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
 
   ## Check that spat/sptemp field parameters are map'd if corresponding fields
   ## are
-  spattemp_names <- c("omega_n", "omega_w", "epsilon_n", "epsilon_w",
-                      "phi_n", "phi_w", "psi_n", "psi_w")
+  spattemp_names <- c("omega_n", "omega_w", "epsilon1_n", "epsilon1_w",
+                      "phi_n", "phi_w", "psi1_n", "psi1_w")
   for (nm in names(map)) {
     ## Only check spat-temp field parameters if spat-temp fields are map'd.
     ## Allows all parameters to be included in `map` even when not actually
