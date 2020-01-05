@@ -138,7 +138,7 @@ Type objective_function<Type>::operator() () {
   // Put unconstrained parameters on their natural (constrained) scales
   vector<Type> xi = exp(log_xi);
   vector<Type> kappa = exp(log_kappa);
-  vector<Type> tau = exp(log_tau);
+  vector<Type> itau = exp(-log_tau);
   Type sigma = exp(log_sigma);
 
   // ===========================================================================
@@ -223,18 +223,20 @@ Type objective_function<Type>::operator() () {
     // Get density of spatial random effects, repeated for each process. Scale the
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
-    SparseMatrix<Type> Q_n_om = tau(0) * Q_spde(spde, kappa(0)) * tau(0);
-    SparseMatrix<Type> Q_w_om = tau(1) * Q_spde(spde, kappa(1)) * tau(1);
-    jnll(0) += GMRF(Q_n_om, nrmlz)(omega_n);
-    jnll(1) += GMRF(Q_w_om, nrmlz)(omega_w);
+    SparseMatrix<Type> Q_n_om = Q_spde(spde, kappa(0));
+    SparseMatrix<Type> Q_w_om = Q_spde(spde, kappa(1));
+    SCALE_t<GMRF_t<Type>> gmrf_n_om = SCALE(GMRF(Q_n_om, nrmlz), itau(0));
+    SCALE_t<GMRF_t<Type>> gmrf_w_om = SCALE(GMRF(Q_w_om, nrmlz), itau(0));
+    jnll(0) += gmrf_n_om(omega_n);
+    jnll(1) += gmrf_w_om(omega_w);
 
     // Simulate spatial random effects using given precision matrices. Then
     // project them to the provided locations. Can't simulate new locations
     // without recomputing the A matrix, which requires the INLA package.
     SIMULATE {
-      omega_n = GMRF(Q_n_om).simulate();
+      gmrf_n_om.simulate(omega_n);
       spat_n = A_spat * omega_n;
-      omega_w = GMRF(Q_w_om).simulate();
+      gmrf_w_om.simulate(omega_w);
       spat_w = A_spat * omega_w;
 
       REPORT(omega_n);
@@ -274,10 +276,11 @@ Type objective_function<Type>::operator() () {
     // Get density of spatial random effects, repeated for each process. Scale the
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
-    SparseMatrix<Type> Q_n_ep = tau(2) * Q_spde(spde, kappa(2)) * tau(2);
-    GMRF_t<Type> gmrf_n_ep(Q_n_ep, nrmlz);
-    SparseMatrix<Type> Q_w_ep = tau(3) * Q_spde(spde, kappa(3)) * tau(3);
-    GMRF_t<Type> gmrf_w_ep(Q_w_ep, nrmlz);
+    SparseMatrix<Type> Q_n_ep = Q_spde(spde, kappa(2));
+    SCALE_t<GMRF_t<Type>> gmrf_n_ep = SCALE(GMRF(Q_n_ep, nrmlz), itau(2));
+    SparseMatrix<Type> Q_w_ep = Q_spde(spde, kappa(3));
+    SCALE_t<GMRF_t<Type>> gmrf_w_ep = SCALE(GMRF(Q_w_ep, nrmlz), itau(3));
+
     for (int yr = 0; yr < N_yrs; yr++) {
       jnll(2) += gmrf_n_ep(epsilon_n.col(yr));
       jnll(3) += gmrf_w_ep(epsilon_w.col(yr));
@@ -289,18 +292,21 @@ Type objective_function<Type>::operator() () {
     // Simulate spatiotemporal random effects using given precision matrices. Then
     // project them to the provided locations. Can't simulate new locations
     // without recomputing the A matrix, which requires the INLA package.
-    // TODO Make sure these sum to zero
     SIMULATE {
       // Vectors to accumulate row sums
       vector<Type> eps_n_rows(epsilon_n.rows());
       vector<Type> eps_w_rows(epsilon_w.rows());
-      eps_n_rows.setZero();
-      eps_w_rows.setZero();
+
+      // Declare temporary vector to hold simulated effects. Prevents "non-const
+      // lvalue" error.
+      vector<Type> sim_temp_n(epsilon_n.rows());
+      vector<Type> sim_temp_w(epsilon_w.rows());
 
       for (int yr = 0; yr < N_yrs; yr++) {
-        // TODO Figure out if these can be `gmrf_n_ep.simulate(epsilon_n)`
-        epsilon_n.col(yr) = gmrf_n_ep.simulate();
-        epsilon_w.col(yr) = gmrf_w_ep.simulate();
+        gmrf_n_ep.simulate(sim_temp_n);
+        epsilon_n.col(yr) = sim_temp_n;
+        gmrf_w_ep.simulate(sim_temp_w);
+        epsilon_w.col(yr) = sim_temp_w;
       }
 
       // Rowwise means
@@ -379,18 +385,20 @@ Type objective_function<Type>::operator() () {
     // Get density of spatial random effects, repeated for each process. Scale the
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
-    SparseMatrix<Type> Q_n_ph = tau(4) * Q_spde(spde, kappa(4)) * tau(4);
-    SparseMatrix<Type> Q_w_ph = tau(5) * Q_spde(spde, kappa(5)) * tau(5);
-    jnll(4) += GMRF(Q_n_ph, nrmlz)(phi_n);
-    jnll(5) += GMRF(Q_w_ph, nrmlz)(phi_w);
+    SparseMatrix<Type> Q_n_ph = Q_spde(spde, kappa(4));
+    SparseMatrix<Type> Q_w_ph = Q_spde(spde, kappa(5));
+    SCALE_t<GMRF_t<Type>> gmrf_n_ph = SCALE(GMRF(Q_n_ph, nrmlz), itau(4));
+    SCALE_t<GMRF_t<Type>> gmrf_w_ph = SCALE(GMRF(Q_w_ph, nrmlz), itau(5));
+    jnll(4) += gmrf_n_ph(phi_n);
+    jnll(5) += gmrf_w_ph(phi_w);
 
     // Simulate spatial random effects using given precision matrices. Then
     // project them to the provided locations. Can't simulate new locations
     // without recomputing the A matrix, which requires the INLA package.
     SIMULATE {
-      phi_n = GMRF(Q_n_ph).simulate();
+      gmrf_n_ph.simulate(phi_n);
+      gmrf_w_ph.simulate(phi_w);
       qspat_n = A_qspat * phi_n;
-      phi_w = GMRF(Q_w_ph).simulate();
       qspat_w = A_qspat * phi_w;
 
       REPORT(phi_n);
@@ -422,10 +430,11 @@ Type objective_function<Type>::operator() () {
     // Get density of spatial random effects, repeated for each process. Scale the
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
-    SparseMatrix<Type> Q_n_ps = tau(6) * Q_spde(spde, kappa(6)) * tau(6);
-    GMRF_t<Type> gmrf_n_ps(Q_n_ps, nrmlz);
-    SparseMatrix<Type> Q_w_ps = tau(7) * Q_spde(spde, kappa(7)) * tau(7);
-    GMRF_t<Type> gmrf_w_ps(Q_w_ps, nrmlz);
+    SparseMatrix<Type> Q_n_ps = Q_spde(spde, kappa(6));
+    SCALE_t<GMRF_t<Type>> gmrf_n_ps = SCALE(GMRF(Q_n_ps, nrmlz), itau(6));
+    SparseMatrix<Type> Q_w_ps = Q_spde(spde, kappa(7));
+    SCALE_t<GMRF_t<Type>> gmrf_w_ps = SCALE(GMRF(Q_w_ps, nrmlz), itau(7));
+
     for (int yr = 0; yr < N_yrs; yr++) {
       jnll(6) += gmrf_n_ps(psi_n.col(yr));
       jnll(7) += gmrf_w_ps(psi_w.col(yr));
@@ -441,13 +450,17 @@ Type objective_function<Type>::operator() () {
       // Vectors to accumulate row sums
       vector<Type> psi_n_rows(psi_n.rows());
       vector<Type> psi_w_rows(psi_w.rows());
-      psi_n_rows.setZero();
-      psi_w_rows.setZero();
+
+      // Declare temporary vector to hold simulated effects. Prevents "non-const
+      // lvalue" error.
+      vector<Type> sim_temp_n(psi_n.rows());
+      vector<Type> sim_temp_w(psi_w.rows());
 
       for (int yr = 0; yr < N_yrs; yr++) {
-        // TODO Figure out if these can be `gmrf_n_ep.simulate(psi_n)`
-        psi_n.col(yr) = gmrf_n_ps.simulate();
-        psi_w.col(yr) = gmrf_w_ps.simulate();
+        gmrf_n_ps.simulate(sim_temp_n);
+        psi_n.col(yr) = sim_temp_n;
+        gmrf_w_ps.simulate(sim_temp_w);
+        psi_w.col(yr) = sim_temp_w;
       }
 
       // Rowwise means
@@ -567,7 +580,7 @@ Type objective_function<Type>::operator() () {
   vector<Type> rho_sp;
   vector<Type> sigma_sp;
   rho_sp = sqrt(8) / kappa;
-  sigma_sp = 1 / (kappa * tau * 2 * sqrt(PI));
+  sigma_sp = itau / (kappa * 2 * sqrt(PI));
 
   REPORT(jnll);
   REPORT(Ilog_n);
