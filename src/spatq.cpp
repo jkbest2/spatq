@@ -283,6 +283,9 @@ Type objective_function<Type>::operator() () {
       jnll(3) += gmrf_w_ep(epsilon_w.col(yr));
     }
 
+    ADREPORT(epsilon_n);
+    ADREPORT(epsilon_w);
+
     // Simulate spatiotemporal random effects using given precision matrices. Then
     // project them to the provided locations. Can't simulate new locations
     // without recomputing the A matrix, which requires the INLA package.
@@ -393,7 +396,6 @@ Type objective_function<Type>::operator() () {
   vector<Type> qsptemp_n(N_obs);
   vector<Type> qsptemp_w(N_obs);
 
-
   if (proc_switch(5)) {
     psi_n.leftCols(N_yrs - 1) = psi1_n;
     psi_n.rightCols(1) = psi1_n.rowwise().sum();
@@ -414,6 +416,9 @@ Type objective_function<Type>::operator() () {
       jnll(6) += gmrf_n_ps(psi_n.col(yr));
       jnll(7) += gmrf_w_ps(psi_w.col(yr));
     }
+
+    ADREPORT(psi_n);
+    ADREPORT(psi_w);
 
     // Simulate spatiotemporal random effects using given precision matrices. Then
     // project them to the provided locations. Can't simulate new locations
@@ -541,8 +546,6 @@ Type objective_function<Type>::operator() () {
   REPORT(rho_sp);
   REPORT(sigma_sp);
 
-  ADREPORT(epsilon_n);
-  ADREPORT(epsilon_w);
   ADREPORT(Index);
 
   return jnll.sum();
