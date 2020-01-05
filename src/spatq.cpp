@@ -291,11 +291,25 @@ Type objective_function<Type>::operator() () {
     // without recomputing the A matrix, which requires the INLA package.
     // TODO Make sure these sum to zero
     SIMULATE {
+      // Vectors to accumulate row sums
+      vector<Type> eps_n_rows(epsilon_n.rows());
+      vector<Type> eps_w_rows(epsilon_w.rows());
+      eps_n_rows.setZero();
+      eps_w_rows.setZero();
+
       for (int yr = 0; yr < N_yrs; yr++) {
         // TODO Figure out if these can be `gmrf_n_ep.simulate(epsilon_n)`
         epsilon_n.col(yr) = gmrf_n_ep.simulate();
         epsilon_w.col(yr) = gmrf_w_ep.simulate();
       }
+
+      // Rowwise means
+      eps_n_rows = epsilon_n.rowwise().sum() / N_yrs;
+      eps_w_rows = epsilon_w.rowwise().sum() / N_yrs;
+      // Mean-center each row
+      epsilon_n.colwise() -= eps_n_rows.matrix();
+      epsilon_w.colwise() -= eps_w_rows.matrix();
+
       sptemp_n = A_sptemp * epsilon_n.value();
       sptemp_w = A_sptemp * epsilon_w.value();
 
@@ -424,10 +438,25 @@ Type objective_function<Type>::operator() () {
     // project them to the provided locations. Can't simulate new locations
     // without recomputing the A matrix, which requires the INLA package.
     SIMULATE {
+      // Vectors to accumulate row sums
+      vector<Type> psi_n_rows(psi_n.rows());
+      vector<Type> psi_w_rows(psi_w.rows());
+      psi_n_rows.setZero();
+      psi_w_rows.setZero();
+
       for (int yr = 0; yr < N_yrs; yr++) {
+        // TODO Figure out if these can be `gmrf_n_ep.simulate(psi_n)`
         psi_n.col(yr) = gmrf_n_ps.simulate();
         psi_w.col(yr) = gmrf_w_ps.simulate();
       }
+
+      // Rowwise means
+      psi_n_rows = psi_n.rowwise().sum() / N_yrs;
+      psi_w_rows = psi_w.rowwise().sum() / N_yrs;
+      // Mean-center each row
+      psi_n.colwise() -= psi_n_rows.matrix();
+      psi_w.colwise() -= psi_w_rows.matrix();
+
       qsptemp_n = A_qsptemp * psi_n.value();
       qsptemp_w = A_qsptemp * psi_w.value();
 
