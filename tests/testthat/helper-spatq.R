@@ -122,6 +122,7 @@ pars <- list(beta_n = pars_gen$beta_n,
              log_kappa = rep(log(pars_gen$kappa), 8),
              log_tau = rep(log(pars_gen$tau), 8),
              log_sigma = log(pars_gen$sigma_c))
+attr(pars, "map_lambda") <- FALSE
 
 map_empty <- list()
 

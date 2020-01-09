@@ -211,6 +211,16 @@ verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
       }
     }
   }
+
+  ## Check that `lambda_n` and `lambda_w` are map'd if required
+  if (attr(parameters, "map_lambda")) {
+    stopifnot("lambda_n" %in% names(map),
+              is.na(map$lambda_n),
+              length(map$lambda_n) == 1,
+              "lambda_w" %in% names(map),
+              is.na(map$lambda_w),
+              length(map$lambda_w) == 1)
+  }
   return(TRUE)
 }
 
@@ -223,12 +233,20 @@ verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
 ##' @author John Best
 ##' @export
 verify_ident_fixef <- function(data) {
-  fix_n <- cbind(data$X_n, data$R_n)
+  if (any(data$R_n != 0)) {
+    fix_n <- cbind(data$X_n, data$R_n)
+  } else {
+    fix_n <- data$X_n
+  }
   np_n <- ncol(fix_n)
   rank_n <- Matrix::rankMatrix(fix_n)
   if (rank_n < np_n) stop("Numbers density fixed effects are not identifiable")
 
-  fix_w <- cbind(data$X_w, data$R_w)
+  if (any(data$R_w != 0)) {
+    fix_w <- cbind(data$X_w, data$R_w)
+  } else {
+    fix_w <- data$X_w
+  }
   np_w <- ncol(fix_w)
   rank_w <- Matrix::rankMatrix(fix_w)
   if (rank_w < np_w) stop("Weight per group fixed effects are not identifiable")

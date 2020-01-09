@@ -305,6 +305,24 @@ create_index_df <- function(step = 1.0, T = 25) {
 ##' @export
 prepare_data <- function(catch_df, index_df, mesh, fem) {
   T <- length(unique(catch_df$time))
+
+  ## If single-vessel and no covariates, nothing to estimate for `lambda_n` or
+  ## `lambda_w`. Check length of unique column contents rather than `levels` in
+  ## case already a factor and has all original vessels as levels even if none
+  ## present. Useful e.g. if estimating index from single survey vessel.
+  if (length(unique(catch_df$vessel_idx)) >= 2) {
+    ## Catchability fixed effect design matrix. Drop first column so
+    ## that fixed effects are identifiable (e.g. if only two vessels,
+    ## only adjust catchability for second.) Use `drop = FALSE` so the
+    ## result is a matrix if only one column is left.
+    R_n <- stats::model.matrix(~ factor(vessel_idx),
+                               data = catch_df)[, -1, drop = FALSE]
+    R_w <- stats::model.matrix(~ factor(vessel_idx),
+                               data = catch_df)[, -1, drop = FALSE]
+  } else {
+    R_n <- matrix(0, nrow = nrow(catch_df))
+    R_w <- matrix(0, nrow = nrow(catch_df))
+  }
   dat <- list(catch_obs = catch_df$catch_biomass,
               area_swept = catch_df$effort,
               ## Abundance fixed effect design matrices
@@ -327,14 +345,10 @@ prepare_data <- function(catch_df, index_df, mesh, fem) {
               ## Integration weights
               Ih = rep_len(attr(index_df, "step")^2, nrow(index_df)),
 
-              ## Catchability fixed effect design matrix. Drop first column so
-              ## that fixed effects are identifiable (e.g. if only two vessels,
-              ## only adjust catchability for second.) Use `drop = FALSE` so the
-              ## result is a matrix if only one column is left.
-              R_n = stats::model.matrix(~ factor(vessel_idx),
-                                        data = catch_df)[, -1, drop = FALSE],
-              R_w = stats::model.matrix(~ factor(vessel_idx),
-                                        data = catch_df)[, -1, drop = FALSE],
+              ## Catchability fixed effect design matrix. See above for
+              ## specification.
+              R_n = R_n,
+              R_w = R_w,
               ## Catchability random effect design matrix
               V_n = matrix(0.0, nrow = nrow(catch_df), ncol = 1),
               V_w = matrix(0.0, nrow = nrow(catch_df), ncol = 1),
@@ -428,9 +442,17 @@ pars_tau <- function(sig2, rho) {
 ##' @author John Best
 ##' @export
 init_fixef <- function(data) {
-  df_n <- tibble::tibble(enc = data$catch_obs > 0,
-                         X_n = data$X_n,
-                         R_n = data$R_n)
+  ## Don't include catchability effects if they aren't used in the model (e.g.
+  ## if estimating index using single survey vessel).
+  q_used <- any(data$R_n != 0)
+  if (q_used) {
+    df_n <- tibble::tibble(enc = data$catch_obs > 0,
+                           X_n = data$X_n,
+                           R_n = data$R_n)
+  } else {
+    df_n <- tibble::tibble(enc = data$catch_obs > 0,
+                           X_n = data$X_n)
+  }
   ## Estimate each group density fixed effect with a simple GLM, using the
   ## complementary log-log link for encounter. This corresponds directly to
   ## group density in the Poisson link model.
@@ -441,9 +463,14 @@ init_fixef <- function(data) {
   ## Using the estimated group density and probability of encounter, calculate
   ## the log mean weight per group, conditional on a positive catch.
   enc <- df_n$enc
-  df_w <- tibble::tibble(catch_obs = data$catch_obs[enc],
-                         X_w = data$X_w[enc, ],
-                         R_w = data$R_w[enc, ])
+  if (q_used) {
+    df_w <- tibble::tibble(catch_obs = data$catch_obs[enc],
+                           X_w = data$X_w[enc, ],
+                           R_w = data$R_w[enc, ])
+  } else {
+    df_w <- tibble::tibble(catch_obs = data$catch_obs[enc],
+                           X_w = data$X_w[enc, ])
+  }
   ## Log-positive catch rate is log(n) - log(p) + log(w), so the first two are
   ## used as an offset here.
   offset_w <- stats::predict(mod_n) -
@@ -457,8 +484,8 @@ init_fixef <- function(data) {
 
   init <- list(beta_n = est_n[1:ncol(data$X_n)],
                beta_w = est_w[1:ncol(data$X_w)],
-               lambda_n = est_n[-(1:ncol(data$X_n))],
-               lambda_w = est_w[-(1:ncol(data$X_w))])
+               lambda_n = ifelse(q_used, est_n[-(1:ncol(data$X_n))], 0),
+               lambda_w = ifelse(q_used, est_w[-(1:ncol(data$X_w))], 0))
   lapply(init, unname)
 }
 
@@ -511,6 +538,13 @@ prepare_pars <- function(data, mesh, init_fixef = TRUE) {
     pars$beta_w <- init_est$beta_w
     pars$lambda_n <- init_est$lambda_n
     pars$lambda_w <- init_est$lambda_w
+  }
+  ## Add attribute noting whether `lambda_n` and `lambda_w` are map'd or not.
+  ## Useful for consistency checks later.
+  if (all(data$R_n == 0)) {
+    attr(pars, "map_lambda") <- TRUE
+  } else {
+    attr(pars, "map_lambda") <- FALSE
   }
   pars
 }
