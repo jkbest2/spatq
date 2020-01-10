@@ -10,7 +10,7 @@ fit_spatq(obj, fit = NULL, ..., grtol = 0.001, maxopts = 10)
 
 report_spatq(obj)
 
-sdreport_spatq(obj)
+sdreport_spatq(obj, bias.correct = TRUE)
 }
 \arguments{
 \item{obj}{A spatq \code{ADFun}, as returned by \code{prepare_adfun} or
@@ -24,6 +24,8 @@ sdreport_spatq(obj)
 
 \item{maxopts}{Maximum number of variable metric optimizations to run. 50
 iterations each and checking maximum gradient component.}
+
+\item{bias.correct}{Use bias correction for \code{sdreport}?}
 }
 \value{
 An optimization object, report list, or sdreport list

@@ -11,6 +11,7 @@
 ##' @param grtol Gradient tolerance
 ##' @param maxopts Maximum number of variable metric optimizations to run. 50
 ##'   iterations each and checking maximum gradient component.
+##' @param bias.correct Use bias correction for \code{sdreport}?
 ##' @return An optimization object, report list, or sdreport list
 ##' @author John Best
 ##' @export
@@ -35,6 +36,6 @@ report_spatq <- function(obj) {
 
 ##' @describeIn fit_spatq Get object sdreport
 ##' @export
-sdreport_spatq <- function(obj) {
-  TMB::sdreport(obj)
+sdreport_spatq <- function(obj, bias.correct = TRUE) {
+  TMB::sdreport(obj, bias.correct = bias.correct)
 }
