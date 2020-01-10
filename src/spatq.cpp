@@ -286,8 +286,8 @@ Type objective_function<Type>::operator() () {
       jnll(3) += gmrf_w_ep(epsilon_w.col(yr));
     }
 
-    ADREPORT(epsilon_n);
-    ADREPORT(epsilon_w);
+    REPORT(epsilon_n);
+    REPORT(epsilon_w);
 
     // Simulate spatiotemporal random effects using given precision matrices. Then
     // project them to the provided locations. Can't simulate new locations
@@ -440,8 +440,8 @@ Type objective_function<Type>::operator() () {
       jnll(7) += gmrf_w_ps(psi_w.col(yr));
     }
 
-    ADREPORT(psi_n);
-    ADREPORT(psi_w);
+    REPORT(psi_n);
+    REPORT(psi_w);
 
     // Simulate spatiotemporal random effects using given precision matrices. Then
     // project them to the provided locations. Can't simulate new locations
