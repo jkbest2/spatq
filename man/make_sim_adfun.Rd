@@ -10,7 +10,7 @@ make_sim_adfun(
   sub_df = NULL,
   root_dir = ".",
   max_T = NULL,
-  map_pars = c(),
+  spec_estd = specify_estimated(),
   ...
 )
 }
@@ -26,7 +26,8 @@ make_sim_adfun(
 
 \item{max_T}{Last year of data to include}
 
-\item{map_pars}{Vector of parameters names to map}
+\item{spec_estd}{List of logicals indicating which parameters are to be
+estimated, as output \code{\link{specify_estimated}}}
 
 \item{...}{Additional options to pass to \code{prepare_adfun}}
 }
