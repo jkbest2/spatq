@@ -482,10 +482,10 @@ init_fixef <- function(data) {
   ## Not going to worry about the bias correction for these initial values
   est_w <- stats::coef(mod_w)
 
-  init <- list(beta_n = est_n[1:ncol(data$X_n)],
-               beta_w = est_w[1:ncol(data$X_w)],
-               lambda_n = ifelse(q_used, est_n[-(1:ncol(data$X_n))], 0),
-               lambda_w = ifelse(q_used, est_w[-(1:ncol(data$X_w))], 0))
+  init <- list(beta_n = est_n[seq_len(ncol(data$X_n))],
+               beta_w = est_w[seq_len(ncol(data$X_w))],
+               lambda_n = ifelse(q_used, est_n[-seq_len(ncol(data$X_n))], 0),
+               lambda_w = ifelse(q_used, est_w[-seq_len(ncol(data$X_w))], 0))
   lapply(init, unname)
 }
 
@@ -581,40 +581,34 @@ re_par_idx <- function(par_name) {
   which(par_name == re_pars)
 }
 
-##' Prepare a \code{map} argument for \code{MakeADFun}. Accepts parameter names
-##' and takes care of dependencies such as spatial or random effect
-##' hyperparameters being map'd when their effects are.
+##' Prepare a \code{map} argument for \code{MakeADFun}.
 ##'
 ##' @title Prepare a \code{map}
 ##' @param pars Parameter list, as from \code{prepare_pars}
-##' @param map_pars Character vector indicating which parameters to \code{map}
+##' @param spec List of logicals indicating which parameters are to be
+##'   estimated, as output by \code{\link{specify_estimated}}
 ##' @return A \code{map} list suitable for passing to \code{MakeADFun}
 ##' @author John Best
 ##' @export
-prepare_map <- function(pars, map_pars) {
-  map <- lapply(pars, function(par) par[] <- factor(seq_along(par)))
-  names(map) <- names(pars)
-  for (par in map_pars) {
-    map[[par]][] <- NA
-    ## Check for xi first, because it is before the kappa and tau parameters in
-    ## the template
-    re_idx <- re_par_idx(par)
-    if (length(re_idx) > 0) {
-      map$log_xi[re_idx] <- NA
-    }
-    sp_idx <- spat_par_idx(par)
-    if (length(sp_idx) > 0) {
-      map$log_kappa[sp_idx] <- NA
-      map$log_tau[sp_idx] <- NA
-    }
-  }
-  ## Remove any list elements that include no NAs (i.e. no parameter values are
-  ## map'd)
-  map[sapply(map, function(p) !anyNA(p))] <- NULL
-  ## Remove unused factor levels; seems to be what was causing NOT A VECTOR
-  ## error
-  map <- lapply(map, factor)
-  map
+prepare_map <- function(pars, spec) {
+  ## Drop parameters that are *not* mapped
+  spec2 <- spec[!vapply(spec, all, TRUE)]
+  ## Invert to specify *mapped* parameter vectors of correct length
+  mapped <- lapply(names(spec2),
+                   function(nm) {
+                     rep(!spec2[[nm]], length.out = length(pars[[nm]]))
+                   })
+  names(mapped) <- names(spec2)
+  map <- lapply(mapped,
+                function(mpd) {
+                  ## Add individual levels for unmapped parameters
+                  v <- cumsum(!mpd)
+                  ## Specify NA for mapped parameters
+                  v[mpd] <- NA
+                  ## Convert to factor vector for TMB
+                  factor(v)
+                })
+  return(map)
 }
 
 ##' Prepare a character vector indicating which parameters should be
@@ -719,14 +713,15 @@ prepare_adfun <- function(data, parameters, map, random,
 ##'   \code{subsample_catch}
 ##' @param root_dir Directory to load data from
 ##' @param max_T Last year of data to include
-##' @param map_pars Vector of parameters names to map
+##' @param spec_estd List of logicals indicating which parameters are to be
+##'   estimated, as output \code{\link{specify_estimated}}
 ##' @param ... Additional options to pass to \code{prepare_adfun}
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
 make_sim_adfun <- function(repl, sc, sub_df = NULL,
                            root_dir = ".", max_T = NULL,
-                           map_pars = c(), ...) {
+                           spec_estd = specify_estimated(), ...) {
   ## Read in data
   catch_df <- read_catch(repl, sc, root_dir)
   if (!is.null(max_T)) {
@@ -747,7 +742,7 @@ make_sim_adfun <- function(repl, sc, sub_df = NULL,
   data <- prepare_data(catch_df, index_df, mesh, fem)
   parameters <- prepare_pars(data, mesh)
   map <- prepare_map(parameters,
-                     map_pars = map_pars)
+                     spec = spec_estd)
   random <- prepare_random(map)
 
   ## Verify and construct ADFun
