@@ -226,7 +226,7 @@ Type objective_function<Type>::operator() () {
     SparseMatrix<Type> Q_n_om = Q_spde(spde, kappa(0));
     SparseMatrix<Type> Q_w_om = Q_spde(spde, kappa(1));
     SCALE_t<GMRF_t<Type>> gmrf_n_om = SCALE(GMRF(Q_n_om, nrmlz), itau(0));
-    SCALE_t<GMRF_t<Type>> gmrf_w_om = SCALE(GMRF(Q_w_om, nrmlz), itau(0));
+    SCALE_t<GMRF_t<Type>> gmrf_w_om = SCALE(GMRF(Q_w_om, nrmlz), itau(1));
     jnll(0) += gmrf_n_om(omega_n);
     jnll(1) += gmrf_w_om(omega_w);
 
