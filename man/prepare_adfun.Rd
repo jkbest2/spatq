@@ -10,6 +10,7 @@ prepare_adfun(
   map,
   random,
   ...,
+  DLL = "spatq",
   silent = TRUE,
   runSymbolicAnalysis = TRUE,
   normalize = FALSE

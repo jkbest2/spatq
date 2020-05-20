@@ -504,6 +504,7 @@ init_fixef <- function(data) {
 ##' @return List with scalar, vector, or matrices of zeros as starting values
 ##'   for optimization
 ##' @author John Best
+##' @export
 prepare_pars <- function(data, mesh, init_fixef = TRUE) {
   T <- attr(data, "T")
   pars <- list(beta_n = pars_data(data$X_n),
@@ -682,7 +683,7 @@ prepare_proc_switch <- function(random) {
 ##' @author John Best
 ##' @export
 prepare_adfun <- function(data, parameters, map, random,
-                          ..., silent = TRUE,
+                          ..., DLL = "spatq", silent = TRUE,
                           runSymbolicAnalysis = TRUE,
                           normalize = FALSE) {
   data$proc_switch <- prepare_proc_switch(random)
@@ -692,7 +693,7 @@ prepare_adfun <- function(data, parameters, map, random,
                         parameters = parameters,
                         map = map,
                         random = random,
-                        DLL = "spatq",
+                        DLL = DLL,
                         ...,
                         silent = silent)
   if (!normalize)

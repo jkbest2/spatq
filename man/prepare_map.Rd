@@ -10,7 +10,7 @@ prepare_map(pars, spec)
 \item{pars}{Parameter list, as from \code{prepare_pars}}
 
 \item{spec}{List of logicals indicating which parameters are to be
-estimated, as output by \code{\link{specify_esitmated}}}
+estimated, as output by \code{\link{specify_estimated}}}
 }
 \value{
 A \code{map} list suitable for passing to \code{MakeADFun}
