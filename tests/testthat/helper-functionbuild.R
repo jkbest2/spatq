@@ -1,15 +1,18 @@
+estd <- specify_estimated(beta = TRUE,
+                          gamma = FALSE,
+                          omega = TRUE,
+                          epsilon = TRUE,
+                          lambda = TRUE,
+                          eta = FALSE,
+                          phi = TRUE,
+                          psi = TRUE)
 obj_sim <- make_sim_adfun(repl = 1, sc = "pref",
                           sub_df = data.frame(vessel_idx = 2,
                                               n = 50),
                           root_dir = normalizePath(
                             system.file("testdata", package = "spatq")),
                           max_T = 15,
-                          map_pars = c("gamma_n", "gamma_w",
-                                       ## "omega_n", "omega_w",
-                                       "epsilon1_n", "epsilon1_w",
-                                       "eta_n", "eta_w",
-                                       "phi_n", "phi_w",
-                                       "psi1_n", "psi1_w"),
+                          spec_estd = estd,
                           runSymbolicAnalysis = TRUE,
                           silent = FALSE)
 

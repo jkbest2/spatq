@@ -28,6 +28,8 @@ prepare_adfun(
 
 \item{...}{Additional arguments to pass to \code{MakeADFun}}
 
+\item{DLL}{TMB model to use; only used for debugging}
+
 \item{silent}{Output TMB progress?}
 
 \item{runSymbolicAnalysis}{Use Metis reorderings? (Requires special

@@ -91,8 +91,8 @@ Type objective_function<Type>::operator() () {
   PARAMETER_VECTOR(omega_w);       // N_vert
 
   // Abundance spatiotemporal effects
-  PARAMETER_MATRIX(epsilon1_n);     // N_vert × N_yrs - 1
-  PARAMETER_MATRIX(epsilon1_w);     // N_vert × N_yrs - 1
+  PARAMETER_MATRIX(epsilon_n);     // N_vert × N_yrs
+  PARAMETER_MATRIX(epsilon_w);     // N_vert × N_yrs
 
   // ---------------------------------------------------------------------------
   // Catchability fixed effects
@@ -108,8 +108,8 @@ Type objective_function<Type>::operator() () {
   PARAMETER_VECTOR(phi_w);         // N_vert
 
   // Catchability spatiotemporal effects
-  PARAMETER_MATRIX(psi1_n);         // N_vert × N_yrs - 1
-  PARAMETER_MATRIX(psi1_w);         // N_vert × N_yrs - 1
+  PARAMETER_MATRIX(psi_n);         // N_vert × N_yrs
+  PARAMETER_MATRIX(psi_w);         // N_vert × N_yrs
 
   // ---------------------------------------------------------------------------
   // Random effects variance parameters
@@ -128,7 +128,7 @@ Type objective_function<Type>::operator() () {
   // Get number of observations
   int N_obs = catch_obs.size();
   // Get number of years
-  int N_yrs = epsilon1_n.cols() + 1;
+  int N_yrs = epsilon_n.cols();
   // Get number of integration locations for each index year
   int N_I = Ih.size();
   // Convert norm_flag incl_data to boolean
@@ -257,19 +257,12 @@ Type objective_function<Type>::operator() () {
   // Abundance spatiotemporal effects
   // ---------------------------------------------------------------------------
   // Project spatial effects from mesh nodes to observation locations
-  matrix<Type> epsilon_n(epsilon1_n.rows(), N_yrs);
-  matrix<Type> epsilon_w(epsilon1_w.rows(), N_yrs);
   vector<Type> sptemp_n(N_obs);
   vector<Type> sptemp_w(N_obs);
   vector<Type> Isptemp_n(N_I);
   vector<Type> Isptemp_w(N_I);
 
   if (proc_switch(2)) {
-    epsilon_n.leftCols(N_yrs - 1) = epsilon1_n;
-    epsilon_n.rightCols(1) = epsilon1_n.rowwise().sum();
-    epsilon_w.leftCols(N_yrs - 1) = epsilon1_w;
-    epsilon_w.rightCols(1) = epsilon1_w.rowwise().sum();
-
     sptemp_n = A_sptemp * epsilon_n.value();
     sptemp_w = A_sptemp * epsilon_w.value();
 
@@ -286,17 +279,10 @@ Type objective_function<Type>::operator() () {
       jnll(3) += gmrf_w_ep(epsilon_w.col(yr));
     }
 
-    REPORT(epsilon_n);
-    REPORT(epsilon_w);
-
     // Simulate spatiotemporal random effects using given precision matrices. Then
     // project them to the provided locations. Can't simulate new locations
     // without recomputing the A matrix, which requires the INLA package.
     SIMULATE {
-      // Vectors to accumulate row sums
-      vector<Type> eps_n_rows(epsilon_n.rows());
-      vector<Type> eps_w_rows(epsilon_w.rows());
-
       // Declare temporary vector to hold simulated effects. Prevents "non-const
       // lvalue" error.
       vector<Type> sim_temp_n(epsilon_n.rows());
@@ -308,13 +294,6 @@ Type objective_function<Type>::operator() () {
         gmrf_w_ep.simulate(sim_temp_w);
         epsilon_w.col(yr) = sim_temp_w;
       }
-
-      // Rowwise means
-      eps_n_rows = epsilon_n.rowwise().sum() / N_yrs;
-      eps_w_rows = epsilon_w.rowwise().sum() / N_yrs;
-      // Mean-center each row
-      epsilon_n.colwise() -= eps_n_rows.matrix();
-      epsilon_w.colwise() -= eps_w_rows.matrix();
 
       sptemp_n = A_sptemp * epsilon_n.value();
       sptemp_w = A_sptemp * epsilon_w.value();
@@ -413,16 +392,10 @@ Type objective_function<Type>::operator() () {
   // Catchability spatiotemporal effects
   // ---------------------------------------------------------------------------
   // Project spatial effects from mesh nodes to observation locations
-  matrix<Type> psi_n(psi1_n.rows(), N_yrs);
-  matrix<Type> psi_w(psi1_w.rows(), N_yrs);
   vector<Type> qsptemp_n(N_obs);
   vector<Type> qsptemp_w(N_obs);
 
   if (proc_switch(5)) {
-    psi_n.leftCols(N_yrs - 1) = psi1_n;
-    psi_n.rightCols(1) = psi1_n.rowwise().sum();
-    psi_w.leftCols(N_yrs - 1) = psi1_w;
-    psi_w.rightCols(1) = psi1_w.rowwise().sum();
 
     qsptemp_n = A_qsptemp * psi_n.value();
     qsptemp_w = A_qsptemp * psi_w.value();
@@ -440,17 +413,10 @@ Type objective_function<Type>::operator() () {
       jnll(7) += gmrf_w_ps(psi_w.col(yr));
     }
 
-    REPORT(psi_n);
-    REPORT(psi_w);
-
     // Simulate spatiotemporal random effects using given precision matrices. Then
     // project them to the provided locations. Can't simulate new locations
     // without recomputing the A matrix, which requires the INLA package.
     SIMULATE {
-      // Vectors to accumulate row sums
-      vector<Type> psi_n_rows(psi_n.rows());
-      vector<Type> psi_w_rows(psi_w.rows());
-
       // Declare temporary vector to hold simulated effects. Prevents "non-const
       // lvalue" error.
       vector<Type> sim_temp_n(psi_n.rows());
@@ -462,13 +428,6 @@ Type objective_function<Type>::operator() () {
         gmrf_w_ps.simulate(sim_temp_w);
         psi_w.col(yr) = sim_temp_w;
       }
-
-      // Rowwise means
-      psi_n_rows = psi_n.rowwise().sum() / N_yrs;
-      psi_w_rows = psi_w.rowwise().sum() / N_yrs;
-      // Mean-center each row
-      psi_n.colwise() -= psi_n_rows.matrix();
-      psi_w.colwise() -= psi_w_rows.matrix();
 
       qsptemp_n = A_qsptemp * psi_n.value();
       qsptemp_w = A_qsptemp * psi_w.value();

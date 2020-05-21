@@ -9,11 +9,11 @@
 ##' @param beta Abundance fixed effects
 ##' @param gamma Abundance iid random effects
 ##' @param omega Abundance spatial effects
-##' @param epsilon1 Abundance spatiotemporal effects (sum-to-zero constrained)
+##' @param epsilon Abundance spatiotemporal effects
 ##' @param lambda Catchability fixed effects
 ##' @param eta Catchability iid random effects
 ##' @param phi Catchability spatial effects
-##' @param psi1 Catchability spatiotemporal effects (sum-to-zero constrained)
+##' @param psi Catchability spatiotemporal effects
 ##' @return A list with elements for each random effect process and parameter in
 ##'   the \code{spatq} model, each with a logical indicating whether it is
 ##'   (\code{TRUE}) or is not (\code{FALSE}) estimated.
@@ -22,11 +22,11 @@
 specify_estimated <- function(beta = TRUE,
                               gamma = FALSE,
                               omega = FALSE,
-                              epsilon1 = FALSE,
+                              epsilon = FALSE,
                               lambda = TRUE,
                               eta = FALSE,
                               phi = FALSE,
-                              psi1 = FALSE) {
+                              psi = FALSE) {
   estd <- list()
   estd$beta_n <- is_estd_proc("beta_n", beta)
   estd$beta_w <- is_estd_proc("beta_w", beta)
@@ -34,8 +34,8 @@ specify_estimated <- function(beta = TRUE,
   estd$gamma_w <- is_estd_proc("gamma_w", gamma)
   estd$omega_n <- is_estd_proc("omega_n", omega)
   estd$omega_w <- is_estd_proc("omega_w", omega)
-  estd$epsilon1_n <- is_estd_proc("epsilon1_n", epsilon1)
-  estd$epsilon1_w <- is_estd_proc("epsilon1_w", epsilon1)
+  estd$epsilon_n <- is_estd_proc("epsilon_n", epsilon)
+  estd$epsilon_w <- is_estd_proc("epsilon_w", epsilon)
 
   estd$lambda_n <- is_estd_proc("lambda_n", lambda)
   estd$lambda_w <- is_estd_proc("lambda_w", lambda)
@@ -43,11 +43,11 @@ specify_estimated <- function(beta = TRUE,
   estd$eta_w <- is_estd_proc("eta_w", eta)
   estd$phi_n <- is_estd_proc("phi_n", phi)
   estd$phi_w <- is_estd_proc("phi_w", phi)
-  estd$psi1_n <- is_estd_proc("psi1_n", psi1)
-  estd$psi1_w <- is_estd_proc("psi1_w", psi1)
+  estd$psi_n <- is_estd_proc("psi_n", psi)
+  estd$psi_w <- is_estd_proc("psi_w", psi)
 
-  spec <- list(gamma = gamma, omega = omega, epsilon1 = epsilon1,
-               eta = eta, phi = phi, psi1 = psi1)
+  spec <- list(gamma = gamma, omega = omega, epsilon = epsilon,
+               eta = eta, phi = phi, psi = psi)
   estd$log_xi <- is_estd_hpar("log_xi", spec)
   estd$log_kappa <- is_estd_hpar("log_kappa", spec)
   estd$log_tau <- is_estd_hpar("log_tau", spec)
@@ -89,7 +89,7 @@ is_estd_hpar <- function(par, spec) {
     procs <- c("gamma", "gamma", "eta", "eta")
     pars <- c("gamma_n", "gamma_w", "eta_n", "eta_w")
   } else {
-    procs <- rep(c("omega", "epsilon1", "phi", "psi1"), each = 2)
+    procs <- rep(c("omega", "epsilon", "phi", "psi"), each = 2)
     pars <- paste0(procs, c("_n", "_w"))
   }
 

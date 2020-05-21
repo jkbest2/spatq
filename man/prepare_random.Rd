@@ -23,10 +23,10 @@ Parameters in this model that are typically marginalized are:
 \itemize{
 \item \code{gamma_n}, \code{gamma_w}
 \item \code{omega_n}, \code{omega_w}
-\item \code{epsilon1_n}, \code{epsilon1_w}
+\item \code{epsilon_n}, \code{epsilon_w}
 \item \code{eta_n}, \code{eta_w}
 \item \code{phi_n}, \code{phi_w}
-\item \code{psi1_n}, \code{psi1_w}
+\item \code{psi_n}, \code{psi_w}
 }
 }
 \author{

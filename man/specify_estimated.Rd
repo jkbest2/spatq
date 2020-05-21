@@ -8,11 +8,11 @@ specify_estimated(
   beta = TRUE,
   gamma = FALSE,
   omega = FALSE,
-  epsilon1 = FALSE,
+  epsilon = FALSE,
   lambda = TRUE,
   eta = FALSE,
   phi = FALSE,
-  psi1 = FALSE
+  psi = FALSE
 )
 }
 \arguments{
@@ -22,7 +22,7 @@ specify_estimated(
 
 \item{omega}{Abundance spatial effects}
 
-\item{epsilon1}{Abundance spatiotemporal effects (sum-to-zero constrained)}
+\item{epsilon}{Abundance spatiotemporal effects}
 
 \item{lambda}{Catchability fixed effects}
 
@@ -30,7 +30,7 @@ specify_estimated(
 
 \item{phi}{Catchability spatial effects}
 
-\item{psi1}{Catchability spatiotemporal effects (sum-to-zero constrained)}
+\item{psi}{Catchability spatiotemporal effects}
 }
 \value{
 A list with elements for each random effect process and parameter in
