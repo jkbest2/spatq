@@ -4,21 +4,22 @@ estd <- specify_estimated(beta = TRUE,
                           epsilon = TRUE,
                           lambda = TRUE,
                           eta = FALSE,
-                          phi = TRUE,
-                          psi = TRUE)
+                          phi = FALSE,
+                          psi = FALSE)
 obj_sim <- make_sim_adfun(repl = 1, sc = "pref",
                           sub_df = data.frame(vessel_idx = 2,
-                                              n = 50),
+                                              n = 500),
                           root_dir = normalizePath(
                             system.file("testdata", package = "spatq")),
                           max_T = 15,
                           spec_estd = estd,
                           runSymbolicAnalysis = TRUE,
+                          normalize = TRUE,
                           silent = FALSE)
 
-## fit_sim <- fit_spatq(obj_sim)#, control = list(trace = 2L))
-## rep_sim <- report_spatq(obj_sim)
-## sdr_sim <- sdreport_spatq(obj_sim)
+fit_sim <- fit_spatq(obj_sim)#, control = list(trace = 2L))
+rep_sim <- report_spatq(obj_sim)
+sdr_sim <- sdreport_spatq(obj_sim)
 
 
 ## par <- obj_sim$env$last.par.best

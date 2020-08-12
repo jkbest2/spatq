@@ -18,3 +18,34 @@ gather_nvec <- function(vec) {
            unname(vec[names(vec) == nm]),
          simplify = FALSE, USE.NAMES = TRUE)
 }
+
+##' Easy way to add parameters as Greek letters with subscripts to plots. Not
+##' exported.
+##'
+##' @title Pretty expressions for plotting parameter names
+##' @param parname Parameter name as a string
+##' @return An \code{expression} representing the parameter
+##' @author John K Best
+par_expr <- function(parname) {
+  switch(parname,
+         "beta_n" = expression(beta[n]),
+         "beta_w" = expression(beta[w]),
+         "gamma_n" = expression(gamma[n]),
+         "gamma_w" = expression(gamma[w]),
+         "omega_n" = expression(omega[n]),
+         "omega_w" = expression(omega[w]),
+         "epsilon_n" = expression(epsilon[n]),
+         "epsilon_w" = expression(epsilon[w]),
+         "lambda_n" = expression(lambda[n]),
+         "lambda_w" = expression(lambda[w]),
+         "eta_n" = expression(eta[n]),
+         "eta_w" = expression(eta[w]),
+         "phi_n" = expression(phi[n]),
+         "phi_w" = expression(phi[w]),
+         "psi_n" = expression(psi[n]),
+         "psi_w" = expression(psi[w]),
+         "log_kappa" = expression(log(kappa)),
+         "log_tau" = expression(log(tau)),
+         "log_sigma" = expression(log(sigma)),
+         parname)
+}
