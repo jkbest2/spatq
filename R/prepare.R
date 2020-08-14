@@ -536,11 +536,7 @@ prepare_pars <- function(data, mesh, init_fixef = TRUE) {
   }
   ## Add attribute noting whether `lambda_n` and `lambda_w` are map'd or not.
   ## Useful for consistency checks later.
-  if (all(data$R_n == 0)) {
-    attr(pars, "map_lambda") <- TRUE
-  } else {
-    attr(pars, "map_lambda") <- FALSE
-  }
+  attr(pars, "map_lambda") <- all(data$R_n == 0)
   pars
 }
 
