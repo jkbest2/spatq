@@ -46,4 +46,3 @@ test_that("Map checking works", {
   expect_error(verify_spatq_map(pars, map_xi_bad))
   expect_error(verify_spatq_map(pars, map_xi_bad2))
 })
-

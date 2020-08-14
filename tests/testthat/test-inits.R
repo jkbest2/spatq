@@ -53,11 +53,11 @@ init_ref <- list(beta_n = c(0.587256825835408, 0.588205033094543,
                  lambda_w = 0.879102621182762)
 init_ref_len <- vapply(init_ref, length, 1)
 
-init <- init_fixef(obj_sim$env$data)
+init <- init_fixef(obj$env$data)
 init_len <- vapply(init, length, 1)
 
 parlen <- vapply(c("X_n", "X_w", "R_n", "R_w"),
-                 function(nm) ncol(obj_sim$env$data[[nm]]), 1)
+                 function(nm) ncol(obj$env$data[[nm]]), 1)
 
 test_that("Initial values are correct length", {
   expect_equal(names(init), names(init_ref))

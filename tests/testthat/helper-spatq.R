@@ -1,3 +1,5 @@
+### Construct all pieces of a spatq model manually to compare with the generated
+### pieces
 ## Set number of observations, generate observation locations
 n_obs_year <- 1500L
 n_years <- 15L
@@ -127,18 +129,3 @@ attr(pars, "map_lambda") <- FALSE
 map_empty <- list()
 
 verify_spatq(dat, pars, map_empty)
-
-## A TMB model object that can be used to simulate
-obj <- TMB::MakeADFun(data = dat,
-                      parameters = pars,
-                      map = map_empty,
-                      random = c("gamma_n", "gamma_w",
-                                 "omega_n", "omega_w",
-                                 "epsilon_n", "epsilon_w",
-                                 "eta_n", "eta_w",
-                                 "phi_n", "phi_w",
-                                 "psi_n", "psi_w"),
-                      DLL = "spatq",
-                      silent = TRUE)
-TMB::runSymbolicAnalysis(obj)
-
