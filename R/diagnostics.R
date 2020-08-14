@@ -1,5 +1,5 @@
-##' Extract the covariance matrix from an \code{\link[TMB]{sdreport}} and convert it to a
-##' correlation matrix.
+##' Extract the covariance matrix from an \code{\link[TMB]{sdreport}} and
+##' convert it to a correlation matrix.
 ##'
 ##' @title Correlation matrix of the fixed-effect parameters
 ##' @param sdr An \code{\link[TMB]{sdreport}} from a TMB model fit
@@ -15,8 +15,8 @@ fixpar_corr <- function(sdr) {
 ##' correlation than a given cutoff.
 ##'
 ##' Note that the returned data frame will not include duplicates. Parameters
-##' with repeated names are disambiguated using \code{\link[base]{make.unique}}, so
-##' they are essentially zero-indexed.
+##' with repeated names are disambiguated using \code{\link[base]{make.unique}},
+##' so they are essentially zero-indexed.
 ##'
 ##' @title Fixed-effect parameters with high correlations
 ##' @param sdr An \code{\link[TMB]{sdreport}} from a TMB model fit
@@ -122,8 +122,8 @@ fixpar_corrplot <- function(sdr, col = hcl.colors(20, "Blue-Red", rev = TRUE)) {
         axes = FALSE, xlab = NA, ylab = NA, asp = 1, col = col,
         mar = c(1, 1, 0, 0), oma = c(0, 0, 0, 0))
   for (idx in seq_along(parnamerle$values)) {
-    endpoints = c(0.5, parnamerle$lengths[idx] + 0.5) + rlecumsum[idx]
-    lab = par_expr(parnamerle$values[idx])
+    endpoints <- c(0.5, parnamerle$lengths[idx] + 0.5) + rlecumsum[idx]
+    lab <- par_expr(parnamerle$values[idx])
     axis(1, endpoints, tick = TRUE, labels = FALSE, pos = 0.5)
     axis(1, mean(endpoints), tick = FALSE, labels = lab, pos = 0.5, las = 1)
     axis(2, endpoints, tick = TRUE, labels = FALSE, pos = 0.5)
@@ -131,7 +131,7 @@ fixpar_corrplot <- function(sdr, col = hcl.colors(20, "Blue-Red", rev = TRUE)) {
   }
   lims <- c(0.5, npar + 0.5)
   for (s in (rlecumsum + 0.5)) {
-    lines(lims, c(s , s))
+    lines(lims, c(s, s))
     lines(c(s, s), lims)
   }
   plot_corcolorbar(col)
@@ -145,7 +145,53 @@ plot_corcolorbar <- function(col) {
   z <- matrix(seq(-1, 1, length.out = length(col)), nrow = 1)
 
   image(x = x, y = y, z = z, col = col,
-        asp = 1, axes = FALSE, xlab = NA, ylab = NA, mar = c(0, 0, 0, 1), oma = c(0, 0, 0, 0))
-  axis(4, at = seq(-1, 1, len = 11), pos = 0.05, lwd = 0, lwd.ticks = 1, las = 1)
+        asp = 1, axes = FALSE,
+        xlab = NA, ylab = NA,
+        mar = c(0, 0, 0, 1), oma = c(0, 0, 0, 0))
+  axis(4, at = seq(-1, 1, len = 11), pos = 0.05, lwd = 0, lwd.ticks = 1,
+       las = 1)
 }
 
+##' Take the eigendecomposition of the fixed-effect covariance matrix, filter
+##' out the smallest eigenvalues, and then order the parameter names by the
+##' loadings in the corresponding eigenvectors.
+##'
+##' The \code{reltol} argument sets a minimum for the ratio of each eigenvalue
+##' to the largest eigenvalue. The \code{abstol} argument sets an absolute
+##' minimum value. The latter takes precedence if it is passed.
+##' @title Find the parameters that contribute to a singular covariance matrix
+##' @param sdr An \code{\link[TMB]{sdreport}} object from a TMB model
+##' @param reltol Relative tolerance for small eigenvalues
+##' @param abstol Absolute tolerance for small eigenvalues; takes precedence
+##' @return A list with \code{values} (eigenvalues), \code{vectors}
+##'   (eigenvectors), and \code{sortedpars}, which is a matrix of parameter
+##'   names with each column ordered by the corresponding loadings of the
+##'   eigenvectors (largest loadings at the top)
+##' @author John K Best
+##' @export
+fixpar_nulleigs <- function(sdr, reltol = 1e-4, abstol = NULL) {
+   cov <- sdr$cov.fixed
+   eigs <- eigen(cov)
+   if (is.numeric(abstol)) {
+     val_idx <- which(eigs$values < abstol)
+   } else {
+     val_idx <- which((eigs$values / max(eigs$values)) < reltol)
+   }
+   if (length(val_idx) == 0) {
+     message("All eigenvalues above tolerance")
+     return(list())
+   }
+
+   vecs <- eigs$vectors[, val_idx, drop = FALSE]
+   row.names(vecs) <- names(sdr$par.fixed)
+   absvecs <- abs(vecs)
+
+   ## Use negative to order largest elements first
+   ordperms <- apply(-absvecs, 2, order)
+   parnames <- make.unique(names(sdr$par.fixed))
+   pars <- apply(ordperms, 2, function(r) parnames[r])
+
+   list(values = eigs$values[val_idx],
+        vectors = eigs$vectors[, val_idx],
+        sortedpars = pars)
+}
