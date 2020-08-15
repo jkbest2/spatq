@@ -9,7 +9,7 @@
 ##' vec <- c(1, 1, 1, 1, 2, 2, 2, 3, 3, 4)
 ##' names(vec) <- c("a", "a", "a", "a", "b", "b", "b", "c", "c", "d")
 ##' gather_nvec(vec)
-##' 
+##'
 ##' @author John Best
 ##' @export
 gather_nvec <- function(vec) {
@@ -24,28 +24,46 @@ gather_nvec <- function(vec) {
 ##'
 ##' @title Pretty expressions for plotting parameter names
 ##' @param parname Parameter name as a string
+##' @param hat Hat for estimated parameter?
 ##' @return An \code{expression} representing the parameter
 ##' @author John K Best
-par_expr <- function(parname) {
-  switch(parname,
-         "beta_n" = expression(beta[n]),
-         "beta_w" = expression(beta[w]),
-         "gamma_n" = expression(gamma[n]),
-         "gamma_w" = expression(gamma[w]),
-         "omega_n" = expression(omega[n]),
-         "omega_w" = expression(omega[w]),
-         "epsilon_n" = expression(epsilon[n]),
-         "epsilon_w" = expression(epsilon[w]),
-         "lambda_n" = expression(lambda[n]),
-         "lambda_w" = expression(lambda[w]),
-         "eta_n" = expression(eta[n]),
-         "eta_w" = expression(eta[w]),
-         "phi_n" = expression(phi[n]),
-         "phi_w" = expression(phi[w]),
-         "psi_n" = expression(psi[n]),
-         "psi_w" = expression(psi[w]),
-         "log_kappa" = expression(log(kappa)),
-         "log_tau" = expression(log(tau)),
-         "log_sigma" = expression(log(sigma)),
-         parname)
+par_expr <- function(parname, hat = FALSE) {
+  parts <- strsplit(parname, "_")[[1]]
+  parts_list <- lapply(parts, par_expr_parts, hat = hat)
+  expr_str <- build_expr_str(parts_list)
+  return(parse(text = expr_str))
+}
+
+##' @title Strings from parameter names to be expression-ified
+##' @param piece String, piece of parameter name
+##' @param hat Hat for estimated parameter?
+##' @return Vector of length one or two with pieces of parameter expression
+##' @author John K Best
+par_expr_parts <- function(piece, hat = FALSE) {
+  if (piece %in% c("log", "n", "w")) {
+    ret <- switch(piece,
+                  "log" = c("log(", ")"),
+                  "n" = "[n]",
+                  "w" = "[w]")
+  } else if (hat) {
+    ret <- paste0("hat(", piece, ")")
+
+  } else {
+    ret <- piece
+  }
+  return(ret)
+}
+
+##' Paste first elements together in order, then second elements in reverse
+##' order.
+##'
+##' @title Build an expression string from a list of string vectors
+##' @param parts_list List of string vectors
+##' @return Single string pasted together
+##' @author John K Best
+build_expr_str <- function(parts_list) {
+  two_idx <- which(sapply(parts_list, length) == 2)
+  strvec <- vapply(parts_list, `[`, "string", 1)
+  strvec2 <- na.omit(vapply(rev(parts_list), `[`, "string", 2))
+  Reduce(paste0, append(strvec, strvec2))
 }
