@@ -4,10 +4,12 @@
 \alias{par_expr}
 \title{Pretty expressions for plotting parameter names}
 \usage{
-par_expr(parname)
+par_expr(parname, hat = FALSE)
 }
 \arguments{
 \item{parname}{Parameter name as a string}
+
+\item{hat}{Hat for estimated parameter?}
 }
 \value{
 An \code{expression} representing the parameter

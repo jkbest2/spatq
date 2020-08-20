@@ -61,6 +61,7 @@ par_expr_parts <- function(piece, hat = FALSE) {
 ##' @param parts_list List of string vectors
 ##' @return Single string pasted together
 ##' @author John K Best
+##' @importFrom stats na.omit
 build_expr_str <- function(parts_list) {
   two_idx <- which(sapply(parts_list, length) == 2)
   strvec <- vapply(parts_list, `[`, "string", 1)

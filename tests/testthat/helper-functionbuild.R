@@ -15,8 +15,8 @@ obj <- make_sim_adfun(repl = 1, sc = "pref",
                       spec_estd = estd,
                       runSymbolicAnalysis = TRUE,
                       normalize = TRUE,
-                      silent = FALSE)
+                      silent = TRUE)
 
-## fit_sim <- fit_spatq(obj_sim)#, control = list(trace = 2L))
-## rep_sim <- report_spatq(obj_sim)
-## sdr_sim <- sdreport_spatq(obj_sim)
+## fit_sim <- fit_spatq(obj)#, control = list(trace = 2L))
+## rep_sim <- report_spatq(obj)
+## sdr_sim <- sdreport_spatq(obj)

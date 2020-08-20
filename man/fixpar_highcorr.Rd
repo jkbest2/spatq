@@ -21,8 +21,8 @@ correlation than a given cutoff.
 }
 \details{
 Note that the returned data frame will not include duplicates. Parameters
-with repeated names are disambiguated using \code{\link[base]{make.unique}}, so
-they are essentially zero-indexed.
+with repeated names are disambiguated using \code{\link[base]{make.unique}},
+so they are essentially zero-indexed.
 }
 \author{
 John K Best

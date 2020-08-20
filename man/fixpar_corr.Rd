@@ -13,8 +13,8 @@ fixpar_corr(sdr)
 The correlation matrix of the fixed-effect parameters.
 }
 \description{
-Extract the covariance matrix from an \code{\link[TMB]{sdreport}} and convert it to a
-correlation matrix.
+Extract the covariance matrix from an \code{\link[TMB]{sdreport}} and
+convert it to a correlation matrix.
 }
 \author{
 John K Best
