@@ -2,12 +2,9 @@
 % Please edit documentation in R/diagnostics.R
 \name{fixpar_corrplot}
 \alias{fixpar_corrplot}
-\alias{plot_corcolorbar}
 \title{Plot the fixed-effect parameter correlation matrix}
 \usage{
 fixpar_corrplot(sdr, col = hcl.colors(20, "Blue-Red", rev = TRUE))
-
-plot_corcolorbar(col)
 }
 \arguments{
 \item{sdr}{An \code{\link[TMB]{sdreport}} from a TMB model fit}
@@ -22,11 +19,6 @@ Plot the fixed-effect parameter correlation matrix, with pretty labels and
 clear divisions between parameters. High off-diagonal correlations may
 indicate a difficult-to-fit model.
 }
-\section{Functions}{
-\itemize{
-\item \code{plot_corcolorbar}: Plot a colorbar for correlations
-}}
-
 \author{
 John K Best
 }

@@ -137,19 +137,35 @@ fixpar_corrplot <- function(sdr, col = hcl.colors(20, "Blue-Red", rev = TRUE)) {
   plot_corcolorbar(col)
 }
 
-##' @describeIn fixpar_corrplot Plot a colorbar for correlations
+##' Plot a colorbar given limits and a set of colors.
+##'
+##' @title Plot a colorbar legend
+##' @param zlim Limits on the color scale
+##' @param col Vector of colors
+##' @param iasp Inverse aspect ratio (larger values will result in wider colorbars)
+##' @author John K Best
 ##' @export
-plot_corcolorbar <- function(col) {
-  x <- c(-0.05, 0.05)
-  y <- seq(-1, 1, length.out = length(col) + 1)
-  z <- matrix(seq(-1, 1, length.out = length(col)), nrow = 1)
+plot_colorbar <- function(zlim, col = hcl.colors(12), iasp = 1) {
+  n <- length(col)
+  ## Fix the width and height of each cell to 1; label manually
+  x <- c(-0.5, 0.5)
+  y <- seq_len(n + 1)
+  z <- matrix(seq(min(zlim), max(zlim), length.out = n), nrow = 1)
 
-  image(x = x, y = y, z = z, col = col,
-        asp = 1, axes = FALSE,
-        xlab = NA, ylab = NA,
+  zlabs <- signif(seq(min(zlim), max(zlim), length.out = n + 1), 2)
+
+  image(x = x, y = y, z = z,
+        col = col, asp = 1 / iasp,
+        axes = FALSE, xlab = NA, ylab = NA,
         mar = c(0, 0, 0, 1), oma = c(0, 0, 0, 0))
-  axis(4, at = seq(-1, 1, len = 11), pos = 0.05, lwd = 0, lwd.ticks = 1,
-       las = 1)
+  axis(4, at = y, labels = zlabs,
+       pos = 0.5, lwd = 0, lwd.ticks = 1, las = 1)
+}
+
+##' @describeIn plot_colorbar Plot a colorbar for correlations
+##' @export
+plot_corcolorbar <- function(col = hcl.colors(20, "Blue-Red", rev = TRUE)) {
+  plot_colorbar(c(-1, 1), col)
 }
 
 ##' Take the eigendecomposition of the fixed-effect covariance matrix, filter
