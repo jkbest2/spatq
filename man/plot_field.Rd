@@ -25,7 +25,7 @@ plot_field(
 \item{par_regex}{Search string for parameter names (e.g. "omega" will
 include both \code{omega_n} and \code{omega_w})}
 
-\item{colorbar}{Plot a colorbar? (NOT IMPLEMENTED)}
+\item{colorbar}{Plot a colorbar?}
 }
 \description{
 Projects and plots fields. Can plot just estimated fields, or include

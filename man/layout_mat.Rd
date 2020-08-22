@@ -22,7 +22,7 @@ layout_widths(nyears, incl_gen = TRUE, npar = 1, colorbar = FALSE)
 
 \item{npar}{Number of parameters to plot}
 
-\item{colorbar}{Include colorbar? (NOT IMPLEMENTED)}
+\item{colorbar}{Include colorbar?}
 
 \item{idxoffset}{Largest of the previously used indices; this layout matrix
 will start at \code{idxoffset + 1}.}

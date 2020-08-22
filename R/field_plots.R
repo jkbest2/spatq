@@ -8,7 +8,7 @@
 ##' @param proj_step Size of projection pixels
 ##' @param par_regex Search string for parameter names (e.g. "omega" will
 ##'   include both \code{omega_n} and \code{omega_w})
-##' @param colorbar Plot a colorbar? (NOT IMPLEMENTED)
+##' @param colorbar Plot a colorbar?
 ##' @author John K Best
 ##' @importFrom graphics mtext par
 ##' @export
@@ -53,18 +53,53 @@ plot_field <- function(est, gen = NULL, mesh = generate_mesh(),
   parlab <- purrr::map(seq_along(fld),
                        ~ par_expr(names(fld)[.x], hat = isest(fld[[.x]])))
 
-  lmat <- layout_mat(nyears, !is.null(gen), length(parnames))
-  lw <- layout_widths(nyears, !is.null(gen), length(parnames))
+  lmat <- layout_mat(nyears, !is.null(gen), length(parnames), colorbar)
+  lw <- layout_widths(nyears, !is.null(gen), length(parnames), colorbar)
   layout(lmat, lw)
-  par(oma = c(0, 2, 0, 0), mar = c(0, 1, 0, 0))
-  for (idx in seq_along(fld)) {
-    apply(fld[[idx]], 3, field_image)
+  par(oma = c(1, 2, 1, 0), mar = c(1, 1, 1, 0))
+  ## Iterate along parameter names, which will be single or double depending
+  ## whether the generative values are included
+  for (p in parnames) {
+    col <- proc_colormap(p)
+    fld_idx <- which(names(fld) == p)
     if (colorbar) {
-      ## FIXME Add colorbar plotting code
+      zlim <- c(min(unlist(fld[fld_idx])),
+                max(unlist(fld[fld_idx])))
+      for (idx in fld_idx) {
+        apply(fld[[idx]], 3, field_image, zlim = zlim, col = col)
+        mtext(parlab[[idx]], side = 2, outer = TRUE, at = parlabcoord[idx])
+      }
+      plot_colorbar(zlim, col)
+    } else {
+      ## FIXME Don't need a zlim argument if no colorbar, but probably a
+      ## cleaner way to do this.
+      for (idx in fld_idx) {
+        apply(fld[[idx]], 3, field_image, col = col)
+        mtext(parlab[[idx]], side = 2, outer = TRUE, at = parlabcoord[idx])
+      }
     }
-    mtext(parlab[[idx]], side = 2, outer = TRUE, at = parlabcoord[idx])
   }
+}
 
+##' Default colormaps for numbers density (viridis) and weight per group
+##' (inferno). These two are chosen based on the regexes \code{"_n$"} and
+##' \code{"_w$"} respectively. Otherwise uses plasma.
+##'
+##' @title Colormaps for numbers density and weight per group fields
+##' @param parname String like "omega_n" or "epsilon_w"
+##' @param n Number of colors in the map
+##' @return Vector of colors, as from \code{\link[grDevices]{hcl.colors}}
+##' @author John K Best
+##' @export
+proc_colormap <- function(parname, n = 12) {
+  if (grepl("_n$", parname)) {
+    col <- hcl.colors(n, "viridis")
+  } else if (grepl("_w$", parname)) {
+    col <- hcl.colors(n, "inferno")
+  } else {
+    col <- hcl.colors(n, "plasma")
+  }
+  col
 }
 
 ##' Plot the \code{\link[graphics]{image}} of a random field, without axes and
@@ -170,7 +205,7 @@ isest <- function(x) !isgen(x)
 ##' @param nyears Number of years to plot
 ##' @param incl_gen Include generative fields?
 ##' @param npar Number of parameters to plot
-##' @param colorbar Include colorbar? (NOT IMPLEMENTED)
+##' @param colorbar Include colorbar?
 ##' @return A layout matrix
 ##' @author John K Best
 layout_mat <- function(nyears,
