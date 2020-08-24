@@ -4,12 +4,10 @@
 \alias{fixpar_corrplot}
 \title{Plot the fixed-effect parameter correlation matrix}
 \usage{
-fixpar_corrplot(sdr, col = hcl.colors(20, "Blue-Red", rev = TRUE))
+fixpar_corrplot(sdr)
 }
 \arguments{
 \item{sdr}{An \code{\link[TMB]{sdreport}} from a TMB model fit}
-
-\item{col}{Color map to use; recommend a diverging map of length 10 or 20}
 }
 \value{
 Nothing; produces plot as a side effect
@@ -17,7 +15,7 @@ Nothing; produces plot as a side effect
 \description{
 Plot the fixed-effect parameter correlation matrix, with pretty labels and
 clear divisions between parameters. High off-diagonal correlations may
-indicate a difficult-to-fit model.
+indicate a difficult-to-fit model. Uses the "Blue-Red 3" color palette.
 }
 \author{
 John K Best

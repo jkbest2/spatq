@@ -7,7 +7,7 @@
 \usage{
 plot_colorbar(zlim, col = hcl.colors(12), iasp = 1)
 
-plot_corcolorbar(col = hcl.colors(20, "Blue-Red", rev = TRUE))
+plot_corcolorbar(col = hcl.colors(20, "Blue-Red 3", rev = TRUE))
 }
 \arguments{
 \item{zlim}{Limits on the color scale}

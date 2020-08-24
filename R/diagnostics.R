@@ -101,15 +101,14 @@ fixpar_mgc <- function(sdr, abs = TRUE) {
 
 ##' Plot the fixed-effect parameter correlation matrix, with pretty labels and
 ##' clear divisions between parameters. High off-diagonal correlations may
-##' indicate a difficult-to-fit model.
+##' indicate a difficult-to-fit model. Uses the "Blue-Red 3" color palette.
 ##'
 ##' @title Plot the fixed-effect parameter correlation matrix
 ##' @param sdr An \code{\link[TMB]{sdreport}} from a TMB model fit
-##' @param col Color map to use; recommend a diverging map of length 10 or 20
 ##' @return Nothing; produces plot as a side effect
 ##' @author John K Best
 ##' @export
-fixpar_corrplot <- function(sdr, col = hcl.colors(20, "Blue-Red", rev = TRUE)) {
+fixpar_corrplot <- function(sdr) {
   npar <- length(sdr$par.fixed)
   parnames <- names(sdr$par.fixed)
   parnamerle <- rle(parnames)
@@ -118,6 +117,7 @@ fixpar_corrplot <- function(sdr, col = hcl.colors(20, "Blue-Red", rev = TRUE)) {
   cor <- fixpar_corr(sdr)
 
   layout(matrix(c(1, 2), ncol = 2), widths = c(0.8, 0.2))
+  col <- hcl.colors(20, "Blue-Red 3", rev = TRUE)
   image(seq_len(npar), seq_len(npar), cor, zlim = c(-1, 1),
         axes = FALSE, xlab = NA, ylab = NA, asp = 1, col = col,
         mar = c(1, 1, 0, 0), oma = c(0, 0, 0, 0))
@@ -164,7 +164,7 @@ plot_colorbar <- function(zlim, col = hcl.colors(12), iasp = 1) {
 
 ##' @describeIn plot_colorbar Plot a colorbar for correlations
 ##' @export
-plot_corcolorbar <- function(col = hcl.colors(20, "Blue-Red", rev = TRUE)) {
+plot_corcolorbar <- function(col = hcl.colors(20, "Blue-Red 3", rev = TRUE)) {
   plot_colorbar(c(-1, 1), col)
 }
 
