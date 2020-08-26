@@ -7,11 +7,14 @@
 ##' @param obj A spatq \code{ADFun}, as returned by \code{prepare_adfun} or
 ##'   \code{make_sim_adfun}
 ##' @param fit Previous fit to use as starting values
-##' @param ... Additional options to pass to \code{optim}, e.g. \code{control}
+##' @param ... Additional options to pass to \code{\link[optimx]{Rvmmin}}, e.g.
+##'   \code{control} or \code{\link[TMB]{sdreport}}
 ##' @param grtol Gradient tolerance
 ##' @param maxopts Maximum number of variable metric optimizations to run. 50
 ##'   iterations each and checking maximum gradient component.
-##' @param bias.correct Use bias correction for \code{sdreport}?
+##' @param bias.correct Use bias correction for \code{\link[TMB]{sdreport}}?
+##' @param getJointPrecision Return the joint fixed and random effect precision
+##'   matrix from \code{\link[TMB]{sdreport}}?
 ##' @return An optimization object, report list, or sdreport list
 ##' @author John Best
 ##' @export
@@ -36,6 +39,12 @@ report_spatq <- function(obj) {
 
 ##' @describeIn fit_spatq Get object sdreport
 ##' @export
-sdreport_spatq <- function(obj, bias.correct = TRUE) {
-  TMB::sdreport(obj, bias.correct = bias.correct)
+sdreport_spatq <- function(obj,
+                           bias.correct = TRUE,
+                           getJointPrecision = TRUE,
+                           ...) {
+  TMB::sdreport(obj,
+                bias.correct = bias.correct,
+                getJointPrecision = getJointPrecision,
+                ...)
 }

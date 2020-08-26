@@ -10,7 +10,7 @@ fit_spatq(obj, fit = NULL, ..., grtol = 0.001, maxopts = 10)
 
 report_spatq(obj)
 
-sdreport_spatq(obj, bias.correct = TRUE)
+sdreport_spatq(obj, bias.correct = TRUE, getJointPrecision = TRUE, ...)
 }
 \arguments{
 \item{obj}{A spatq \code{ADFun}, as returned by \code{prepare_adfun} or
@@ -18,14 +18,18 @@ sdreport_spatq(obj, bias.correct = TRUE)
 
 \item{fit}{Previous fit to use as starting values}
 
-\item{...}{Additional options to pass to \code{optim}, e.g. \code{control}}
+\item{...}{Additional options to pass to \code{\link[optimx]{Rvmmin}}, e.g.
+\code{control} or \code{\link[TMB]{sdreport}}}
 
 \item{grtol}{Gradient tolerance}
 
 \item{maxopts}{Maximum number of variable metric optimizations to run. 50
 iterations each and checking maximum gradient component.}
 
-\item{bias.correct}{Use bias correction for \code{sdreport}?}
+\item{bias.correct}{Use bias correction for \code{\link[TMB]{sdreport}}?}
+
+\item{getJointPrecision}{Return the joint fixed and random effect precision
+matrix from \code{\link[TMB]{sdreport}}?}
 }
 \value{
 An optimization object, report list, or sdreport list
