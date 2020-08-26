@@ -4,7 +4,7 @@
 \alias{prepare_data}
 \title{Prepare the \code{data} argument for the \code{spatq} model}
 \usage{
-prepare_data(catch_df, index_df, mesh, fem)
+prepare_data(catch_df, index_df, mesh, fem, X_contr = contr.helmert)
 }
 \arguments{
 \item{catch_df}{A data frame with catch observations, as read in by

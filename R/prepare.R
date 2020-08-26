@@ -301,8 +301,14 @@ create_index_df <- function(step = 1.0, T = 25) {
 ##' @return A \code{list} with the data values for a \code{spatq} model
 ##' @author John Best
 ##' @export
-prepare_data <- function(catch_df, index_df, mesh, fem) {
+prepare_data <- function(catch_df, index_df, mesh, fem,
+                         X_contr = contr.helmert) {
   T <- length(unique(catch_df$time))
+  ## Convert `time` to a factor so different contrasts can be set easily. Don't
+  ## overwrite `time` because later calls to `generate_projection` need it to be
+  ## numeric.
+  catch_df$ftime <- factor(catch_df$time)
+  index_df$ftime <- factor(index_df$time)
 
   ## If single-vessel and no covariates, nothing to estimate for `lambda_n` or
   ## `lambda_w`. Check length of unique column contents rather than `levels` in
@@ -323,11 +329,16 @@ prepare_data <- function(catch_df, index_df, mesh, fem) {
   }
   dat <- list(catch_obs = catch_df$catch_biomass,
               area_swept = catch_df$effort,
-              ## Abundance fixed effect design matrices
-              X_n = stats::model.matrix(~ factor(time) + 0, data = catch_df),
-              X_w = stats::model.matrix(~ factor(time) + 0, data = catch_df),
-              IX_n = stats::model.matrix(~ factor(time) + 0, data = index_df),
-              IX_w = stats::model.matrix(~ factor(time) + 0, data = index_df),
+              ## Abundance fixed effect design matrices, with `time` as a factor
+              ## (`ftime`)
+              X_n = stats::model.matrix(~ ftime, data = catch_df,
+                                        contrasts.arg = list(ftime = X_contr)),
+              X_w = stats::model.matrix(~ ftime, data = catch_df,
+                                        contrasts.arg = list(ftime = X_contr)),
+              IX_n = stats::model.matrix(~ ftime, data = index_df,
+                                         contrasts.arg = list(ftime = X_contr)),
+              IX_w = stats::model.matrix(~ ftime, data = index_df,
+                                         contrasts.arg = list(ftime = X_contr)),
               ## Abundance random effect design matrices
               Z_n = matrix(0, nrow = nrow(catch_df), ncol = 1),
               Z_w = matrix(0, nrow = nrow(catch_df), ncol = 1),
