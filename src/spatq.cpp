@@ -91,8 +91,8 @@ Type objective_function<Type>::operator() () {
   PARAMETER_VECTOR(omega_w);       // N_vert
 
   // Abundance spatiotemporal effects
-  PARAMETER_MATRIX(epsilon_n);     // N_vert × N_yrs
-  PARAMETER_MATRIX(epsilon_w);     // N_vert × N_yrs
+  PARAMETER_VECTOR(epsilon_n);     // (N_vert × N_yrs)
+  PARAMETER_VECTOR(epsilon_w);     // (N_vert × N_yrs)
 
   // ---------------------------------------------------------------------------
   // Catchability fixed effects
@@ -108,8 +108,8 @@ Type objective_function<Type>::operator() () {
   PARAMETER_VECTOR(phi_w);         // N_vert
 
   // Catchability spatiotemporal effects
-  PARAMETER_MATRIX(psi_n);         // N_vert × N_yrs
-  PARAMETER_MATRIX(psi_w);         // N_vert × N_yrs
+  PARAMETER_VECTOR(psi_n);         // (N_vert × N_yrs)
+  PARAMETER_VECTOR(psi_w);         // (N_vert × N_yrs)
 
   // ---------------------------------------------------------------------------
   // Random effects variance parameters
@@ -125,10 +125,12 @@ Type objective_function<Type>::operator() () {
   // ===========================================================================
   // Derived values
   // ---------------------------------------------------------------------------
+  // Get number of vertices in mesh
+  int N_vert = omega_n.size();
   // Get number of observations
   int N_obs = catch_obs.size();
   // Get number of years
-  int N_yrs = epsilon_n.cols();
+  int N_yrs = epsilon_n.size() / N_vert;
   // Get number of integration locations for each index year
   int N_I = Ih.size();
   // Convert norm_flag incl_data to boolean
@@ -263,8 +265,8 @@ Type objective_function<Type>::operator() () {
   vector<Type> Isptemp_w(N_I);
 
   if (proc_switch(2)) {
-    sptemp_n = A_sptemp * epsilon_n.value();
-    sptemp_w = A_sptemp * epsilon_w.value();
+    sptemp_n = A_sptemp * epsilon_n;
+    sptemp_w = A_sptemp * epsilon_w;
 
     // Get density of spatial random effects, repeated for each process. Scale the
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
@@ -275,8 +277,9 @@ Type objective_function<Type>::operator() () {
     SCALE_t<GMRF_t<Type>> gmrf_w_ep = SCALE(GMRF(Q_w_ep, nrmlz), itau(3));
 
     for (int yr = 0; yr < N_yrs; yr++) {
-      jnll(2) += gmrf_n_ep(epsilon_n.col(yr));
-      jnll(3) += gmrf_w_ep(epsilon_w.col(yr));
+      int i0 = N_vert * yr;
+      jnll(2) += gmrf_n_ep(epsilon_n.segment(i0, N_vert));
+      jnll(3) += gmrf_w_ep(epsilon_w.segment(i0, N_vert));
     }
 
     // Simulate spatiotemporal random effects using given precision matrices. Then
@@ -285,26 +288,27 @@ Type objective_function<Type>::operator() () {
     SIMULATE {
       // Declare temporary vector to hold simulated effects. Prevents "non-const
       // lvalue" error.
-      vector<Type> sim_temp_n(epsilon_n.rows());
-      vector<Type> sim_temp_w(epsilon_w.rows());
+      vector<Type> sim_temp_n(N_vert);
+      vector<Type> sim_temp_w(N_vert);
 
       for (int yr = 0; yr < N_yrs; yr++) {
+        int i0 = N_vert * yr;
         gmrf_n_ep.simulate(sim_temp_n);
-        epsilon_n.col(yr) = sim_temp_n;
+        epsilon_n.segment(i0, N_vert) = sim_temp_n;
         gmrf_w_ep.simulate(sim_temp_w);
-        epsilon_w.col(yr) = sim_temp_w;
+        epsilon_w.segment(i0, N_vert) = sim_temp_w;
       }
 
-      sptemp_n = A_sptemp * epsilon_n.value();
-      sptemp_w = A_sptemp * epsilon_w.value();
+      sptemp_n = A_sptemp * epsilon_n;
+      sptemp_w = A_sptemp * epsilon_w;
 
       REPORT(epsilon_n);
       REPORT(epsilon_w);
     }
 
     // Index spatiotemporal effects
-    Isptemp_n = IA_sptemp * epsilon_n.value();
-    Isptemp_w = IA_sptemp * epsilon_w.value();
+    Isptemp_n = IA_sptemp * epsilon_n;
+    Isptemp_w = IA_sptemp * epsilon_w;
   } else {
     epsilon_n.setZero();
     epsilon_w.setZero();
@@ -396,9 +400,8 @@ Type objective_function<Type>::operator() () {
   vector<Type> qsptemp_w(N_obs);
 
   if (proc_switch(5)) {
-
-    qsptemp_n = A_qsptemp * psi_n.value();
-    qsptemp_w = A_qsptemp * psi_w.value();
+    qsptemp_n = A_qsptemp * psi_n;
+    qsptemp_w = A_qsptemp * psi_w;
 
     // Get density of spatial random effects, repeated for each process. Scale the
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
@@ -409,8 +412,9 @@ Type objective_function<Type>::operator() () {
     SCALE_t<GMRF_t<Type>> gmrf_w_ps = SCALE(GMRF(Q_w_ps, nrmlz), itau(7));
 
     for (int yr = 0; yr < N_yrs; yr++) {
-      jnll(6) += gmrf_n_ps(psi_n.col(yr));
-      jnll(7) += gmrf_w_ps(psi_w.col(yr));
+      int i0 = N_vert * yr;
+      jnll(6) += gmrf_n_ps(psi_n.segment(i0, N_vert));
+      jnll(7) += gmrf_w_ps(psi_w.segment(i0, N_vert));
     }
 
     // Simulate spatiotemporal random effects using given precision matrices. Then
@@ -419,18 +423,19 @@ Type objective_function<Type>::operator() () {
     SIMULATE {
       // Declare temporary vector to hold simulated effects. Prevents "non-const
       // lvalue" error.
-      vector<Type> sim_temp_n(psi_n.rows());
-      vector<Type> sim_temp_w(psi_w.rows());
+      vector<Type> sim_temp_n(N_vert);
+      vector<Type> sim_temp_w(N_vert);
 
       for (int yr = 0; yr < N_yrs; yr++) {
+        int i0 = N_vert * yr;
         gmrf_n_ps.simulate(sim_temp_n);
-        psi_n.col(yr) = sim_temp_n;
+        psi_n.segment(i0, N_vert) = sim_temp_n;
         gmrf_w_ps.simulate(sim_temp_w);
-        psi_w.col(yr) = sim_temp_w;
+        psi_w.segment(i0, N_vert) = sim_temp_w;
       }
 
-      qsptemp_n = A_qsptemp * psi_n.value();
-      qsptemp_w = A_qsptemp * psi_w.value();
+      qsptemp_n = A_qsptemp * psi_n;
+      qsptemp_w = A_qsptemp * psi_w;
 
       REPORT(psi_n);
       REPORT(psi_w);
