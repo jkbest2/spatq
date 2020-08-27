@@ -396,11 +396,7 @@ prepare_data <- function(catch_df, index_df, mesh, fem,
 pars_data <- function(data_el, T = 1) {
   if (inherits(data_el, "inla.mesh")) {
     n <- data_el$n
-    if (T > 1) {
-      par_el <- matrix(0.0, nrow = n, ncol = T)
-    } else {
-      par_el <- rep_len(0.0, n)
-    }
+    par_el <- rep_len(0.0, n * T)
   } else if (is.null(dim(data_el))) {
     par_el <- 0.0
   } else {
