@@ -9,6 +9,7 @@ test_that("Null eigenvalue detection works", {
 
   pars <- rep(0, n)
   names(pars) <- letters[seq_len(n)]
+  row.names(X) <- names(pars)
   sdr <- list(par.fixed = pars, cov.fixed = X)
 
   nulleigs <- fixpar_nulleigs(sdr)

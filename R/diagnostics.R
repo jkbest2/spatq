@@ -176,18 +176,20 @@ plot_corcolorbar <- function(col = hcl.colors(20, "Blue-Red 3", rev = TRUE)) {
 ##' to the largest eigenvalue. The \code{abstol} argument sets an absolute
 ##' minimum value. The latter takes precedence if it is passed.
 ##' @title Find the parameters that contribute to a singular covariance matrix
+##' @param x A matrix
 ##' @param sdr An \code{\link[TMB]{sdreport}} object from a TMB model
 ##' @param reltol Relative tolerance for small eigenvalues
 ##' @param abstol Absolute tolerance for small eigenvalues; takes precedence
+##' @param vectrans Transformation function applied before sorting eigenvector
+##'   elements, usually either `abs` or `identity`
 ##' @return A list with \code{values} (eigenvalues), \code{vectors}
 ##'   (eigenvectors), and \code{sortedpars}, which is a matrix of parameter
 ##'   names with each column ordered by the corresponding loadings of the
 ##'   eigenvectors (largest loadings at the top)
 ##' @author John K Best
 ##' @export
-fixpar_nulleigs <- function(sdr, reltol = 1e-4, abstol = NULL) {
-   cov <- sdr$cov.fixed
-   eigs <- eigen(cov)
+nulleigs <- function(x, reltol = 1e-4, abstol = NULL, vectrans = abs) {
+   eigs <- eigen(x)
    if (is.numeric(abstol)) {
      val_idx <- which(eigs$values < abstol)
    } else {
@@ -199,15 +201,37 @@ fixpar_nulleigs <- function(sdr, reltol = 1e-4, abstol = NULL) {
    }
 
    vecs <- eigs$vectors[, val_idx, drop = FALSE]
-   row.names(vecs) <- names(sdr$par.fixed)
-   absvecs <- abs(vecs)
+   row.names(vecs) <- row.names(x)
+   transvecs <- vectrans(vecs)
 
    ## Use negative to order largest elements first
-   ordperms <- apply(-absvecs, 2, order)
-   parnames <- make.unique(names(sdr$par.fixed))
+   ordperms <- apply(-transvecs, 2, order)
+   parnames <- make.unique(row.names(x))
    pars <- apply(ordperms, 2, function(r) parnames[r])
 
-   list(values = eigs$values[val_idx],
-        vectors = eigs$vectors[, val_idx],
+   list(values = eigs$values[val_idx], vectors = eigs$vectors[, val_idx],
         sortedpars = pars)
+}
+
+##' @describeIn nulleigs Find (nearly) null eigenvalues in the fixed parameter
+##'   covariance matrix
+##' @export
+fixpar_nulleigs <- function(sdr, reltol = 1e-4, abstol = NULL) {
+  fpcov <- sdr$cov.fixed
+  if (is.null(fpcov)) {
+    stop("No `cov.fixed` in `sdr`")
+  }
+  nulleigs(fpcov, reltol, abstol)
+}
+
+##' @describeIn nulleigs Find (nearly) null eigenvalues in the joint precision
+##'   matrix
+##' @export
+jointprec_nulleigs <- function(sdr, reltol = 1e-4, abstol = NULL) {
+  jp <- sdr$jointPrecision
+  if (is.null(jp)) {
+    stop("Error: no joint precision matrix.
+          Re-run `sdreport` with `jointPrecision = TRUE`.")
+  }
+  nulleigs(sdr$jointPrecision, reltol, abstol)
 }
