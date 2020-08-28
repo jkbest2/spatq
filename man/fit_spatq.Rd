@@ -6,26 +6,39 @@
 \alias{sdreport_spatq}
 \title{Fit a spatq model by maximum likelihood}
 \usage{
-fit_spatq(obj, ..., method = "BFGS")
+fit_spatq(obj, fit = NULL, ..., grtol = 0.001, maxopts = 10)
 
 report_spatq(obj)
 
-sdreport_spatq(obj)
+sdreport_spatq(obj, bias.correct = TRUE, getJointPrecision = TRUE, ...)
 }
 \arguments{
 \item{obj}{A spatq \code{ADFun}, as returned by \code{prepare_adfun} or
 \code{make_sim_adfun}}
 
-\item{...}{Additional options to pass to \code{optim}, e.g. \code{control}}
+\item{fit}{Previous fit to use as starting values}
 
-\item{method}{Optimization method to uses (see \code{optim} for available
-options)}
+\item{...}{Additional options to pass to \code{\link[optimx]{Rvmmin}}, e.g.
+\code{control} or \code{\link[TMB]{sdreport}}}
+
+\item{grtol}{Gradient tolerance}
+
+\item{maxopts}{Maximum number of variable metric optimizations to run. 50
+iterations each and checking maximum gradient component.}
+
+\item{bias.correct}{Use bias correction for \code{\link[TMB]{sdreport}}?}
+
+\item{getJointPrecision}{Return the joint fixed and random effect precision
+matrix from \code{\link[TMB]{sdreport}}?}
 }
 \value{
 An optimization object, report list, or sdreport list
 }
 \description{
-Use \code{optim} to estimate parameters of a \code{spatq} model.
+Use \code{optimx::Rcgmin} to find quickly improve, then
+\code{optimx::Rvmmin} to improve once closer to optimum. After each 50
+iterations of \code{optimx::Rvmmin} check the maximum gradient component,
+stopping if it is less than \code{grtol}.
 }
 \section{Functions}{
 \itemize{

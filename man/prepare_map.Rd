@@ -4,20 +4,19 @@
 \alias{prepare_map}
 \title{Prepare a \code{map}}
 \usage{
-prepare_map(pars, map_pars)
+prepare_map(pars, spec)
 }
 \arguments{
 \item{pars}{Parameter list, as from \code{prepare_pars}}
 
-\item{map_pars}{Character vector indicating which parameters to \code{map}}
+\item{spec}{List of logicals indicating which parameters are to be
+estimated, as output by \code{\link{specify_estimated}}}
 }
 \value{
 A \code{map} list suitable for passing to \code{MakeADFun}
 }
 \description{
-Prepare a \code{map} argument for \code{MakeADFun}. Accepts parameter names
-and takes care of dependencies such as spatial or random effect
-hyperparameters being map'd when their effects are.
+Prepare a \code{map} argument for \code{MakeADFun}.
 }
 \author{
 John Best

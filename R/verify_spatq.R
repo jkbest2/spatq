@@ -24,6 +24,7 @@ verify_spatq <- function(data, parameters, map = list()) {
   verify_spatq_names(data, parameters, map)
   verify_spatq_dims(data, parameters, map)
   verify_spatq_map(parameters, map)
+  verify_ident_fixef(data)
 }
 
 ##' Check that all the required data and parameter names are included. Currently
@@ -104,19 +105,19 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
     ddims$Z_w[2] == pdims$gamma_w[1]
     ddims$A_spat[2] == pdims$omega_n[1]
     ddims$A_spat[2] == pdims$omega_w[1]
-    ddims$A_sptemp[2] == prod(pdims$epsilon_n)
-    ddims$A_sptemp[2] == prod(pdims$epsilon_w)
+    ddims$A_sptemp[2] == pdims$epsilon_n[1] * pdims$epsilon_n[2]
+    ddims$A_sptemp[2] == pdims$epsilon_w[1] * pdims$epsilon_w[2]
     ddims$R_n[2] == pdims$lambda_n[1]
     ddims$R_w[2] == pdims$lambda_w[1]
     ddims$V_n[2] == pdims$eta_n[1]
     ddims$V_w[2] == pdims$eta_w[1]
     ddims$A_qspat[2] == pdims$phi_n[1]
     ddims$A_qspat[2] == pdims$phi_w[1]
-    ddims$A_qsptemp[2] == prod(pdims$psi_n)
-    ddims$A_qsptemp[2] == prod(pdims$psi_w)
+    ddims$A_sptemp[2] == pdims$psi_n[1] * pdims$psi_n[2]
+    ddims$A_sptemp[2] == pdims$psi_w[1] * pdims$psi_w[2]
   })
 
-  ## Check that all spatiotemporal processes have same number of years
+  ## Check that all spatiotemporal processes have same number of columns
   stopifnot(exprs = {
     pdims$epsilon_w[2] == pdims$epsilon_n[2]
     pdims$psi_n[2] == pdims$epsilon_n[2]
@@ -208,5 +209,45 @@ verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
       }
     }
   }
+
+  ## Check that `lambda_n` and `lambda_w` are map'd if required
+  if (attr(parameters, "map_lambda")) {
+    stopifnot("lambda_n" %in% names(map),
+              is.na(map$lambda_n),
+              length(map$lambda_n) == 1,
+              "lambda_w" %in% names(map),
+              is.na(map$lambda_w),
+              length(map$lambda_w) == 1)
+  }
+  return(TRUE)
+}
+
+##' Check that the combined fixed effect design matrices for abundance and
+##' catchability are full rank.
+##'
+##' @title Verify that fixed effects are identifiable
+##' @param data Data list, as produced by \code{prepare_data}
+##' @return TRUE if it passes, error otherwise
+##' @author John Best
+##' @export
+verify_ident_fixef <- function(data) {
+  if (any(data$R_n != 0)) {
+    fix_n <- cbind(data$X_n, data$R_n)
+  } else {
+    fix_n <- data$X_n
+  }
+  np_n <- ncol(fix_n)
+  rank_n <- Matrix::rankMatrix(fix_n)
+  if (rank_n < np_n) stop("Numbers density fixed effects are not identifiable")
+
+  if (any(data$R_w != 0)) {
+    fix_w <- cbind(data$X_w, data$R_w)
+  } else {
+    fix_w <- data$X_w
+  }
+  np_w <- ncol(fix_w)
+  rank_w <- Matrix::rankMatrix(fix_w)
+  if (rank_w < np_w) stop("Weight per group fixed effects are not identifiable")
+
   return(TRUE)
 }

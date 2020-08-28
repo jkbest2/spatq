@@ -1,11 +1,22 @@
-obj_fbuild <- make_sim_adfun(repl = 1, sc = "simple",
-                             sub_df = data.frame(vessel_idx = c(1, 2),
-                                                 n = c(400, 500)),
-                             root_dir = normalizePath(
-                               system.file("testdata", package = "spatq")),
-                             max_T = 15,
-                             runSymbolicAnalysis = FALSE)
+estd <- specify_estimated(beta = TRUE,
+                          gamma = FALSE,
+                          omega = TRUE,
+                          epsilon = TRUE,
+                          lambda = TRUE,
+                          eta = FALSE,
+                          phi = FALSE,
+                          psi = FALSE)
+obj <- make_sim_adfun(repl = 1, sc = "pref",
+                      sub_df = data.frame(vessel_idx = 2,
+                                          n = 500),
+                      root_dir = normalizePath(
+                        system.file("testdata", package = "spatq")),
+                      max_T = 15,
+                      spec_estd = estd,
+                      runSymbolicAnalysis = TRUE,
+                      normalize = TRUE,
+                      silent = TRUE)
 
-## fit <- fit_spatq(obj_fbuild, control = list(trace = 2L))
-## rep <- report_spatq(obj_fbuild)
-## sdr <- sdreport_spatq(obj_fbuild)
+## fit_sim <- fit_spatq(obj)#, control = list(trace = 2L))
+## rep_sim <- report_spatq(obj)
+## sdr_sim <- sdreport_spatq(obj)

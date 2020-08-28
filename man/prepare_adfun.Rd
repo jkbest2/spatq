@@ -10,8 +10,10 @@ prepare_adfun(
   map,
   random,
   ...,
+  DLL = "spatq",
   silent = TRUE,
-  runSymbolicAnalysis = TRUE
+  runSymbolicAnalysis = TRUE,
+  normalize = FALSE
 )
 }
 \arguments{
@@ -26,10 +28,14 @@ prepare_adfun(
 
 \item{...}{Additional arguments to pass to \code{MakeADFun}}
 
+\item{DLL}{TMB model to use; only used for debugging}
+
 \item{silent}{Output TMB progress?}
 
 \item{runSymbolicAnalysis}{Use Metis reorderings? (Requires special
 installation of TMB; see documentation.)}
+
+\item{normalize}{Normalize GMRF likelihoods?}
 }
 \value{
 A TMB ADFun suitable for optimization

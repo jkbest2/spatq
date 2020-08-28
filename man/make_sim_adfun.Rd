@@ -4,12 +4,20 @@
 \alias{make_sim_adfun}
 \title{Create ADFun from simulated data}
 \usage{
-make_sim_adfun(repl, sc, sub_df = NULL, root_dir = ".", max_T = NULL, ...)
+make_sim_adfun(
+  repl,
+  sc,
+  sub_df = NULL,
+  root_dir = ".",
+  max_T = NULL,
+  spec_estd = specify_estimated(),
+  ...
+)
 }
 \arguments{
 \item{repl}{Replicate number}
 
-\item{sc}{Scenario; "naive", "simple", "scaled", or "shared"}
+\item{sc}{Scenario; "pref", "spat", or "combo"}
 
 \item{sub_df}{Data frame indicating subsampling strategy; see
 \code{subsample_catch}}
@@ -17,6 +25,9 @@ make_sim_adfun(repl, sc, sub_df = NULL, root_dir = ".", max_T = NULL, ...)
 \item{root_dir}{Directory to load data from}
 
 \item{max_T}{Last year of data to include}
+
+\item{spec_estd}{List of logicals indicating which parameters are to be
+estimated, as output \code{\link{specify_estimated}}}
 
 \item{...}{Additional options to pass to \code{prepare_adfun}}
 }

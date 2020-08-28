@@ -1,7 +1,7 @@
 Package: spatq
 Title: Use spatially varying catchability to standardize fishery-dependent data
-Version: 0.2.1
-Authors@R: 
+Version: 0.3.0
+Authors@R:
     person(given = "John",
            family = "Best",
            role = c("aut", "cre"),
@@ -16,10 +16,13 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.0.1
+RoxygenNote: 7.1.1
 Imports:
     dplyr,
+    graphics,
+    grDevices,
     Matrix,
+    optimx,
     purrr,
     readr,
     stats,
@@ -35,6 +38,7 @@ Suggests:
     testthat (>= 2.1.0),
     covr,
     knitr,
+    rgdal,
     rmarkdown
 Additional_repositories: https://inla.r-inla-download.org/R/testing
 VignetteBuilder: knitr

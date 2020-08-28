@@ -13,9 +13,6 @@ generate_empty_projection(mesh, data_df, group = NULL)
 coordinates to project to}
 
 \item{group}{Year of observation for spatiotemporal effect}
-
-\item{...}{Not used but availble for consistent calls with
-\code{generate_projection}}
 }
 \value{
 Sparse \code{Matrix::Matrx} of the appropriate dimensions, but

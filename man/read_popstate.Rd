@@ -9,7 +9,7 @@ read_popstate(repl, sc, root_dir = ".")
 \arguments{
 \item{repl}{Replicate number}
 
-\item{sc}{Scenario; one of "naive", "simple", "scaled", or "shared"}
+\item{sc}{Scenario; one of "pref", "spat", or "combo"}
 
 \item{root_dir}{Directory with e.g. \code{repl_01} subdirectory that
 contains \code{popstate_*.csv}}

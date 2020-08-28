@@ -1,6 +1,8 @@
+### Construct all pieces of a spatq model manually to compare with the generated
+### pieces
 ## Set number of observations, generate observation locations
-n_obs_year <- 100L
-n_years <- 25L
+n_obs_year <- 1500L
+n_years <- 15L
 n_obs <- n_obs_year * n_years
 loc <- matrix(runif(2 * n_obs), ncol = 2)
 years <- rep(1:n_years, each = n_obs_year)
@@ -95,7 +97,10 @@ dat <- list(catch_obs = rep(0, n_obs),
             V_w = model.matrix(~ factor(sample(1:10, n_obs, TRUE)) + 0),
             A_qspat = A_qspat,
             A_qsptemp = A_qsptemp,
-            spde = fem)
+            spde = fem,
+            proc_switch = rep(TRUE, 6),
+            norm_flag = FALSE,
+            incl_data = TRUE)
 
 ## Spatial random effects (`spat_n` and `spat_w`) are set to zero vectors of
 ## appropriate length, as these are simulated.
@@ -119,21 +124,8 @@ pars <- list(beta_n = pars_gen$beta_n,
              log_kappa = rep(log(pars_gen$kappa), 8),
              log_tau = rep(log(pars_gen$tau), 8),
              log_sigma = log(pars_gen$sigma_c))
+attr(pars, "map_lambda") <- FALSE
 
 map_empty <- list()
 
 verify_spatq(dat, pars, map_empty)
-
-## A TMB model object that can be used to simulate
-obj <- TMB::MakeADFun(data = dat,
-                      parameters = pars,
-                      map = map_empty,
-                      random = c("gamma_n", "gamma_w",
-                                 "omega_n", "omega_w",
-                                 "epsilon_n", "epsilon_w",
-                                 "eta_n", "eta_w",
-                                 "phi_n", "phi_w",
-                                 "psi_n", "psi_w"),
-                      DLL = "spatq",
-                      silent = TRUE)
-
