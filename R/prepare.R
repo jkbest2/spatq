@@ -301,6 +301,7 @@ create_index_df <- function(step = 1.0, T = 25) {
 ##' @param X_contr Contrasts to use for fixed effect design matrix
 ##' @return A \code{list} with the data values for a \code{spatq} model
 ##' @author John Best
+##' @importFrom stats contr.helmert
 ##' @export
 prepare_data <- function(catch_df, index_df, mesh, fem,
                          X_contr = contr.helmert) {
