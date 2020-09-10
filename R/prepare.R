@@ -367,8 +367,7 @@ prepare_data <- function(catch_df, index_df, mesh, fem,
               A_qspat = generate_projection(mesh, catch_df, vessel_idx = 2),
               A_qsptemp = generate_projection(mesh, catch_df,
                                               vessel_idx = 2,
-                                              group = catch_df$time,
-                                              zero = TRUE),
+                                              group = catch_df$time),
 
               ## FEM matrices for spatial/spatiotemporal effects
               spde = fem,
