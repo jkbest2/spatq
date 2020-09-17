@@ -48,3 +48,10 @@ sdreport_spatq <- function(obj,
                 getJointPrecision = getJointPrecision,
                 ...)
 }
+
+##' @describeIn fit_spatq Get finite difference Hessian
+##' @importFrom stats optimHess
+##' @export
+hessian_spatq <- function(obj, fit, ...) {
+  optimHess(fit$par, obj$fn, obj$gr, ...)
+}

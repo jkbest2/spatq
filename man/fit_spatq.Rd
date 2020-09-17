@@ -4,6 +4,7 @@
 \alias{fit_spatq}
 \alias{report_spatq}
 \alias{sdreport_spatq}
+\alias{hessian_spatq}
 \title{Fit a spatq model by maximum likelihood}
 \usage{
 fit_spatq(obj, fit = NULL, ..., grtol = 0.001, maxopts = 10)
@@ -11,6 +12,8 @@ fit_spatq(obj, fit = NULL, ..., grtol = 0.001, maxopts = 10)
 report_spatq(obj)
 
 sdreport_spatq(obj, bias.correct = TRUE, getJointPrecision = TRUE, ...)
+
+hessian_spatq(obj, fit, ...)
 }
 \arguments{
 \item{obj}{A spatq \code{ADFun}, as returned by \code{prepare_adfun} or
@@ -45,6 +48,8 @@ stopping if it is less than \code{grtol}.
 \item \code{report_spatq}: Get object report
 
 \item \code{sdreport_spatq}: Get object sdreport
+
+\item \code{hessian_spatq}: Get finite difference Hessian
 }}
 
 \author{

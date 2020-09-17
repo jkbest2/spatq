@@ -409,10 +409,7 @@ pars_data <- function(data_el, T = 1) {
 ##' The SPDE construction uses parameters kappa and tau, while the usual Matern
 ##' parameters are sigma and rho. The kappa parameter is \code{sqrt(8) / rho}.
 ##'
-##' @title Calculate kappa from rho
-##' @param rho Correlation range parameter
-##' @return The value of kappa corresponding to rho
-##' @author John Best
+##' @describeIn pars_tau Calculate kappa from rho
 ##' @export
 pars_kappa <- function(rho) {
   sqrt(8) / rho
@@ -420,18 +417,32 @@ pars_kappa <- function(rho) {
 
 ##' The SPDE construction uses parameters kappa and tau, while the usual Matern
 ##' parameters are sigma and rho. The tau parameter is \code{sqrt(1 / (sig2 * 4
-##' * pi * kappa^2))}.
+##' * pi * kappa^2))}. All assume that the Matern smoothness parameter is 1.
 ##'
 ##' @title Calculate tau from rho and sigma^2
 ##' @param sig2 Marginal variance
 ##' @param rho Correlation range parameter
-##' @return The value of tau corresponding to the specified correlation range
-##'   and marginal variance
+##' @param kappa Correlation decay parameter
+##' @param tau Ratio of precision and correlation range
+##' @return Parameter value
+##'
 ##' @author John Best
 ##' @export
 pars_tau <- function(sig2, rho) {
   den <- sig2 * 4 * pi * pars_kappa(rho)^2
   sqrt(1 / den)
+}
+
+##' @describeIn pars_tau Calculate the correlation range
+##' @export
+pars_rho <- function(kappa) {
+  sqrt(8) / kappa
+}
+
+##' @describeIn pars_tau Calculate the marginal variance
+##' @export
+pars_sig2 <- function(tau, kappa) {
+  1 / (4 * pi * kappa^2 * tau^2)
 }
 
 ##' Estimates numbers density fixed effects through a binomial regression with
