@@ -60,6 +60,7 @@ parlen <- vapply(c("X_n", "X_w", "R_n", "R_w"),
                  function(nm) ncol(obj$env$data[[nm]]), 1)
 
 test_that("Initial values are correct length", {
+  skip("No longer (particularly) relevant")
   expect_equal(names(init), names(init_ref))
   expect_equal(init_len, init_ref_len)
   expect_equal(unname(init_len), unname(parlen))

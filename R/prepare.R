@@ -738,31 +738,6 @@ make_sim_adfun <- function(repl, sc, sub_df = NULL,
                            spec_estd = specify_estimated(), ...) {
   setup <- spatqsetup_sim(repl, sc, sub_df, root_dir, max_T, index_step,
                           spec_estd)
-
-  ## Read in data
-  ## catch_df <- read_catch(repl, sc, root_dir)
-  ## if (!is.null(max_T)) {
-  ##   catch_df <- dplyr::filter(catch_df, time <= max_T)
-  ##   attr(catch_df, "T") <- max_T
-  ## }
-  ## ## Subset observations
-  ## catch_df <- subsample_catch(catch_df, sub_df)
-
-  ## ## Create index integration reference
-  ## index_df <- create_index_df(step = 5, T = attr(catch_df, "T"))
-
-  ## ## Discretize space
-  ## mesh <- generate_mesh()
-  ## fem <- generate_fem(mesh)
-
-  ## ## Prepare model specification components
-  ## data <- prepare_data(catch_df, index_df, mesh, fem)
-  ## parameters <- prepare_pars(data, mesh)
-  ## map <- prepare_map(parameters,
-  ##                    spec = spec_estd)
-  ## random <- prepare_random(map)
-
-  ## Verify and construct ADFun
   prepare_adfun(setup$data, setup$parameters,
                 setup$map, setup$random, ...)
 }
