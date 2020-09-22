@@ -22,10 +22,11 @@ read_catch <- function(repl, sc, root_dir = ".") {
                                 time = readr::col_integer(),
                                 vessel_idx = readr::col_integer(),
                                 loc_idx = readr::col_integer(),
-                                coordinates = readr::col_character(),
+                                coord1 = readr::col_double(),
+                                coord2 = readr::col_double(),
                                 effort = readr::col_double(),
                                 catch_biomass = readr::col_double())) %>%
-    dplyr::left_join(get_coordref(root_dir), by = "loc_idx")
+    dplyr::rename(s1 = coord1, s2 = coord2)
   ## Number of years and store as an attribute for later use in constructing
   ## projection matrices etc.
   attr(catch_df, "T") <- length(unique(catch_df$time))
