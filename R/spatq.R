@@ -20,4 +20,6 @@ globalVariables(c("s1",
                   "time",
                   "vessel_idx",
                   "data",
-                  "cloglog"))
+                  "cloglog",
+                  "coord1",
+                  "coord2"))
