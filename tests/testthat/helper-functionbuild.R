@@ -13,6 +13,7 @@ obj <- make_sim_adfun(repl = 1, sc = "pref",
                         system.file("testdata", package = "spatq")),
                       max_T = 15,
                       spec_estd = estd,
+                      index_step = 5,
                       runSymbolicAnalysis = TRUE,
                       normalize = TRUE,
                       silent = TRUE)
