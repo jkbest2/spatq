@@ -852,7 +852,7 @@ update_parameters <- function(setup, obj) {
       ## Which parameter elements were not estimated?
       map_idx <- !is.na(setup$map[[nm]])
       ## Don't replace if there aren't the right number of new parameter values
-      if (sum(map_idx) != length(setup$parameters[[nm]])) {
+      if (sum(map_idx) != length(newpars[[nm]])) {
         stop("New parameter values wrong length wrt map")
       }
       setup$parameters[[nm]][map_idx] <- newpars[[nm]]
@@ -876,5 +876,6 @@ update_map <- function(setup, newspec) {
 ##' @describeIn update_setup Update \code{random}
 ##' @export
 update_random <- function(setup) {
-  prepare_random(setup$map)
+  setup$random <- prepare_random(setup$map)
+  setup
 }
