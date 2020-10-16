@@ -14,6 +14,8 @@
 ##' @param eta Catchability iid random effects
 ##' @param phi Catchability spatial effects
 ##' @param psi Catchability spatiotemporal effects
+##' @param kappa_map Factor vector of length 8 specifying the map for kappa
+##'   parameters
 ##' @return A list with elements for each random effect process and parameter in
 ##'   the \code{spatq} model, each with a logical indicating whether it is
 ##'   (\code{TRUE}) or is not (\code{FALSE}) estimated.
@@ -26,7 +28,8 @@ specify_estimated <- function(beta = TRUE,
                               lambda = TRUE,
                               eta = FALSE,
                               phi = FALSE,
-                              psi = FALSE) {
+                              psi = FALSE,
+                              kappa_map = NULL) {
   estd <- list()
   estd$beta_n <- is_estd_proc("beta_n", beta)
   estd$beta_w <- is_estd_proc("beta_w", beta)
@@ -51,6 +54,9 @@ specify_estimated <- function(beta = TRUE,
   estd$log_xi <- is_estd_hpar("log_xi", spec)
   estd$log_kappa <- is_estd_hpar("log_kappa", spec)
   estd$log_tau <- is_estd_hpar("log_tau", spec)
+  if (!is.null(kappa_map)) {
+    attr(estd, "kappa_map") <- factor(kappa_map)
+  }
 
   return(estd)
 }

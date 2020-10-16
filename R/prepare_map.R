@@ -25,5 +25,15 @@ prepare_map <- function(pars, spec) {
                   ## Convert to factor vector for TMB
                   factor(v)
                 })
+
+  ## If kappa map is explicitly provided, replace the default
+  if (!is.null(attr(spec, "kappa_map"))) {
+    kappa_map <- attr(spec, "kappa_map")
+    if (!xor(is.na(map$log_kappa), is.na(kappa_map))) {
+      stop("kappa_map must include NAs in correct locations")
+    }
+    map$log_kappa <- factor(kappa_map)
+  }
+
   return(map)
 }
