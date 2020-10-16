@@ -140,7 +140,7 @@ Type objective_function<Type>::operator() () {
   // Put unconstrained parameters on their natural (constrained) scales
   vector<Type> xi = exp(log_xi);
   vector<Type> kappa = exp(log_kappa);
-  vector<Type> itau = exp(-log_tau);
+  vector<Type> tau = exp(log_tau);
   Type sigma = exp(log_sigma);
 
   // ===========================================================================
@@ -227,8 +227,8 @@ Type objective_function<Type>::operator() () {
     // formulation.
     SparseMatrix<Type> Q_n_om = Q_spde(spde, kappa(0));
     SparseMatrix<Type> Q_w_om = Q_spde(spde, kappa(1));
-    SCALE_t<GMRF_t<Type>> gmrf_n_om = SCALE(GMRF(Q_n_om, nrmlz), itau(0));
-    SCALE_t<GMRF_t<Type>> gmrf_w_om = SCALE(GMRF(Q_w_om, nrmlz), itau(1));
+    SCALE_t<GMRF_t<Type>> gmrf_n_om = SCALE(GMRF(Q_n_om, nrmlz), tau(0));
+    SCALE_t<GMRF_t<Type>> gmrf_w_om = SCALE(GMRF(Q_w_om, nrmlz), tau(1));
     jnll(0) += gmrf_n_om(omega_n);
     jnll(1) += gmrf_w_om(omega_w);
 
@@ -272,9 +272,9 @@ Type objective_function<Type>::operator() () {
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
     SparseMatrix<Type> Q_n_ep = Q_spde(spde, kappa(2));
-    SCALE_t<GMRF_t<Type>> gmrf_n_ep = SCALE(GMRF(Q_n_ep, nrmlz), itau(2));
+    SCALE_t<GMRF_t<Type>> gmrf_n_ep = SCALE(GMRF(Q_n_ep, nrmlz), tau(2));
     SparseMatrix<Type> Q_w_ep = Q_spde(spde, kappa(3));
-    SCALE_t<GMRF_t<Type>> gmrf_w_ep = SCALE(GMRF(Q_w_ep, nrmlz), itau(3));
+    SCALE_t<GMRF_t<Type>> gmrf_w_ep = SCALE(GMRF(Q_w_ep, nrmlz), tau(3));
 
     for (int yr = 0; yr < N_yrs; yr++) {
       int i0 = N_vert * yr;
@@ -370,8 +370,8 @@ Type objective_function<Type>::operator() () {
     // formulation.
     SparseMatrix<Type> Q_n_ph = Q_spde(spde, kappa(4));
     SparseMatrix<Type> Q_w_ph = Q_spde(spde, kappa(5));
-    SCALE_t<GMRF_t<Type>> gmrf_n_ph = SCALE(GMRF(Q_n_ph, nrmlz), itau(4));
-    SCALE_t<GMRF_t<Type>> gmrf_w_ph = SCALE(GMRF(Q_w_ph, nrmlz), itau(5));
+    SCALE_t<GMRF_t<Type>> gmrf_n_ph = SCALE(GMRF(Q_n_ph, nrmlz), tau(4));
+    SCALE_t<GMRF_t<Type>> gmrf_w_ph = SCALE(GMRF(Q_w_ph, nrmlz), tau(5));
     jnll(4) += gmrf_n_ph(phi_n);
     jnll(5) += gmrf_w_ph(phi_w);
 
@@ -407,9 +407,9 @@ Type objective_function<Type>::operator() () {
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
     SparseMatrix<Type> Q_n_ps = Q_spde(spde, kappa(6));
-    SCALE_t<GMRF_t<Type>> gmrf_n_ps = SCALE(GMRF(Q_n_ps, nrmlz), itau(6));
+    SCALE_t<GMRF_t<Type>> gmrf_n_ps = SCALE(GMRF(Q_n_ps, nrmlz), tau(6));
     SparseMatrix<Type> Q_w_ps = Q_spde(spde, kappa(7));
-    SCALE_t<GMRF_t<Type>> gmrf_w_ps = SCALE(GMRF(Q_w_ps, nrmlz), itau(7));
+    SCALE_t<GMRF_t<Type>> gmrf_w_ps = SCALE(GMRF(Q_w_ps, nrmlz), tau(7));
 
     for (int yr = 0; yr < N_yrs; yr++) {
       int i0 = N_vert * yr;
@@ -544,7 +544,7 @@ Type objective_function<Type>::operator() () {
   vector<Type> rho_sp;
   vector<Type> sigma_sp;
   rho_sp = sqrt(8) / kappa;
-  sigma_sp = itau / (kappa * 2 * sqrt(PI));
+  sigma_sp = tau / (kappa * 2 * sqrt(PI));
 
   REPORT(jnll);
   REPORT(Ilog_n);
