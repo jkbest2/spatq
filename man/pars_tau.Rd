@@ -4,22 +4,22 @@
 \alias{pars_kappa}
 \alias{pars_tau}
 \alias{pars_rho}
-\alias{pars_sig2}
+\alias{pars_sig}
 \title{The SPDE construction uses parameters kappa and tau, while the usual Matern
 parameters are sigma and rho. The kappa parameter is \code{sqrt(8) / rho}.}
 \usage{
 pars_kappa(rho)
 
-pars_tau(sig2, rho)
+pars_tau(sig, rho)
 
 pars_rho(kappa)
 
-pars_sig2(tau, kappa)
+pars_sig(tau, kappa)
 }
 \arguments{
 \item{rho}{Correlation range parameter}
 
-\item{sig2}{Marginal variance}
+\item{sig}{Marginal standard deviation}
 
 \item{kappa}{Correlation decay parameter}
 
@@ -30,8 +30,21 @@ Parameter value
 }
 \description{
 The SPDE construction uses parameters kappa and tau, while the usual Matern
-parameters are sigma and rho. The tau parameter is \code{sqrt(1 / (sig2 * 4
-* pi * kappa^2))}. All assume that the Matern smoothness parameter is 1.
+parameters are sigma and rho. These functions allow converting between the
+parameterizations.
+}
+\details{
+The tau parameter rescales the precision matrix to a given marginal standard
+deviation, while \code{kappa} controls the correlation decay rate. In particular,
+\itemize{
+\item \code{tau = 2 * sqrt(pi) * sig * kappa},
+\item \code{kappa = sqrt(8) / rho},
+\item \code{sig = tau / (2 * sqrt(pi) * kappa)}, and
+\item \code{rho = sqrt(8) / kappa}.
+}
+
+All assume that the Matern smoothness parameter is 1 and the domain is
+two-dimensional
 }
 \section{Functions}{
 \itemize{
@@ -39,7 +52,7 @@ parameters are sigma and rho. The tau parameter is \code{sqrt(1 / (sig2 * 4
 
 \item \code{pars_rho}: Calculate the correlation range
 
-\item \code{pars_sig2}: Calculate the marginal variance
+\item \code{pars_sig}: Calculate the marginal standard deviation
 }}
 
 \author{

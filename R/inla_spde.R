@@ -129,11 +129,22 @@ pars_kappa <- function(rho) {
 }
 
 ##' The SPDE construction uses parameters kappa and tau, while the usual Matern
-##' parameters are sigma and rho. The tau parameter is \code{sqrt(1 / (sig2 * 4
-##' * pi * kappa^2))}. All assume that the Matern smoothness parameter is 1.
+##' parameters are sigma and rho. These functions allow converting between the
+##' parameterizations.
+##'
+##' The tau parameter rescales the precision matrix to a given marginal standard
+##' deviation, while \code{kappa} controls the correlation decay rate. In particular,
+##'
+##' - \code{tau = 2 * sqrt(pi) * sig * kappa},
+##' - \code{kappa = sqrt(8) / rho},
+##' - \code{sig = tau / (2 * sqrt(pi) * kappa)}, and
+##' - \code{rho = sqrt(8) / kappa}.
+##'
+##' All assume that the Matern smoothness parameter is 1 and the domain is
+##' two-dimensional
 ##'
 ##' @title Calculate tau from rho and sigma^2
-##' @param sig2 Marginal variance
+##' @param sig Marginal standard deviation
 ##' @param rho Correlation range parameter
 ##' @param kappa Correlation decay parameter
 ##' @param tau Ratio of precision and correlation range
@@ -141,9 +152,8 @@ pars_kappa <- function(rho) {
 ##'
 ##' @author John Best
 ##' @export
-pars_tau <- function(sig2, rho) {
-  den <- sig2 * 4 * pi * pars_kappa(rho)^2
-  sqrt(1 / den)
+pars_tau <- function(sig, rho) {
+  2 * sig * sqrt(pi) * pars_kappa(rho)
 }
 
 ##' @describeIn pars_tau Calculate the correlation range
@@ -152,8 +162,8 @@ pars_rho <- function(kappa) {
   sqrt(8) / kappa
 }
 
-##' @describeIn pars_tau Calculate the marginal variance
+##' @describeIn pars_tau Calculate the marginal standard deviation
 ##' @export
-pars_sig2 <- function(tau, kappa) {
-  1 / (4 * pi * kappa^2 * tau^2)
+pars_sig <- function(tau, kappa) {
+  tau / (2 * sqrt(pi) * kappa)
 }

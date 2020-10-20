@@ -12,7 +12,8 @@ specify_estimated(
   lambda = TRUE,
   eta = FALSE,
   phi = FALSE,
-  psi = FALSE
+  psi = FALSE,
+  kappa_map = NULL
 )
 }
 \arguments{
@@ -31,6 +32,9 @@ specify_estimated(
 \item{phi}{Catchability spatial effects}
 
 \item{psi}{Catchability spatiotemporal effects}
+
+\item{kappa_map}{Factor vector of length 8 specifying the map for kappa
+parameters}
 }
 \value{
 A list with elements for each random effect process and parameter in
