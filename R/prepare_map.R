@@ -29,7 +29,7 @@ prepare_map <- function(pars, spec) {
   ## If kappa map is explicitly provided, replace the default
   if (!is.null(attr(spec, "kappa_map"))) {
     kappa_map <- attr(spec, "kappa_map")
-    if (!xor(is.na(map$log_kappa), is.na(kappa_map))) {
+    if (any(xor(is.na(map$log_kappa), is.na(kappa_map)))) {
       stop("kappa_map must include NAs in correct locations")
     }
     map$log_kappa <- factor(kappa_map)
