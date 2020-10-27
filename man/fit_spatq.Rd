@@ -7,13 +7,13 @@
 \alias{hessian_spatq}
 \title{Fit a spatq model by maximum likelihood}
 \usage{
-fit_spatq(obj, fit = NULL, ..., grtol = 0.001, maxopts = 10)
+fit_spatq(obj, fit = NULL, optcontrol = spatq_optcontrol())
 
 report_spatq(obj)
 
 sdreport_spatq(obj, bias.correct = TRUE, getJointPrecision = TRUE, ...)
 
-hessian_spatq(obj, fit, ...)
+hessian_spatq(obj, fit)
 }
 \arguments{
 \item{obj}{A spatq \code{ADFun}, as returned by \code{prepare_adfun} or
@@ -21,27 +21,24 @@ hessian_spatq(obj, fit, ...)
 
 \item{fit}{Previous fit to use as starting values}
 
-\item{...}{Additional options to pass to \code{\link[optimx]{Rvmmin}}, e.g.
-\code{control} or \code{\link[TMB]{sdreport}}}
-
-\item{grtol}{Gradient tolerance}
-
-\item{maxopts}{Maximum number of variable metric optimizations to run. 50
-iterations each and checking maximum gradient component.}
+\item{optcontrol}{a}
 
 \item{bias.correct}{Use bias correction for \code{\link[TMB]{sdreport}}?}
 
 \item{getJointPrecision}{Return the joint fixed and random effect precision
 matrix from \code{\link[TMB]{sdreport}}?}
+
+\item{...}{additional arguments to pass to \code{\link[TMB]{sdreport}}}
 }
 \value{
 An optimization object, report list, or sdreport list
 }
 \description{
-Use \code{optimx::Rcgmin} to find quickly improve, then
-\code{optimx::Rvmmin} to improve once closer to optimum. After each 50
-iterations of \code{optimx::Rvmmin} check the maximum gradient component,
-stopping if it is less than \code{grtol}.
+Uses \code{\link[stats]{optim}} to find an optimum. If a previous fit is not
+provided, the first fit uses the conjugate gradient method to improve
+quickly. After that, the BFGS method is used to refine the optimization.
+Termination tolerances and control parameters for \code{optim} can be
+provided through \code{\link{spatq_optcontrol}}.
 }
 \section{Functions}{
 \itemize{

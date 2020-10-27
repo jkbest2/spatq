@@ -22,7 +22,6 @@ Imports:
     graphics,
     grDevices,
     Matrix,
-    optimx,
     purrr,
     readr,
     stats,
