@@ -14,10 +14,6 @@ obj <- make_sim_adfun(repl = 1, sc = "pref",
                       normalize = TRUE,
                       silent = TRUE)
 
-## fit_sim <- fit_spatq(obj)#, control = list(trace = 2L))
-## rep_sim <- report_spatq(obj)
-## sdr_sim <- sdreport_spatq(obj)
-
 ## Fixed-effect only model
 estd_f <- specify_estimated()
 obj_f <- make_sim_adfun(repl = 1, sc = "pref",
