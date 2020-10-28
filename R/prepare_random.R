@@ -15,7 +15,8 @@
 ##' @title Prepare \code{random}
 ##' @param map A \code{map} list, as from \code{prepare_map}
 ##' @return A character vector indicating which parameters should be integrated
-##'   out using the Laplace approximation.
+##'   out using the Laplace approximation or \code{NULL} if no parameters are to
+##'   be integrated out.
 ##' @author John Best
 ##' @export
 prepare_random <- function(map) {
@@ -31,5 +32,12 @@ prepare_random <- function(map) {
                   FUN.VALUE = TRUE)))
     stop("Map'd random effects parameters must be all NAs")
   ## Return vector of random effects names with map'd parameter names removed
-  setdiff(re_pars, names(map))
+  rand <- setdiff(re_pars, names(map))
+
+  ## If no parameters are random, random should be NULL or TMB treats it as if
+  ## there are random parameters and e.g. sdreport break
+  if (length(rand) == 0)
+    rand <- NULL
+
+  return(rand)
 }

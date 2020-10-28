@@ -125,8 +125,9 @@ report_spatq <- function(obj) {
 ##' @describeIn fit_spatq Get object sdreport
 ##' @export
 sdreport_spatq <- function(obj,
-                           bias.correct = TRUE,
-                           getJointPrecision = TRUE,
+                           ## Don't bias correct if no random effects
+                           bias.correct = !is.null(obj$env$random),
+                           getJointPrecision = FALSE,
                            ...) {
   TMB::sdreport(obj,
                 bias.correct = bias.correct,
