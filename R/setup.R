@@ -16,7 +16,7 @@
 ##'   \code{\link{prepare_adfun}}.
 ##' @author John K Best
 ##' @export
-spatqsetup_sim <- function(repl, sc, sub_df = NULL,
+spatq_simsetup <- function(repl, sc, sub_df = NULL,
                            root_dir = ".", max_T = NULL,
                            index_step = 5,
                            spec_estd = specify_estimated()) {
@@ -29,7 +29,11 @@ spatqsetup_sim <- function(repl, sc, sub_df = NULL,
   ## Subset observations
   catch_df <- subsample_catch(catch_df, sub_df)
 
-  return(spatqsetup(catch_df, spec_estd, index_step))
+  setup <- spatqsetup(catch_df, spec_estd, index_step)
+  attr(setup, "repl") <- replace
+  attr(setup, "scenario") <- sc
+  class(setup) <- c("spatq_simsetup", "spatq_setup")
+  return(setup)
 }
 
 ##' Checks that \code{data}, \code{parameters}, and \code{map} are consistent
@@ -50,7 +54,7 @@ new_spatqsetup <- function(data, parameters, map, random) {
                  parameters = parameters,
                  map = map,
                  random = random),
-            class = "spatqsetup")
+            class = "spatq_setup")
 }
 
 ##' @describeIn new_spatqsetup Convenient constructor for model setups
@@ -84,13 +88,14 @@ spatqsetup <- function(catch_df, spatqspec, index_step) {
 ##'
 ##' @title Update a model setup
 ##' @param setup Existing setup object
-##' @param obj Objective function after optimizing
+##' @param newparobj Object containing updated parameter values, to be extracted
+##'   using \code{\link{get_newpars}}
 ##' @param newspec Next estimation specification
 ##' @return Updated \code{\link{spatqsetup}}
 ##' @author John K Best
 ##' @export
-update_setup <- function(setup, obj, newspec) {
-  setup <- update_parameters(setup, obj)
+update_setup <- function(setup, newparobj, newspec) {
+  setup <- update_parameters(setup, newparobj)
   setup <- update_map(setup, newspec)
   setup <- update_random(setup)
   return(setup)
@@ -98,29 +103,43 @@ update_setup <- function(setup, obj, newspec) {
 
 ##' @describeIn update_setup Update \code{parameters}
 ##' @export
-update_parameters <- function(setup, obj) {
-  ## Extract the best values from the previous fit
-  newpars <- gather_nvec(obj$env$last.par.best)
-  ## Only need to iterate over parameters that were updated
-  for (nm in names(newpars)) {
-    ## Need to deal with parameters that are partially map'd
-    if (nm %in% names(setup$map)) {
-      ## Which parameter elements were not estimated?
-      map_idx <- !is.na(setup$map[[nm]])
-      ## Don't replace if there aren't the right number of new parameter values
-      if (sum(map_idx) != length(newpars[[nm]])) {
-        stop("New parameter values wrong length wrt map")
-      }
-      setup$parameters[[nm]][map_idx] <- newpars[[nm]]
-    } else {
-      ## If the parameter doesn't appear in `map`, replace the entire vector
-      setup$parameters[[nm]] <- newpars[[nm]]
-    }
+update_parameters <- function(setup, newparobj, checkdims = TRUE) {
+  ## Extract the best values from the previous fit as a named list
+  newpars <- get_newpars(newparobj)
+  ## Update each parameter vector using `newpars`. Use a `for` loop because need
+  ## to iterate over `names(setup$parameters)`, so `lapply` returns an unnamed
+  ## list.
+  for (nm in names(setup$parameters)) {
+    setup$parameters[[nm]] <- update_onepar(setup$parameters[[nm]],
+                                            newpars[[nm]],
+                                            setup$map[[nm]])
   }
 
   ## Return entire modified `setup` object
   return(setup)
 }
+
+##' Extract updated parameter values from a previous fit, provided as a named
+##' vector, list, \code{spatq_fit}, or \code{spatq_obj} that has already been
+##' optimized.
+##'
+##' @title Get updated parameter values
+##' @param obj object to extract new parameter values from
+##' @return named list with parameter values to update
+##' @author John K Best
+##' @export
+get_newpars <- function(obj) UseMethod("get_newpars")
+##' @export
+get_newpars.list <- function(obj) obj
+##' @export
+get_newpars.spatq_fit <- function(obj) gather_nvec(obj$par)
+##' @export
+get_newpars.spatq_obj <- function(obj) gather_nvec(obj$env$last.par.best)
+##' @export
+get_newpars.sdreport <- function(obj) gather_nvec(c(obj$par.fixed, obj$par.random))
+## Vectors inherit "numeric"
+##'@export
+get_newpars.numeric <- function(obj) gather_nvec(obj)
 
 ##' @describeIn update_setup Update \code{map}
 ##' @export
@@ -134,4 +153,53 @@ update_map <- function(setup, newspec) {
 update_random <- function(setup) {
   setup$random <- prepare_random(setup$map)
   setup
+}
+
+##' Replace parameter values with better ones, if available.
+##'
+##' @title Update a single parameter vector
+##' @param currvals Vector of current parameter values
+##' @param newvals Values to update
+##' @param mapvec Map, indexing the new values into their places in the
+##'   parameter vector, with NAs for elements that were not estiamted
+##' @return The updated parameter vector
+##' @author John K Best
+update_onepar <- function(currvals, newvals = NULL, mapvec = NULL) {
+  if (is.null(newvals)) {
+    ## If no new values, use old values
+    vals <- currvals
+  }
+  else if (is.null(mapvec)) {
+    ## If not map'd, just replace the vector
+    vals <- newvals
+  }
+  else {
+    ## Need to
+    if (length(currvals) < length(mapvec)) {
+      stop("Length of currvals must be greater than mapvec")
+    }
+
+    ## Going to use for indexing and need to check `max`
+    mapvec <- as.integer(mapvec)
+
+    if (max(mapvec, na.rm = TRUE) > length(newvals)) {
+      ## If new parameters are to be estimated, use the current values
+      mapvec[mapvec > length(newvals)] <- NA
+    }
+
+    ## If not estimated, use current value. Otherwise use value corresponding to
+    ## the map index. Need this to account for parameters map'd to take same
+    ## values (e.g. log_kappa map is c(1, 2, NA, NA, 1, 2, NA, NA)).
+    vals <- ifelse(is.na(mapvec), currvals, newvals[mapvec])
+  }
+
+  ## Used when parameter dimension changes, e.g. adding years or a new fleet. In
+  ## that case you won't have new parameter estimates, but we assume that
+  ## they're added on the end of the parameter vector so we fill in the tail
+  ## using the current (default) values.
+  if (length(vals) < length(currvals)) {
+    vals <- append(vals, tail(currvals, length(currvals) - length(vals)))
+  }
+
+  return(vals)
 }

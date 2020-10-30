@@ -7,9 +7,9 @@
 \alias{update_random}
 \title{Update a model setup}
 \usage{
-update_setup(setup, obj, newspec)
+update_setup(setup, newparobj, newspec)
 
-update_parameters(setup, obj)
+update_parameters(setup, newparobj, checkdims = TRUE)
 
 update_map(setup, newspec)
 
@@ -18,7 +18,8 @@ update_random(setup)
 \arguments{
 \item{setup}{Existing setup object}
 
-\item{obj}{Objective function after optimizing}
+\item{newparobj}{Object containing updated parameter values, to be extracted
+using \code{\link{get_newpars}}}
 
 \item{newspec}{Next estimation specification}
 }
