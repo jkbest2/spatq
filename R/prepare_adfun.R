@@ -33,7 +33,33 @@ prepare_adfun <- function(data, parameters, map, random,
     obj <- TMB::normalize(obj, flag = "incl_data", value = FALSE)
   if (runSymbolicAnalysis)
     TMB::runSymbolicAnalysis(obj)
-  obj
+  structure(obj, class = "spatq_obj")
+}
+
+##' Prepare an objective function using \code{\link[TMB]{MakeADFun}}.
+##'
+##' @title Contstruct a spatq objective function
+##' @param setup a \code{\link{spatq_setup}} object
+##' @param runSymbolicAnalysis Use Metis reorderings? (Requires special
+##'   installation of TMB; see documentation.)
+##' @param normalize Normalize GMRF likelihoods?
+##' @param ... Additional arguments to pass to \code{\link[TMB]{MakeADFun}}
+##' @return a spatq_obj object suitable for passing to \code{\link{fit_spatq}}
+##' @author John K Best
+spatq_obj <- function(setup, runSymbolicAnalysis = TRUE, normalize = TRUE, ...) {
+  setup$data$proc_switch <- prepare_proc_switch(setup$random)
+  setup$data$norm_flag <- normalize
+  verify_spatq(setup$data, setup$parameters, setup$map)
+  obj <- TMB::MakeADFun(data = setup$data,
+                        parameters = setup$parameters,
+                        map = setup$map,
+                        random = setup$random,
+                        ...)
+  if (!normalize)
+    obj <- TMB::normalize(obj, flag = "incl_data", value = FALSE)
+  if (runSymbolicAnalysis & length(setup$random) > 0)
+    TMB::runSymbolicAnalysis(obj)
+  structure(obj, class = "spatq_obj")
 }
 
 ##' Read in a simulated data set and construct a TMB ADFun for model fitting.
@@ -58,7 +84,7 @@ make_sim_adfun <- function(repl, sc, sub_df = NULL,
                            root_dir = ".", max_T = NULL,
                            index_step,
                            spec_estd = specify_estimated(), ...) {
-  setup <- spatqsetup_sim(repl, sc, sub_df, root_dir, max_T, index_step,
+  setup <- spatq_simsetup(repl, sc, sub_df, root_dir, max_T, index_step,
                           spec_estd)
   prepare_adfun(setup$data, setup$parameters,
                 setup$map, setup$random, ...)
