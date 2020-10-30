@@ -7,7 +7,7 @@
 spatq_obj(setup, runSymbolicAnalysis = TRUE, normalize = TRUE, ...)
 }
 \arguments{
-\item{setup}{a \code{\link{spatq_setup}} object}
+\item{setup}{a \code{\link{spatqsetup}} object}
 
 \item{runSymbolicAnalysis}{Use Metis reorderings? (Requires special
 installation of TMB; see documentation.)}
