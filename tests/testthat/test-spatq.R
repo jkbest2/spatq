@@ -14,7 +14,7 @@ test_that("Fixed effects model can be fit and sdreported", {
   fneval_f <- obj_f$fn()
   greval_f <- obj_f$gr()
   heeval_f <- obj_f$he()
-  fit_f <- fit_spatq(obj_f)
+  fit_f <- fit_spatq(obj_f, NULL, spatq_optcontrol(maxopts = 3))
   rep_f <- report_spatq(obj_f)
   sdr_f <- sdreport_spatq(obj_f)
 

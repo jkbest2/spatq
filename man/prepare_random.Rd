@@ -11,7 +11,8 @@ prepare_random(map)
 }
 \value{
 A character vector indicating which parameters should be integrated
-out using the Laplace approximation.
+out using the Laplace approximation or \code{NULL} if no parameters are to
+be integrated out.
 }
 \description{
 Prepare a character vector indicating which parameters should be

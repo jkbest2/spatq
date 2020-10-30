@@ -4,7 +4,7 @@
 \alias{terminate_opt}
 \title{Test whether optimization should be stopped}
 \usage{
-terminate_opt(fit, optcontrol)
+terminate_opt(fit = NULL, optcontrol)
 }
 \arguments{
 \item{fit}{\code{spatq_fit} object from \code{\link{attach_optdiags}}}

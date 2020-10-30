@@ -18,13 +18,9 @@
 ##' @importFrom stats optim
 ##' @export
 fit_spatq <- function(obj, fit = NULL, optcontrol = spatq_optcontrol()) {
-  ## Use default starting parameters if previous fit is not provided
   if (is.null(fit)) {
-    fit1 <- optim(obj$par, obj$fn, obj$gr, method = "CG",
-                  control = optcontrol$cg_control)
-    fit <- attach_optdiags(fit1, fit, obj)
+    fit <- init_spatq_fit(obj)
   }
-
   while (!terminate_opt(fit, optcontrol)) {
     fit1 <- optim(fit$par, obj$fn, obj$gr, method = "BFGS",
                   control = optcontrol$bfgs_control)
@@ -45,11 +41,7 @@ fit_spatq <- function(obj, fit = NULL, optcontrol = spatq_optcontrol()) {
 ##' @export
 attach_optdiags <- function(newfit, oldfit = NULL, obj) {
   if (is.null(oldfit)) {
-    oldfit <- list(value = obj$fn(obj$par),
-                   par = obj$par,
-                   grad = obj$gr(obj$par),
-                   nfit = 0,
-                   totcounts = c("function" = 0, "gradient" = 0))
+    oldfit <- init_spatq_fit(obj)
   }
   newfit$grad <- obj$gr(newfit$par)
   newfit$dgrad <- oldfit$grad - newfit$grad
@@ -59,6 +51,22 @@ attach_optdiags <- function(newfit, oldfit = NULL, obj) {
   newfit$totcounts <- oldfit$counts + newfit$counts
   class(newfit) <- "spatq_fit"
   newfit
+}
+
+##' @describeIn attach_optdiags Initialize a spatq_fit object
+##' @export
+init_spatq_fit <- function(obj) {
+  ## Fill in with values that make sense or else values that won't cause
+  ## optimization to terminate prematurely
+  structure(
+    list(value = obj$fn(obj$par),
+         par = obj$par,
+         grad = obj$gr(obj$par),
+         dparrel = rep_len(Inf, length(obj$par)),
+         dobjrel = Inf,
+         nfit = 0,
+         totcounts = c("function" = 0, "gradient" = 0)),
+    class = "spatq_fit")
 }
 
 ##' Sequentially tests whether maximum number of optimizations has been reached,
@@ -73,9 +81,11 @@ attach_optdiags <- function(newfit, oldfit = NULL, obj) {
 ##' @return boolean indicating termination (TRUE) or not (FALSE)
 ##' @author John K Best
 ##' @export
-terminate_opt <- function(fit, optcontrol) {
+terminate_opt <- function(fit = NULL, optcontrol) {
   term <- FALSE
-  if (fit$nfit >= optcontrol$maxopts) {
+  if (is.null(fit)) {
+    term <- FALSE
+  } else if (fit$nfit >= optcontrol$maxopts) {
     term <- TRUE
   } else if (max(abs(fit$grad)) < optcontrol$grtol) {
     term <- TRUE
@@ -101,17 +111,15 @@ terminate_opt <- function(fit, optcontrol) {
 ##' @param bfgs_control a list of control parameters for the BFGS optimizations
 ##' @return a \code{spatq_optcontrol} object
 ##' @author John K Best
-spatq_optcontrol <- function(grtol = 1e-3,
-                             dparrtol = 0,
-                             dobjrtol = 0,
-                             maxopts = 10,
-                             cg_control = list(maxit = 50),
+spatq_optcontrol <- function(grtol = 1e-8,
+                             dparrtol = -Inf,
+                             dobjrtol = -Inf,
+                             maxopts = 1,
                              bfgs_control = list()) {
   structure(list(grtol = grtol,
                  dparrtol = dparrtol,
                  dobjrtol = dobjrtol,
                  maxopts = maxopts,
-                 cg_control = cg_control,
                  bfgs_control = bfgs_control),
             class = "spatq_optcontrol")
 }

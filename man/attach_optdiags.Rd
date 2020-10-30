@@ -2,9 +2,12 @@
 % Please edit documentation in R/fit_spatq.R
 \name{attach_optdiags}
 \alias{attach_optdiags}
+\alias{init_spatq_fit}
 \title{Attach optimization diagnostics}
 \usage{
 attach_optdiags(newfit, oldfit = NULL, obj)
+
+init_spatq_fit(obj)
 }
 \arguments{
 \item{newfit}{new optimization result}
@@ -20,6 +23,11 @@ A \code{spatq_fit} object
 Attach optimization diagnostics comparing a previous optimization result to
 a new optimization result.
 }
+\section{Functions}{
+\itemize{
+\item \code{init_spatq_fit}: Initialize a spatq_fit object
+}}
+
 \author{
 John K Best
 }

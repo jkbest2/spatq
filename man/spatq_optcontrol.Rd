@@ -5,11 +5,10 @@
 \title{Control parameters for optimization}
 \usage{
 spatq_optcontrol(
-  grtol = 0.001,
-  dparrtol = 0,
-  dobjrtol = 0,
-  maxopts = 10,
-  cg_control = list(maxit = 50),
+  grtol = 1e-08,
+  dparrtol = -Inf,
+  dobjrtol = -Inf,
+  maxopts = 1,
   bfgs_control = list()
 )
 }
@@ -24,10 +23,10 @@ optimization calls}
 
 \item{maxopts}{maximum number of optimizations to run}
 
+\item{bfgs_control}{a list of control parameters for the BFGS optimizations}
+
 \item{cg_control}{a list of control parameters for the initial conjugate
 gradient optimization}
-
-\item{bfgs_control}{a list of control parameters for the BFGS optimizations}
 }
 \value{
 a \code{spatq_optcontrol} object

@@ -11,7 +11,12 @@ fit_spatq(obj, fit = NULL, optcontrol = spatq_optcontrol())
 
 report_spatq(obj)
 
-sdreport_spatq(obj, bias.correct = TRUE, getJointPrecision = TRUE, ...)
+sdreport_spatq(
+  obj,
+  bias.correct = !is.null(obj$env$random),
+  getJointPrecision = FALSE,
+  ...
+)
 
 hessian_spatq(obj, fit)
 }
