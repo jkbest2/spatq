@@ -30,13 +30,21 @@ bias_metric <- function(fit_df) {
 ##'
 ##' @title Rescale indices
 ##' @param b Unscaled indices/biomass
-##' @return A vector of indices scaled to have a product 1 (mean log of zero)
+##' @param sd Unscaled index standard deviation
+##' @return A list with elements \code{index} and \code{sd}, where indices are
+##'   scaled to have a product 1 (mean log of zero) and standard deviations are
+##'   scaled by the same factor.
 ##' @author John Best
 ##' @export
-rescale_index <- function(b) {
+rescale_index <- function(b, sd = NULL) {
   scale <- exp(mean(log(b)))
-  index <- b / scale
+  index <- list(index = b / scale)
+  if (!is.null(sd)) {
+    sc_sd <- sd / scale
+    index$sd <- sc_sd
+  }
   attr(index, "scale") <- scale
+  class(index) <- "spatq_index"
   index
 }
 

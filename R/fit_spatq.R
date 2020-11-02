@@ -106,8 +106,6 @@ terminate_opt <- function(fit = NULL, optcontrol) {
 ##' @param dobjrtol relative tolerance of objective value change between
 ##'   optimization calls
 ##' @param maxopts maximum number of optimizations to run
-##' @param cg_control a list of control parameters for the initial conjugate
-##'   gradient optimization
 ##' @param bfgs_control a list of control parameters for the BFGS optimizations
 ##' @return a \code{spatq_optcontrol} object
 ##' @author John K Best

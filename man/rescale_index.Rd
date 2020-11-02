@@ -4,13 +4,17 @@
 \alias{rescale_index}
 \title{Rescale indices}
 \usage{
-rescale_index(b)
+rescale_index(b, sd = NULL)
 }
 \arguments{
 \item{b}{Unscaled indices/biomass}
+
+\item{sd}{Unscaled index standard deviation}
 }
 \value{
-A vector of indices scaled to have a product 1 (mean log of zero)
+A list with elements \code{index} and \code{sd}, where indices are
+scaled to have a product 1 (mean log of zero) and standard deviations are
+scaled by the same factor.
 }
 \description{
 Rescale indices of abundance so that they have product one (mean-log zero).

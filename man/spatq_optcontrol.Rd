@@ -24,9 +24,6 @@ optimization calls}
 \item{maxopts}{maximum number of optimizations to run}
 
 \item{bfgs_control}{a list of control parameters for the BFGS optimizations}
-
-\item{cg_control}{a list of control parameters for the initial conjugate
-gradient optimization}
 }
 \value{
 a \code{spatq_optcontrol} object
