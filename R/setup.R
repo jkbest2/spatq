@@ -103,7 +103,7 @@ update_setup <- function(setup, newparobj, newspec) {
 
 ##' @describeIn update_setup Update \code{parameters}
 ##' @export
-update_parameters <- function(setup, newparobj, checkdims = TRUE) {
+update_parameters <- function(setup, newparobj) {
   ## Extract the best values from the previous fit as a named list
   newpars <- get_newpars(newparobj)
   ## Update each parameter vector using `newpars`. Use a `for` loop because need
@@ -129,17 +129,26 @@ update_parameters <- function(setup, newparobj, checkdims = TRUE) {
 ##' @author John K Best
 ##' @export
 get_newpars <- function(obj) UseMethod("get_newpars")
+##' @method get_newpars list
 ##' @export
 get_newpars.list <- function(obj) obj
+##' @method get_newpars spatq_fit
 ##' @export
 get_newpars.spatq_fit <- function(obj) gather_nvec(obj$par)
+##' @method get_newpars spatq_obj
 ##' @export
 get_newpars.spatq_obj <- function(obj) gather_nvec(obj$env$last.par.best)
+##' @method get_newpars sdreport
 ##' @export
 get_newpars.sdreport <- function(obj) gather_nvec(c(obj$par.fixed, obj$par.random))
+##' @method get_newpars numeric
 ## Vectors inherit "numeric"
-##'@export
+##' @export
 get_newpars.numeric <- function(obj) gather_nvec(obj)
+## Handle the NULL case
+##' @method get_newpars NULL
+##' @export
+get_newpars.NULL <- function(obj) NULL
 
 ##' @describeIn update_setup Update \code{map}
 ##' @export
@@ -164,6 +173,8 @@ update_random <- function(setup) {
 ##'   parameter vector, with NAs for elements that were not estiamted
 ##' @return The updated parameter vector
 ##' @author John K Best
+##' @importFrom utils tail
+##' @export
 update_onepar <- function(currvals, newvals = NULL, mapvec = NULL) {
   if (is.null(newvals)) {
     ## If no new values, use old values

@@ -9,7 +9,7 @@
 \usage{
 update_setup(setup, newparobj, newspec)
 
-update_parameters(setup, newparobj, checkdims = TRUE)
+update_parameters(setup, newparobj)
 
 update_map(setup, newspec)
 
