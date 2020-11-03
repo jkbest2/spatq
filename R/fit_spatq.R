@@ -87,12 +87,12 @@ terminate_opt <- function(fit = NULL, optcontrol) {
     term <- FALSE
   } else if (fit$nfit >= optcontrol$maxopts) {
     term <- TRUE
-  } else if (max(abs(fit$grad)) < optcontrol$grtol) {
-    term <- TRUE
-  } else if (max(abs(fit$dparrel)) < optcontrol$dparrtol) {
-    term <- TRUE
-  } else if (fit$dobjrel < optcontrol$dobjrtol) {
-    term <- TRUE
+  ## } else if (max(abs(fit$grad)) < optcontrol$grtol) {
+  ##   term <- TRUE
+  ## } else if (max(abs(fit$dparrel)) < optcontrol$dparrtol) {
+  ##   term <- TRUE
+  ## } else if (fit$dobjrel < optcontrol$dobjrtol) {
+  ##   term <- TRUE
   }
   term
 }
