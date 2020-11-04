@@ -109,6 +109,7 @@ terminate_opt <- function(fit = NULL, optcontrol) {
 ##' @param bfgs_control a list of control parameters for the BFGS optimizations
 ##' @return a \code{spatq_optcontrol} object
 ##' @author John K Best
+##' @export
 spatq_optcontrol <- function(grtol = 1e-8,
                              dparrtol = -Inf,
                              dobjrtol = -Inf,

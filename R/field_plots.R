@@ -178,6 +178,7 @@ project_field <- function(parvec, proj, dim) {
 ##' @param value Logical; is this a generative/estimated parameter?
 ##' @return \code{x} with attribute \code{"isgen"} or logical
 ##' @author John K Best
+##' @export
 isgen <- function(x) {
   attr(x, "isgen")
 }

@@ -46,6 +46,7 @@ prepare_adfun <- function(data, parameters, map, random,
 ##' @param ... Additional arguments to pass to \code{\link[TMB]{MakeADFun}}
 ##' @return a spatq_obj object suitable for passing to \code{\link{fit_spatq}}
 ##' @author John K Best
+##' @export
 spatq_obj <- function(setup, runSymbolicAnalysis = TRUE, normalize = TRUE, ...) {
   setup$data$proc_switch <- prepare_proc_switch(setup$random)
   setup$data$norm_flag <- normalize
