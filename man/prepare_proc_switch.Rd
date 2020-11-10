@@ -11,7 +11,7 @@ prepare_proc_switch(random)
 \code{prepare_random}}
 }
 \value{
-Logical vector of length 6 indicating which random processes are
+Logical vector of length 12 indicating which random processes are
 \emph{not} map'd off
 }
 \description{

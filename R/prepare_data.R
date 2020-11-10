@@ -254,7 +254,7 @@ prepare_data <- function(catch_df, index_df, mesh, fem,
 
               ## Turn off random effects likelihood components. Start with all
               ## on, turn off after map
-              proc_switch = rep(TRUE, 6),
+              proc_switch = rep(TRUE, 12),
               ## Normalize GMRFs externally, and include flag for returning
               ## negative log-likelihood without data likelihood
               norm_flag = FALSE,
@@ -293,13 +293,12 @@ pars_data <- function(data_el, T = 1) {
 ##' @title Prepare process switch
 ##' @param random Character vector of random parameters; as from
 ##'   \code{prepare_random}
-##' @return Logical vector of length 6 indicating which random processes are
+##' @return Logical vector of length 12 indicating which random processes are
 ##'   *not* map'd off
 ##' @author John Best
 prepare_proc_switch <- function(random) {
   procs <- c("gamma_n", "gamma_w", "omega_n", "omega_w",
              "epsilon_n", "epsilon_w", "eta_n", "eta_w",
              "phi_n", "phi_w", "psi_n", "psi_w")
-  on <- procs %in% random
-  vapply(seq(1, 11, 2), function(i) on[i] || on[i + 1], TRUE)
+  procs %in% random
 }
