@@ -77,6 +77,12 @@ Type objective_function<Type>::operator() () {
   DATA_IVECTOR(proc_switch);
 
   // ---------------------------------------------------------------------------
+  // Which observation likelihood:
+  // 0: Poisson-link zero-inflated log-normal
+  // 1: Tweedie
+  DATA_INTEGER(obslik);
+
+  // ---------------------------------------------------------------------------
   // Flags to control GMRF normalization and return early for normalization
   DATA_INTEGER(norm_flag);
   DATA_INTEGER(incl_data);
@@ -126,7 +132,7 @@ Type objective_function<Type>::operator() () {
   PARAMETER_VECTOR(log_tau);       // 8
 
   // Log catch variation parameter
-  PARAMETER(log_sigma);            // 1
+  PARAMETER_VECTOR(obslik_pars);   // 1 for ZI log-normal, 2 for Tweedie
 
   // ===========================================================================
   // Derived values
@@ -147,7 +153,6 @@ Type objective_function<Type>::operator() () {
   vector<Type> xi = exp(log_xi);
   vector<Type> kappa = exp(log_kappa);
   vector<Type> tau = exp(log_tau);
-  Type sigma = exp(log_sigma);
 
   // ===========================================================================
   // Log-likelihood accumulator
@@ -620,27 +625,47 @@ Type objective_function<Type>::operator() () {
   // ===========================================================================
   // Observation likelihood
   // ---------------------------------------------------------------------------
-  for (int i = 0; i < N_obs; i++) {
-    if (catch_obs(i) == 0) {
-      jnll(10) -= log_p_zero(i);
-    } else {
-      jnll(10) -= log_p_enc(i) +
-        dlnorm(catch_obs(i), log_r(i) - sigma * sigma / Type(2.0), sigma, true);
+  if (obslik == 0) {
+    // Poisson-link zero-inflated log-normal
+    Type sigma = exp(obslik_pars(1));
+    for (int i = 0; i < N_obs; i++) {
+      if (catch_obs(i) == 0) {
+        jnll(10) -= log_p_zero(i);
+      } else {
+        jnll(10) -= log_p_enc(i) +
+          dlnorm(catch_obs(i), log_r(i) - sigma * sigma / Type(2.0), sigma, true);
+      }
+    }
+
+    // Simulate observations. Use `p` as encounter probability, and `r` as median
+    // of log Normal with logsd `sigma`.
+    SIMULATE {
+      vector<Type> encounter(N_obs);
+      vector<Type> log_catch_median(N_obs);
+
+      encounter = rbinom(Type(1.0), exp(log_p_enc));
+      log_catch_median = log_r - sigma * sigma / Type(2.0);
+      catch_obs = encounter * rlnorm(log_catch_median, sigma);
+
+      REPORT(encounter);
+      REPORT(catch_obs);
     }
   }
+  else if (obslik == 1) {
+    // Tweedie
+    Type disp = tweedie_phi(obslik_pars(1));
+    Type shape = tweedie_p(obslik_pars(2));
+    for (int i = 0; i < N_obs; i++) {
+      jnll(10) -= dtweedie(catch_obs(i), tweedie_mu(log_n(i)), disp, shape, true);
+    }
 
-  // Simulate observations. Use `p` as encounter probability, and `r` as median
-  // of log Normal with logsd `sigma`.
-  SIMULATE {
-    vector<Type> encounter(N_obs);
-    vector<Type> log_catch_median(N_obs);
-
-    encounter = rbinom(Type(1.0), exp(log_p_enc));
-    log_catch_median = log_r - sigma * sigma / Type(2.0);
-    catch_obs = encounter * rlnorm(log_catch_median, sigma);
-
-    REPORT(encounter);
-    REPORT(catch_obs);
+    // Simulate from observation distribution; not currently implemented
+    SIMULATE {
+      for (int i = 0; i < N_obs; i++) {
+      // catch_obs(i) = rtweedie(exp(log_n(i)), disp, shape);
+      catch_obs(i) = 0.0;
+      }
+    }
   }
 
   // ===========================================================================
