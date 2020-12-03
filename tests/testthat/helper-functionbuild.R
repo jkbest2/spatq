@@ -26,3 +26,30 @@ obj_f <- make_sim_adfun(repl = 1, sc = "pref",
                         runSymbolicAnalysis = FALSE,
                         normalize = TRUE,
                         silent = TRUE)
+
+## Tweedie with fixed effects
+twf_estd <- specify_estimated(beta = TRUE, lambda = TRUE,
+                              obs_lik = 1L)
+twf_setup <- spatq_simsetup(repl = 1, sc = "pref",
+                            root_dir = normalizePath(
+                              system.file("testdata", package = "spatq")),
+                            max_T = 5,
+                            index_step = 50,
+                            spec_estd = twf_estd)
+twf_obj <- spatq_obj(twf_setup)
+twf_fit <- fit_spatq(twf_obj)
+
+## Tweedie with random effects
+tw_estd <- specify_estimated(beta = TRUE, gamma = FALSE,
+                             omega = TRUE, epsilon = TRUE,
+                             lambda = TRUE, eta = FALSE,
+                             phi = TRUE, psi = FALSE,
+                             kappa_map = c(1, NA, 1, NA, 1, NA, NA, NA),
+                             obs_lik = 1L)
+tw_setup <- spatq_simsetup(repl = 1, sc = "pref",
+                           root_dir = normalizePath(
+                             system.file("testdata", package = "spatq")),
+                           max_T = 15,
+                           index_step = 5,
+                           spec_estd = tw_estd)
+tw_obj <- spatq_obj(tw_setup)

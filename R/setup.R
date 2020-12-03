@@ -1,7 +1,7 @@
 ##' Convenience constructor when data follows simulation study directory
-##' structure. See also \code{\link{new_spatqsetup}}.
+##' structure. See also \code{\link{new_spatq_setup}}.
 ##'
-##' @title Construct a spatqsetup from a simulated data set
+##' @title Construct a spatq_setup from a simulated data set
 ##' @param repl Replicate number
 ##' @param sc Scenario; "pref", "spat", or "combo"
 ##' @param sub_df Data frame indicating subsampling strategy; see
@@ -29,8 +29,8 @@ spatq_simsetup <- function(repl, sc, sub_df = NULL,
   ## Subset observations
   catch_df <- subsample_catch(catch_df, sub_df)
 
-  setup <- spatqsetup(catch_df, spec_estd, index_step)
-  attr(setup, "repl") <- replace
+  setup <- spatq_setup(catch_df, spec_estd, index_step)
+  attr(setup, "repl") <- repl
   attr(setup, "scenario") <- sc
   class(setup) <- c("spatq_simsetup", "spatq_setup")
   return(setup)
@@ -44,11 +44,11 @@ spatq_simsetup <- function(repl, sc, sub_df = NULL,
 ##' @param parameters Parameter list as from \code{\link{prepare_pars}}
 ##' @param map Map list as from \code{\link{prepare_map}}
 ##' @param random Random vector as from \code{\link{prepare_random}}
-##' @return A \code{spatqsetup} object ready to be used to construct a spatq
+##' @return A \code{spatq_setup} object ready to be used to construct a spatq
 ##'   objective function
 ##' @author John K Best
 ##' @export
-new_spatqsetup <- function(data, parameters, map, random) {
+new_spatq_setup <- function(data, parameters, map, random) {
   verify_spatq(data, parameters, map)
   structure(list(data = data,
                  parameters = parameters,
@@ -57,13 +57,13 @@ new_spatqsetup <- function(data, parameters, map, random) {
             class = "spatq_setup")
 }
 
-##' @describeIn new_spatqsetup Convenient constructor for model setups
+##' @describeIn new_spatq_setup Convenient constructor for model setups
 ##' @param catch_df Data frame with catch observations, as from
 ##'   \code{\link{read_catch}}
-##' @param spatqspec Model specification, \code{\link{specify_estimated}}
+##' @param spatq_spec Model specification, \code{\link{specify_estimated}}
 ##' @param index_step Index grid step size \code{\link{create_index_df}}
 ##' @export
-spatqsetup <- function(catch_df, spatqspec, index_step) {
+spatq_setup <- function(catch_df, spatq_spec, index_step) {
   ## Get number of years represented in catch data
   T <- length(unique(catch_df$time))
 
@@ -75,13 +75,13 @@ spatqsetup <- function(catch_df, spatqspec, index_step) {
   fem <- generate_fem(mesh)
 
   ## Prepare model specification components
-  data <- prepare_data(catch_df, index_df, mesh, fem)
+  data <- prepare_data(catch_df, index_df, mesh, fem, spatq_spec$obs_lik)
   parameters <- prepare_pars(data, mesh)
   map <- prepare_map(parameters,
-                     spec = spatqspec)
+                     spec = spatq_spec)
   random <- prepare_random(map)
 
-  return(new_spatqsetup(data, parameters, map, random))
+  return(new_spatq_setup(data, parameters, map, random))
 }
 
 ##' Not intended to be used when the underlying data change.
@@ -91,7 +91,7 @@ spatqsetup <- function(catch_df, spatqspec, index_step) {
 ##' @param newparobj Object containing updated parameter values, to be extracted
 ##'   using \code{\link{get_newpars}}
 ##' @param newspec Next estimation specification
-##' @return Updated \code{\link{spatqsetup}}
+##' @return Updated \code{\link{spatq_setup}}
 ##' @author John K Best
 ##' @export
 update_setup <- function(setup, newparobj, newspec) {

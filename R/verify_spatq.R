@@ -43,18 +43,46 @@ verify_spatq_names <- function(data, parameters, map = list()) {
                  "Z_n", "Z_w", "IZ_n", "IZ_w",
                  "A_spat", "A_sptemp", "IA_spat", "IA_sptemp", "Ih",
                  "R_n", "R_w", "V_n", "V_w",
-                 "A_qspat", "A_qsptemp", "spde")
+                 "A_qspat", "A_qsptemp", "spde",
+                 "proc_switch", "obs_lik",
+                 "norm_flag", "incl_data")
   parnames <- c("beta_n", "beta_w", "gamma_n", "gamma_w",
                 "omega_n", "omega_w", "epsilon_n", "epsilon_w",
                 "lambda_n", "lambda_w", "eta_n", "eta_w",
                 "phi_n", "phi_w", "psi_n", "psi_w",
-                "log_kappa", "log_tau", "log_sigma")
-  ## print(parameters)
-  stopifnot(exprs = {
-    all(datanames %in% names(data))
-    all(parnames %in% names(parameters))
-  })
-  return(TRUE)
+                "log_xi", "log_kappa", "log_tau", "obs_lik_pars")
+  ret <- verify_setequal(names(data), datanames) &&
+    verify_setequal(names(parameters), parnames)
+  return(ret)
+}
+
+##' Check that two arguments contain the same elements. If not, provide an
+##' informative error message.
+##'
+##' @title Verify two sets are equal
+##' @param set1 First set
+##' @param set2 Second set
+##' @param set A set
+##' @return `TRUE` if all components present, error otherwise
+##' @export
+verify_setequal <- function(set1, set2) {
+  if (!setequal(set1, set2)) {
+    only1 <- setdiff(set1, set2)
+    only2 <- setdiff(set2, set1)
+    nm1 <- deparse1(substitute(set1))
+    nm2 <- deparse1(substitute(set2))
+    stop("\nOnly ", nm1, " has ", set_string(only1), ".\n",
+         "Only ", nm2, " has ", set_string(only2), ".")
+    ret <- FALSE
+  } else {
+    ret <- TRUE
+  }
+  return(ret)
+}
+
+##' @describeIn verify_setequal Paste strings together as a set
+set_string <- function(set) {
+  paste("{", paste(set, collapse = ", "), "}")
 }
 
 ##' Check that all components are of correct dimensions and conform.
@@ -153,6 +181,15 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
     pdims$log_tau[1] == 8
   })
 
+  ## Check correct number of observation likelihood parameters are provided
+  n_olp <- switch(data$obs_lik + 1, # R uses 1-indexing vs. 0- for C++
+                  1, # Zero-inflated Poisson link log-normal (sigma)
+                  2) # Tweedie (dispersion and shape)
+  stopifnot(exprs = {
+    ## Be sure to extract the first element because this is now a 2-vector
+    pdims$obs_lik_pars[1] == n_olp
+  })
+
   lapply(names(map), function(mn) {
     stopifnot(length(map[[mn]]) == length(parameters[[mn]]))
   })
@@ -178,7 +215,7 @@ verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
     if (nm %in% ranef_names) {
       idx <- which(ranef_names == nm)
       stopifnot(exprs = {
-        ## Check that map includes the field parametes and the correct indices
+        ## Check that map includes the field parameters and the correct indices
         ## are NA
         !is.null(map$log_xi) && is.na(map$log_xi[idx])
       })
@@ -219,6 +256,13 @@ verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
               is.na(map$lambda_w),
               length(map$lambda_w) == 1)
   }
+
+  ## If using Tweedie obs lik, make sure that all weight-per-group parameters are map'd
+  if (length(parameters$obs_lik_pars) > 1) {
+    w_pars <- c("beta_w", "gamma_w", "omega_w", "epsilon_w",
+                "lambda_w", "eta_w", "phi_w", "psi_w")
+    stopifnot(all(w_pars %in% names(map)))
+  }
   return(TRUE)
 }
 
@@ -231,6 +275,7 @@ verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
 ##' @author John Best
 ##' @export
 verify_ident_fixef <- function(data) {
+  ## Check numbers density fixed effects
   if (any(data$R_n != 0)) {
     fix_n <- cbind(data$X_n, data$R_n)
   } else {
@@ -240,7 +285,9 @@ verify_ident_fixef <- function(data) {
   rank_n <- Matrix::rankMatrix(fix_n)
   if (rank_n < np_n) stop("Numbers density fixed effects are not identifiable")
 
-  if (any(data$R_w != 0)) {
+  ## Check weight-per-group fixed effects, only if using zero-inflated Poisson
+  ## link log-normal likelihood
+  if (data$obs_lik == 0 & any(data$R_w != 0)) {
     fix_w <- cbind(data$X_w, data$R_w)
   } else {
     fix_w <- data$X_w
