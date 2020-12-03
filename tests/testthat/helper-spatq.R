@@ -99,6 +99,7 @@ dat <- list(catch_obs = rep(0, n_obs),
             A_qsptemp = A_qsptemp,
             spde = fem,
             proc_switch = rep(TRUE, 6),
+            obs_lik = 0L,
             norm_flag = FALSE,
             incl_data = TRUE)
 
@@ -123,7 +124,7 @@ pars <- list(beta_n = pars_gen$beta_n,
              log_xi = rep(0.0, 4L),
              log_kappa = rep(log(pars_gen$kappa), 8),
              log_tau = rep(log(pars_gen$tau), 8),
-             log_sigma = log(pars_gen$sigma_c))
+             obs_lik_pars = log(pars_gen$sigma_c))
 attr(pars, "map_lambda") <- FALSE
 
 map_empty <- list()

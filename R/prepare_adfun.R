@@ -39,7 +39,7 @@ prepare_adfun <- function(data, parameters, map, random,
 ##' Prepare an objective function using \code{\link[TMB]{MakeADFun}}.
 ##'
 ##' @title Contstruct a spatq objective function
-##' @param setup a \code{\link{spatqsetup}} object
+##' @param setup a \code{\link{spatq_setup}} object
 ##' @param runSymbolicAnalysis Use Metis reorderings? (Requires special
 ##'   installation of TMB; see documentation.)
 ##' @param normalize Normalize GMRF likelihoods?

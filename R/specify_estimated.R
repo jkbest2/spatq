@@ -16,6 +16,8 @@
 ##' @param psi Catchability spatiotemporal effects
 ##' @param kappa_map Factor vector of length 8 specifying the map for kappa
 ##'   parameters
+##' @param obs_lik Observation likelihood. Current options are \code{0}:
+##'   Poisson-link log-normal and \code{1}: Tweedie
 ##' @return A list with elements for each random effect process and parameter in
 ##'   the \code{spatq} model, each with a logical indicating whether it is
 ##'   (\code{TRUE}) or is not (\code{FALSE}) estimated.
@@ -29,36 +31,40 @@ specify_estimated <- function(beta = TRUE,
                               eta = FALSE,
                               phi = FALSE,
                               psi = FALSE,
-                              kappa_map = NULL) {
+                              kappa_map = NULL,
+                              obs_lik = 0L) {
   estd <- list()
-  estd$beta_n <- is_estd_proc("beta_n", beta)
-  estd$beta_w <- is_estd_proc("beta_w", beta)
-  estd$gamma_n <- is_estd_proc("gamma_n", gamma)
-  estd$gamma_w <- is_estd_proc("gamma_w", gamma)
-  estd$omega_n <- is_estd_proc("omega_n", omega)
-  estd$omega_w <- is_estd_proc("omega_w", omega)
-  estd$epsilon_n <- is_estd_proc("epsilon_n", epsilon)
-  estd$epsilon_w <- is_estd_proc("epsilon_w", epsilon)
+  estd$beta_n <- is_estd_proc("beta_n", beta, obs_lik)
+  estd$beta_w <- is_estd_proc("beta_w", beta, obs_lik)
+  estd$gamma_n <- is_estd_proc("gamma_n", gamma, obs_lik)
+  estd$gamma_w <- is_estd_proc("gamma_w", gamma, obs_lik)
+  estd$omega_n <- is_estd_proc("omega_n", omega, obs_lik)
+  estd$omega_w <- is_estd_proc("omega_w", omega, obs_lik)
+  estd$epsilon_n <- is_estd_proc("epsilon_n", epsilon, obs_lik)
+  estd$epsilon_w <- is_estd_proc("epsilon_w", epsilon, obs_lik)
 
-  estd$lambda_n <- is_estd_proc("lambda_n", lambda)
-  estd$lambda_w <- is_estd_proc("lambda_w", lambda)
-  estd$eta_n <- is_estd_proc("eta_n", eta)
-  estd$eta_w <- is_estd_proc("eta_w", eta)
-  estd$phi_n <- is_estd_proc("phi_n", phi)
-  estd$phi_w <- is_estd_proc("phi_w", phi)
-  estd$psi_n <- is_estd_proc("psi_n", psi)
-  estd$psi_w <- is_estd_proc("psi_w", psi)
+  estd$lambda_n <- is_estd_proc("lambda_n", lambda, obs_lik)
+  estd$lambda_w <- is_estd_proc("lambda_w", lambda, obs_lik)
+  estd$eta_n <- is_estd_proc("eta_n", eta, obs_lik)
+  estd$eta_w <- is_estd_proc("eta_w", eta, obs_lik)
+  estd$phi_n <- is_estd_proc("phi_n", phi, obs_lik)
+  estd$phi_w <- is_estd_proc("phi_w", phi, obs_lik)
+  estd$psi_n <- is_estd_proc("psi_n", psi, obs_lik)
+  estd$psi_w <- is_estd_proc("psi_w", psi, obs_lik)
 
   spec <- list(gamma = gamma, omega = omega, epsilon = epsilon,
                eta = eta, phi = phi, psi = psi)
-  estd$log_xi <- is_estd_hpar("log_xi", spec)
-  estd$log_kappa <- is_estd_hpar("log_kappa", spec)
-  estd$log_tau <- is_estd_hpar("log_tau", spec)
+  estd$log_xi <- is_estd_hpar("log_xi", estd)
+  estd$log_kappa <- is_estd_hpar("log_kappa", estd)
+  estd$log_tau <- is_estd_hpar("log_tau", estd)
+  estd$obs_lik <- obs_lik
   if (!is.null(kappa_map)) {
     attr(estd, "kappa_map") <- factor(kappa_map)
   }
 
-  return(estd)
+  return(
+    structure(estd,
+              class = "spatq_spec"))
 }
 
 ##' Only intended to be called from \code{\link{specify_estimated}};
@@ -67,65 +73,44 @@ specify_estimated <- function(beta = TRUE,
 ##' all of those arguments..
 ##'
 ##' @title Check if process is estimated
-##' @param par Name of the process parameter (e.g. \code{"omega_n"}) as a string
+##' @param parname Name of the process parameter (e.g. \code{"omega_n"}) as a string
 ##' @param proc_spec Logical or list at the "process" level (e.g. omega, which
 ##'   contains \code{omega_n} and \code{omega_w})
-##' @param spec List of all process-level specifications
+##' @param estd List indicating whether each random process is estimated
+##' @param obs_lik Observation likelihood, current options are \code{0}:
+##    Poisson-link log-normal and \code{1}: Tweedie
 ##' @return Logical indicating whether parameter is to be estimated
 ##' @author John Best
-is_estd_proc <- function(par, proc_spec) {
-  if (is.logical(proc_spec)) {
+is_estd_proc <- function(parname, proc_spec, obs_lik) {
+  if (obs_lik == 1 && grepl(r"(_w$)", parname)) {
+    ## Don't estimate weight-per-group parameters if using a Tweedie
+    ## observation likelihood
+    est <- FALSE
+  } else if (is.logical(proc_spec)) {
     est <- proc_spec
-  } else if (is.logical(proc_spec[[par]])) {
-    est <- proc_spec[[par]]
-  } else if (is.list(proc_spec) && !(par %in% names(proc_spec))) {
+  } else if (is.logical(proc_spec[[parname]])) {
+    est <- proc_spec[[parname]]
+  } else if (is.list(proc_spec) && !(parname %in% names(proc_spec))) {
     est <- TRUE
-  } else if (is.list(proc_spec[[par]])) {
+  } else if (is.list(proc_spec[[parname]])) {
     est <- TRUE
   } else {
-    est <- NA
+    ## Fallback; something went wrong
+    stop("Parameters ", parname, " not specified correctly.")
   }
 
   return(est)
 }
 
 ##' @describeIn is_estd_proc Check which hyperparameters are estimated
-is_estd_hpar <- function(par, spec) {
-  if (par == "log_xi") {
-    procs <- c("gamma", "gamma", "eta", "eta")
-    pars <- c("gamma_n", "gamma_w", "eta_n", "eta_w")
+is_estd_hpar <- function(parname, estd) {
+  if (parname == "log_xi") {
+    procs <- c("gamma_n", "gamma_w", "eta_n", "eta_w")
   } else {
     procs <- rep(c("omega", "epsilon", "phi", "psi"), each = 2)
-    pars <- paste0(procs, c("_n", "_w"))
+    procs <- paste0(procs, c("_n", "_w"))
   }
 
-  ## Use NA's so a failed parse of the spec tree is obvious
-  est <- rep(NA, length(pars))
-  for (idx in seq_along(pars)) {
-    ## Extract the process to consider (either "gamma" or "eta")
-    proc_spec <- spec[[procs[idx]]]
-    if (is.logical(proc_spec)) {
-      ## If the process is logical, use that for hyperparameters as well
-      est[idx] <- proc_spec
-    } else if (is.list(proc_spec)) {
-      if (par %in% names(proc_spec)) {
-        ## If hyperparameters are specified for both parameters simultaneously,
-        ## use those values
-        est[idx] <- proc_spec[[par]]
-      } else if (pars[idx] %in% names(proc_spec)) {
-        ## If n and w are specified separately, extract the specific
-        ## parameter of interest
-        par_spec <- proc_spec[[pars[idx]]]
-        if (is.logical(par_spec)) {
-          ## If this value is logical, apply to log_xi as well
-          est[idx] <- par_spec
-        } else if (par %in% names(par_spec)) {
-          ## Otherwise, take value from nested "log_xi" list element
-          est[idx] <- par_spec[[par]]
-        }
-      }
-    }
-  }
-  ## Return the logical vector
-  return(est)
+  unlist(estd[procs])
+
 }

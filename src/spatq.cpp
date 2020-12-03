@@ -80,7 +80,7 @@ Type objective_function<Type>::operator() () {
   // Which observation likelihood:
   // 0: Poisson-link zero-inflated log-normal
   // 1: Tweedie
-  DATA_INTEGER(obslik);
+  DATA_INTEGER(obs_lik);
 
   // ---------------------------------------------------------------------------
   // Flags to control GMRF normalization and return early for normalization
@@ -132,7 +132,7 @@ Type objective_function<Type>::operator() () {
   PARAMETER_VECTOR(log_tau);       // 8
 
   // Log catch variation parameter
-  PARAMETER_VECTOR(obslik_pars);   // 1 for ZI log-normal, 2 for Tweedie
+  PARAMETER_VECTOR(obs_lik_pars);   // 1 for ZI log-normal, 2 for Tweedie
 
   // ===========================================================================
   // Derived values
@@ -625,9 +625,11 @@ Type objective_function<Type>::operator() () {
   // ===========================================================================
   // Observation likelihood
   // ---------------------------------------------------------------------------
-  if (obslik == 0) {
+  if (obs_lik == 0) {
     // Poisson-link zero-inflated log-normal
-    Type sigma = exp(obslik_pars(1));
+    Type sigma = exp(obs_lik_pars(0));
+    REPORT(sigma);
+
     for (int i = 0; i < N_obs; i++) {
       if (catch_obs(i) == 0) {
         jnll(10) -= log_p_zero(i);
@@ -651,10 +653,13 @@ Type objective_function<Type>::operator() () {
       REPORT(catch_obs);
     }
   }
-  else if (obslik == 1) {
+  else if (obs_lik == 1) {
     // Tweedie
-    Type disp = tweedie_phi(obslik_pars(1));
-    Type shape = tweedie_p(obslik_pars(2));
+    Type disp = tweedie_phi(obs_lik_pars(0));
+    Type shape = tweedie_p(obs_lik_pars(1));
+    REPORT(disp);
+    REPORT(shape);
+
     for (int i = 0; i < N_obs; i++) {
       jnll(10) -= dtweedie(catch_obs(i), tweedie_mu(log_n(i)), disp, shape, true);
     }

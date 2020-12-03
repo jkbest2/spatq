@@ -24,7 +24,7 @@ using \code{\link{get_newpars}}}
 \item{newspec}{Next estimation specification}
 }
 \value{
-Updated \code{\link{spatqsetup}}
+Updated \code{\link{spatq_setup}}
 }
 \description{
 Not intended to be used when the underlying data change.

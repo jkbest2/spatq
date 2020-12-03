@@ -35,5 +35,8 @@ prepare_map <- function(pars, spec) {
     map$log_kappa <- factor(kappa_map)
   }
 
+  ## Drop `obs_lik`; currently always estimating these parameters
+  map$obs_lik <- NULL
+
   return(map)
 }

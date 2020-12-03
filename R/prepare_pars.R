@@ -75,8 +75,11 @@ init_fixef <- function(data) {
 ##'   for optimization
 ##' @author John Best
 ##' @export
-prepare_pars <- function(data, mesh, init_fixef = TRUE) {
+prepare_pars <- function(data, mesh, init_fixef = FALSE) {
   T <- attr(data, "T")
+  init_olp <- switch(data$obs_lik + 1,
+                     log(1), # log-dispersion for Poisson-link log-normal
+                     c(log(1), 1.5)) # log-dispersion and shift-logit shape for Tweedie
   pars <- list(beta_n = pars_data(data$X_n),
                beta_w = pars_data(data$X_w),
                gamma_n = pars_data(data$Z_n),
@@ -98,7 +101,7 @@ prepare_pars <- function(data, mesh, init_fixef = TRUE) {
                log_xi = rep(0.0, 4L),
                log_kappa = rep(log(pars_kappa(50)), 8),
                log_tau = rep(log(pars_tau(1.0, 50)), 8),
-               log_sigma = log(1.0))
+               obs_lik_pars = init_olp)
   if (init_fixef) {
     init_est <- init_fixef(data)
     pars$beta_n <- init_est$beta_n

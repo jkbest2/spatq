@@ -4,7 +4,7 @@
 \alias{prepare_pars}
 \title{Prepare parameter list}
 \usage{
-prepare_pars(data, mesh, init_fixef = TRUE)
+prepare_pars(data, mesh, init_fixef = FALSE)
 }
 \arguments{
 \item{data}{Data list, as from \code{prepare_data}}

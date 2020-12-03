@@ -13,7 +13,8 @@ specify_estimated(
   eta = FALSE,
   phi = FALSE,
   psi = FALSE,
-  kappa_map = NULL
+  kappa_map = NULL,
+  obs_lik = 0L
 )
 }
 \arguments{
@@ -35,6 +36,9 @@ specify_estimated(
 
 \item{kappa_map}{Factor vector of length 8 specifying the map for kappa
 parameters}
+
+\item{obs_lik}{Observation likelihood. Current options are \code{0}:
+Poisson-link log-normal and \code{1}: Tweedie}
 }
 \value{
 A list with elements for each random effect process and parameter in

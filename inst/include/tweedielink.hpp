@@ -20,14 +20,16 @@ Type tweedie_phi(Type log_sigma) {
   return exp(log_sigma);
 }
 
-//' Shifted logistic link for Tweedie shape
+//' Identity link for Tweedie shape
 //'
 //' A Tweedie distribution with 1 < p < 2 is a compound Poisson gamma
-//' distribution, allowing for zero inflated non-negative observations.
+//' distribution, allowing for zero inflated non-negative observations. Can't
+//' use a shifted logistic or fitting fails with a Calloc of petabytes.
 //' @param sl_p [Type] shifted logit shape parameter
 //' @return Tweedie shape parameter 1 < p < 2
 template<class Type>
 Type tweedie_p(Type sl_p) {
-  return invlogit(sl_p) + Type(1.0);
+  //return invlogit(sl_p) + Type(1.0);
+  return sl_p;
 }
 

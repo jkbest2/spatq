@@ -2,7 +2,7 @@
 % Please edit documentation in R/setup.R
 \name{spatq_simsetup}
 \alias{spatq_simsetup}
-\title{Construct a spatqsetup from a simulated data set}
+\title{Construct a spatq_setup from a simulated data set}
 \usage{
 spatq_simsetup(
   repl,
@@ -38,7 +38,7 @@ A list with elements \code{data}, \code{parameters}, \code{map}, and
 }
 \description{
 Convenience constructor when data follows simulation study directory
-structure. See also \code{\link{new_spatqsetup}}.
+structure. See also \code{\link{new_spatq_setup}}.
 }
 \author{
 John K Best

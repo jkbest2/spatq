@@ -5,17 +5,19 @@
 \alias{is_estd_hpar}
 \title{Check if process is estimated}
 \usage{
-is_estd_proc(par, proc_spec)
+is_estd_proc(parname, proc_spec, obs_lik)
 
-is_estd_hpar(par, spec)
+is_estd_hpar(parname, estd)
 }
 \arguments{
-\item{par}{Name of the process parameter (e.g. \code{"omega_n"}) as a string}
+\item{parname}{Name of the process parameter (e.g. \code{"omega_n"}) as a string}
 
 \item{proc_spec}{Logical or list at the "process" level (e.g. omega, which
 contains \code{omega_n} and \code{omega_w})}
 
-\item{spec}{List of all process-level specifications}
+\item{obs_lik}{Observation likelihood, current options are \code{0}:}
+
+\item{estd}{List indicating whether each random process is estimated}
 }
 \value{
 Logical indicating whether parameter is to be estimated
