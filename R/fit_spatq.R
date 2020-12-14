@@ -1,3 +1,64 @@
+##' Use nonlinear optimization routines from \code{\link[stats]{nlminb}} or
+##' \code{\link[stats]{optim}} to fit. Can include constraints where appropriate
+##' for the chosen method. If \code{method = "nlminb"} is used, the result is
+##' restructure to match \code{\link[stats]{optim}} output using
+##' \code{\link{fix_nlminb_fit}}.
+##'
+##' @title Fit a spatq model by maximum likelihood
+##' @param obj A \code{\link{spatq_obj}}
+##' @param fit Previous fit, use results as starting values
+##' @param method Optimization method to use, as a string. Valid options are
+##'   \code{"nlminb"} or one of the multivariate \code{\link[stats]{optim}}
+##'   methods.
+##' @param bounds List with \code{"upper"} and \code{"lower"} parameter bounds;
+##'   will error for unconstrained optimization methods
+##' @param control list of control arguments to pass to
+##'   \code{\link[stats]{nlminb}} or \code{\link[stats]{optim}}
+##' @return A spatq_fit object containing the optimization output and
+##'   optimization diagnostics
+##' @importFrom stats optim nlminb
+##' @author John K Best
+##' @export
+spatq_fit <- function(obj,
+                      fit = NULL,
+                      method = "nlminb",
+                      bounds = list(lower = -Inf, upper = Inf),
+                      control = list()) {
+  if (is.null(fit)) {
+    fit <- init_spatq_fit(obj)
+  }
+  if (method == "nlminb") {
+    newfit <- nlminb(fit$par, obj$fn, obj$gr,
+                  control = control)
+    ## Change resulting fit to match `optim` output
+    newfit <- fix_nlminb_fit(fit)
+  } else if (method  %in% c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN")) {
+    newfit <- optim(fit$par, obj$fn, obj$gr,
+                    method = method,
+                    lower = bounds$lower, upper = bounds$upper,
+                    control = control)
+  } else {
+    stop("Method ", method, " not available, use nlminb or optim method")
+  }
+  fit <- attach_optdiags(newfit, fit, obj)
+  return(fit)
+}
+
+##' Reorders output, renames "objective" to "value", and drops "iterations".
+##'
+##' @title Make \code{nlminb} output match \code{optim} output
+##' @param fit \code{\link[stats]{nlminb}} output
+##' @return Optimization result that matches \code{\link[stats]{optim}}
+##' @author John K Best
+##' @export
+fix_nlminb_fit <- function(fit) {
+  list(par = fit$par,
+       value = fit$objective,
+       counts = fit$evaluations,
+       convergence = fit$convergence,
+       message = fit$message)
+}
+
 ##' Uses \code{\link[stats]{optim}} to find an optimum. If a previous fit is not
 ##' provided, the first fit uses the conjugate gradient method to improve
 ##' quickly. After that, the BFGS method is used to refine the optimization.
