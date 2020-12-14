@@ -7,7 +7,7 @@
 \usage{
 new_spatq_setup(data, parameters, map, random)
 
-spatq_setup(catch_df, spatq_spec, index_step)
+spatq_setup(catch_df, spatq_spec, index_step, init_fixef = TRUE, ...)
 }
 \arguments{
 \item{data}{Data for spatq model, as produced by \code{\link{prepare_data}}}
@@ -21,9 +21,15 @@ spatq_setup(catch_df, spatq_spec, index_step)
 \item{catch_df}{Data frame with catch observations, as from
 \code{\link{read_catch}}}
 
-\item{spatq_spec}{Model specification, \code{\link{specify_estimated}}}
+\item{spatq_spec}{Model specification from \code{\link{specify_estimated}}}
 
 \item{index_step}{Index grid step size \code{\link{create_index_df}}}
+
+\item{init_fixef}{Use parameter estimates from model with only fixed effects
+as initial values?}
+
+\item{...}{Additional arguments to pass to \code{\link{init_fixef}}, which
+are then passed to \code{\link{spatq_fit}} for the fixed effect model fit}
 }
 \value{
 A \code{spatq_setup} object ready to be used to construct a spatq

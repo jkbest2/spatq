@@ -1,64 +1,3 @@
-##' Estimates numbers density fixed effects through a binomial regression with
-##' the complementary log-log link function. Log numbers density and log
-##' encounter probability provide an offset for a log normal regression on
-##' positive catches, hopefully providing reasonable starting parameter values
-##' for weight per group covariates. Log numbers density is NOT currently
-##' bias-corrected, but should still work well as starting values.
-##'
-##' @title Initial estimates of fixed effect parameters
-##' @param data A data list, as produced by \code{prepare_data}
-##' @return A list with estimates of \code{beta_n}, \code{beta_w},
-##'   \code{lambda_n}, and \code{lambda_w}
-##' @author John Best
-##' @export
-init_fixef <- function(data) {
-  ## Don't include catchability effects if they aren't used in the model (e.g.
-  ## if estimating index using single survey vessel).
-  q_used <- any(data$R_n != 0)
-  if (q_used) {
-    df_n <- tibble::tibble(enc = data$catch_obs > 0,
-                           X_n = data$X_n,
-                           R_n = data$R_n)
-  } else {
-    df_n <- tibble::tibble(enc = data$catch_obs > 0,
-                           X_n = data$X_n)
-  }
-  ## Estimate each group density fixed effect with a simple GLM, using the
-  ## complementary log-log link for encounter. This corresponds directly to
-  ## group density in the Poisson link model.
-  mod_n <- stats::glm(enc ~ 0 + ., data = df_n,
-                      family = stats::binomial(cloglog))
-  est_n <- stats::coef(mod_n)
-
-  ## Using the estimated group density and probability of encounter, calculate
-  ## the log mean weight per group, conditional on a positive catch.
-  enc <- df_n$enc
-  if (q_used) {
-    df_w <- tibble::tibble(catch_obs = data$catch_obs[enc],
-                           X_w = data$X_w[enc, ],
-                           R_w = data$R_w[enc, ])
-  } else {
-    df_w <- tibble::tibble(catch_obs = data$catch_obs[enc],
-                           X_w = data$X_w[enc, ])
-  }
-  ## Log-positive catch rate is log(n) - log(p) + log(w), so the first two are
-  ## used as an offset here.
-  offset_w <- stats::predict(mod_n) -
-    log(stats::predict(mod_n, type = "response"))
-  offset_w <- offset_w[data$catch_obs > 0]
-  ## mod_w <- glm(catch_obs ~ 0 + ., data = df_w, offset = offset_w,
-  ##              family = gaussian(log))
-  mod_w <- stats::lm(log(catch_obs) ~ 0 + ., data = df_w, offset = offset_w)
-  ## Not going to worry about the bias correction for these initial values
-  est_w <- stats::coef(mod_w)
-
-  init <- list(beta_n = est_n[seq_len(ncol(data$X_n))],
-               beta_w = est_w[seq_len(ncol(data$X_w))],
-               lambda_n = ifelse(q_used, est_n[-seq_len(ncol(data$X_n))], 0),
-               lambda_w = ifelse(q_used, est_w[-seq_len(ncol(data$X_w))], 0))
-  lapply(init, unname)
-}
-
 ##' Prepare a list of parameters of appropriate dimension. Otherwise
 ##' uninitialized parameter starting values are set to zeros except kappa and
 ##' tau, which use a correlation range of 50 (half the domain) and marginal
@@ -102,13 +41,7 @@ prepare_pars <- function(data, mesh, init_fixef = FALSE) {
                log_kappa = rep(log(pars_kappa(50)), 8),
                log_tau = rep(log(pars_tau(1.0, 50)), 8),
                obs_lik_pars = init_olp)
-  if (init_fixef) {
-    init_est <- init_fixef(data)
-    pars$beta_n <- init_est$beta_n
-    pars$beta_w <- init_est$beta_w
-    pars$lambda_n <- init_est$lambda_n
-    pars$lambda_w <- init_est$lambda_w
-  }
+
   ## Add attribute noting whether `lambda_n` and `lambda_w` are map'd or not.
   ## Useful for consistency checks later.
   attr(pars, "map_lambda") <- all(data$R_n == 0)

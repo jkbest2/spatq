@@ -51,5 +51,6 @@ tw_setup <- spatq_simsetup(repl = 1, sc = "pref",
                              system.file("testdata", package = "spatq")),
                            max_T = 15,
                            index_step = 5,
-                           spec_estd = tw_estd)
+                           spec_estd = tw_estd,
+                           init_fixef = TRUE)
 tw_obj <- spatq_obj(tw_setup)

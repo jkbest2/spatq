@@ -11,7 +11,9 @@ spatq_simsetup(
   root_dir = ".",
   max_T = NULL,
   index_step = 5,
-  spec_estd = specify_estimated()
+  spec_estd = specify_estimated(),
+  init_fixef = TRUE,
+  ...
 )
 }
 \arguments{
@@ -30,11 +32,17 @@ spatq_simsetup(
 
 \item{spec_estd}{List of logicals indicating which parameters are to be
 estimated, as output \code{\link{specify_estimated}}}
+
+\item{init_fixef}{Use parameter estimates from model with only fixed effects
+as initial values?}
+
+\item{...}{Additional arguments to pass to \code{\link{init_fixef}}, which
+are then passed to \code{\link{spatq_fit}} for the fixed effect model fit}
 }
 \value{
 A list with elements \code{data}, \code{parameters}, \code{map}, and
 \code{random}, ready to be used as the arguments to
-\code{\link{prepare_adfun}}.
+\code{\link{prepare_adfun}} or passed to \code{\link{spatq_obj}}
 }
 \description{
 Convenience constructor when data follows simulation study directory

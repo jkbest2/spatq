@@ -11,15 +11,20 @@
 ##' @param index_step Step for the index grid
 ##' @param spec_estd List of logicals indicating which parameters are to be
 ##'   estimated, as output \code{\link{specify_estimated}}
+##' @param init_fixef Use parameter estimates from model with only fixed effects
+##'   as initial values?
+##' @param ... Additional arguments to pass to \code{\link{init_fixef}}, which
+##'   are then passed to \code{\link{spatq_fit}} for the fixed effect model fit
 ##' @return A list with elements \code{data}, \code{parameters}, \code{map}, and
 ##'   \code{random}, ready to be used as the arguments to
-##'   \code{\link{prepare_adfun}}.
+##'   \code{\link{prepare_adfun}} or passed to \code{\link{spatq_obj}}
 ##' @author John K Best
 ##' @export
 spatq_simsetup <- function(repl, sc, sub_df = NULL,
                            root_dir = ".", max_T = NULL,
                            index_step = 5,
-                           spec_estd = specify_estimated()) {
+                           spec_estd = specify_estimated(),
+                           init_fixef = TRUE, ...) {
   ## Read in data
   catch_df <- read_catch(repl, sc, root_dir)
   if (!is.null(max_T)) {
@@ -29,7 +34,7 @@ spatq_simsetup <- function(repl, sc, sub_df = NULL,
   ## Subset observations
   catch_df <- subsample_catch(catch_df, sub_df)
 
-  setup <- spatq_setup(catch_df, spec_estd, index_step)
+  setup <- spatq_setup(catch_df, spec_estd, index_step, init_fixef, ...)
   attr(setup, "repl") <- repl
   attr(setup, "scenario") <- sc
   class(setup) <- c("spatq_simsetup", "spatq_setup")
@@ -60,10 +65,14 @@ new_spatq_setup <- function(data, parameters, map, random) {
 ##' @describeIn new_spatq_setup Convenient constructor for model setups
 ##' @param catch_df Data frame with catch observations, as from
 ##'   \code{\link{read_catch}}
-##' @param spatq_spec Model specification, \code{\link{specify_estimated}}
+##' @param spatq_spec Model specification from \code{\link{specify_estimated}}
 ##' @param index_step Index grid step size \code{\link{create_index_df}}
+##' @param init_fixef Use parameter estimates from model with only fixed effects
+##'   as initial values?
+##' @param ... Additional arguments to pass to \code{\link{init_fixef}}, which
+##'   are then passed to \code{\link{spatq_fit}} for the fixed effect model fit
 ##' @export
-spatq_setup <- function(catch_df, spatq_spec, index_step) {
+spatq_setup <- function(catch_df, spatq_spec, index_step, init_fixef = TRUE, ...) {
   ## Get number of years represented in catch data
   T <- length(unique(catch_df$time))
 
@@ -81,7 +90,35 @@ spatq_setup <- function(catch_df, spatq_spec, index_step) {
                      spec = spatq_spec)
   random <- prepare_random(map)
 
-  return(new_spatq_setup(data, parameters, map, random))
+  setup <- new_spatq_setup(data, parameters, map, random)
+
+  if (init_fixef) {
+    setup <- init_fixef(setup, spatq_spec, ...)
+    verify_spatq(setup$data, setup$parameters, setup$map)
+  }
+
+  return(setup)
+}
+
+##' Fit the specified model without any random effects and use the resulting
+##' parameter estimates as initial values.
+##'
+##' @title Initial estimates of fixed effect parameters
+##' @param setup A \code{\link{spatq_setup}}
+##' @param spec A model specification, as from \code{\link{specify_estimated}}
+##' @param ... Further arguments to pass to \code{\link{spatq_fit}}
+##' @return A \code{\link{spatq_setup}} with parameters of fixed-effects model
+##'   initialized to their MLEs
+##' @author John Best
+##' @export
+init_fixef <- function(setup, spec, ...) {
+  fix_spec <- specify_estimated(beta = TRUE,
+                                lambda = !attr(setup$parameters, "map_lambda"),
+                                obs_lik = setup$data$obs_lik)
+  fix_setup <- update_setup(setup, setup$parameters, fix_spec)
+  fix_obj <- spatq_obj(fix_setup, runSymbolicAnalysis = FALSE, silent = TRUE)
+  fix_fit <- spatq_fit(fix_obj, ...)
+  setup <- update_setup(setup, fix_fit, spec)
 }
 
 ##' Not intended to be used when the underlying data change.
@@ -179,12 +216,13 @@ update_onepar <- function(currvals, newvals = NULL, mapvec = NULL) {
   if (is.null(newvals)) {
     ## If no new values, use old values
     vals <- currvals
-  }
-  else if (is.null(mapvec)) {
+  } else if (is.null(mapvec)) {
     ## If not map'd, just replace the vector
     vals <- newvals
-  }
-  else {
+  } else if (all(is.na(mapvec))) {
+    ## If all map'd and new values provided, use new values
+    vals <- newvals
+  } else {
     ## Need to
     if (length(currvals) < length(mapvec)) {
       stop("Length of currvals must be greater than mapvec")
