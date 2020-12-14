@@ -53,6 +53,21 @@ attach_optdiags <- function(newfit, oldfit = NULL, obj) {
   newfit
 }
 
+##' @method print spatq_fit
+##' @author John K Best
+##' @export
+print.spatq_fit <- function(x, ...) {
+  fit_df <- data.frame(parname = names(x$par),
+                       parval = x$par,
+                       grad = c(x$grad))
+  print(fit_df)
+  cat("\nConvergence: ", x$convergence, "\n",
+      "Message: ", x$message, "\n",
+      "MGC: ", max(abs(x$grad)), "\n", sep = "")
+
+  return(invisible(x))
+}
+
 ##' @describeIn attach_optdiags Initialize a spatq_fit object
 ##' @export
 init_spatq_fit <- function(obj) {
