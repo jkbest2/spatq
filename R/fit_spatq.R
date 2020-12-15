@@ -31,7 +31,7 @@ spatq_fit <- function(obj,
     newfit <- nlminb(fit$par, obj$fn, obj$gr,
                   control = control)
     ## Change resulting fit to match `optim` output
-    newfit <- fix_nlminb_fit(fit)
+    newfit <- fix_nlminb_fit(newfit)
   } else if (method  %in% c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN")) {
     newfit <- optim(fit$par, obj$fn, obj$gr,
                     method = method,
