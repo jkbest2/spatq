@@ -27,6 +27,7 @@ spatq_fit <- function(obj,
   if (is.null(fit)) {
     fit <- init_spatq_fit(obj)
   }
+  t0 <- Sys.time()
   if (method == "nlminb") {
     newfit <- nlminb(fit$par, obj$fn, obj$gr,
                   control = control)
@@ -40,6 +41,7 @@ spatq_fit <- function(obj,
   } else {
     stop("Method ", method, " not available, use nlminb or optim method")
   }
+  newfit$opt_time <- Sys.time() - t0
   fit <- attach_optdiags(newfit, fit, obj)
   return(fit)
 }
@@ -110,6 +112,7 @@ attach_optdiags <- function(newfit, oldfit = NULL, obj) {
   newfit$dobjrel <- (oldfit$value - newfit$value) / oldfit$value
   newfit$nfit <- oldfit$nfit + 1
   newfit$totcounts <- oldfit$counts + newfit$counts
+  newfit$opt_time <- oldfit$opt_time + newfit$opt_time
   class(newfit) <- "spatq_fit"
   newfit
 }
@@ -141,7 +144,8 @@ init_spatq_fit <- function(obj) {
          dparrel = rep_len(Inf, length(obj$par)),
          dobjrel = Inf,
          nfit = 0,
-         totcounts = c("function" = 0, "gradient" = 0)),
+         totcounts = c("function" = 0, "gradient" = 0),
+         opt_time = as.difftime("0", "%S")),
     class = "spatq_fit")
 }
 
