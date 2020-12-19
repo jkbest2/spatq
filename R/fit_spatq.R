@@ -111,7 +111,7 @@ attach_optdiags <- function(newfit, oldfit = NULL, obj) {
   newfit$dparrel <- (oldfit$par - newfit$par) / oldfit$par
   newfit$dobjrel <- (oldfit$value - newfit$value) / oldfit$value
   newfit$nfit <- oldfit$nfit + 1
-  newfit$totcounts <- oldfit$counts + newfit$counts
+  newfit$totcounts <- oldfit$totcounts + newfit$counts
   newfit$opt_time <- oldfit$opt_time + newfit$opt_time
   class(newfit) <- "spatq_fit"
   newfit
@@ -125,9 +125,12 @@ print.spatq_fit <- function(x, ...) {
                        parval = x$par,
                        grad = c(x$grad))
   print(fit_df)
-  cat("\nConvergence: ", x$convergence, "\n",
+  cat("\nObjective: ", x$value, "\n",
+      "Convergence: ", x$convergence, "\n",
       "Message: ", x$message, "\n",
-      "MGC: ", max(abs(x$grad)), "\n", sep = "")
+      "MGC: ", max(abs(x$grad)), "\n",
+      "Time optimizing: ", x$opt_time, units(x$opt_time), "\n",
+      sep = "")
 
   return(invisible(x))
 }
