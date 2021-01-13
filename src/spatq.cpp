@@ -667,6 +667,7 @@ Type objective_function<Type>::operator() () {
     // Simulate from observation distribution; not currently implemented
     SIMULATE {
       for (int i = 0; i < N_obs; i++) {
+      // FIXME Add Tweedie RNG
       // catch_obs(i) = rtweedie(exp(log_n(i)), disp, shape);
       catch_obs(i) = 0.0;
       }

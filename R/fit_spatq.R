@@ -217,10 +217,12 @@ report_spatq <- function(obj) {
 sdreport_spatq <- function(obj,
                            ## Don't bias correct if no random effects
                            bias.correct = !is.null(obj$env$random),
+                           bias.correct.control = list(sd = TRUE),
                            getJointPrecision = FALSE,
                            ...) {
   TMB::sdreport(obj,
                 bias.correct = bias.correct,
+                bias.correct.control = bias.correct.control,
                 getJointPrecision = getJointPrecision,
                 ...)
 }
