@@ -9,28 +9,61 @@
 ##' @author John Best
 ##' @importFrom dplyr %>%
 ##' @export
-read_catch <- function(repl, sc, root_dir = ".") {
-  check_scenario(sc)
+read_catch <- function(repl, study, sc, root_dir = ".") {
+  base_dir <- study_dir(study, root_dir)
+  ## File names are ${study_dir}/repl_${repl}/${study_scenario}_catch.csv
   ## File names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two
   ## digits.
   repl_str <- stringr::str_pad(repl, 2, pad = "0")
   repl_dir <- paste0("repl_", repl_str)
-  sc_file <- paste0("catch_", repl_str, "_", sc, ".csv")
-  flnm <- file.path(root_dir, repl_dir, sc_file)
+  catch_file <- study_scenario_files(study, sc)$catch
+  flnm <- file.path(root_dir, repl_dir, catch_file)
   catch_df <- readr::read_csv(flnm,
                               col_types = readr::cols(
-                                time = readr::col_integer(),
-                                vessel_idx = readr::col_integer(),
-                                loc_idx = readr::col_integer(),
-                                coord1 = readr::col_double(),
-                                coord2 = readr::col_double(),
-                                effort = readr::col_double(),
-                                catch_biomass = readr::col_double())) %>%
+                                                   time = readr::col_integer(),
+                                                   vessel_idx = readr::col_integer(),
+                                                   loc_idx = readr::col_integer(),
+                                                   coord1 = readr::col_double(),
+                                                   coord2 = readr::col_double(),
+                                                   effort = readr::col_double(),
+                                                   catch_biomass = readr::col_double())) %>%
     dplyr::rename(s1 = coord1, s2 = coord2)
   ## Number of years and store as an attribute for later use in constructing
   ## projection matrices etc.
   attr(catch_df, "T") <- length(unique(catch_df$time))
   catch_df
+}
+
+##' Each set of simulations is stored in a separate directory; this function
+##' serves to look up the name of that directory based on the name of that
+##' directory.
+##'
+##' @title Directory where a study's simulations live
+##' @param study Study; currently only "qdevscaling"
+##' @param root_dir Where to start
+##' @return Directory path for study
+##' @author John K Best
+study_dir <- function(study, root_dir = ".") {
+  sdir <- switch(study,
+                 qdevscaling = "qdevscaling")
+  file.path(root_dir, sdir)
+}
+
+##' List filenames of simulated catch and population data sets.
+##'
+##' @title Files with simulated data sets
+##' @param study Study; currently only "qdevscaling"
+##' @param scenario Scenario identifier; "qdevscaling" uses numeric
+##' @param root_dir Where to start
+##' @return A list with elements \code{catch}, \code{popcsv}, and \code{poph5}
+##' @author John K Best
+study_scenario_files <- function(study, scenario) {
+  study_file <- switch(study,
+                       qdevscaling = "qdevscale_")
+  scenario <- stringr::str_pad(scenario, 2, pad = "0")
+  list(catch = paste0(study_file, scenario, "_catch.csv"),
+                      popcsv = paste0(study_file, scenario, "_popstate.csv"),
+                      poph5 = paste0(study_file, scenario, "_popstate.h5"))
 }
 
 ##' Randomly choose a subset of observations for some or all vessels etc.
@@ -75,6 +108,8 @@ subsample_catch <- function(catch_df, n_df = NULL) {
   catch_df
 }
 
+##' NO LONGER USED. Always returns TRUE now.
+##'
 ##' Check that scenario name is correct. Available options are "pref", "spat",
 ##' or "combo". Any other string will throw an error.
 ##'
@@ -84,8 +119,8 @@ subsample_catch <- function(catch_df, n_df = NULL) {
 ##' @author John Best
 ##' @export
 check_scenario <- function(sc) {
-  sc %in% c("pref", "spat", "combo") ||
-    stop("Scenario must be one of \"pref\", \"spat\", or \"combo\"")
+  ## sc %in% c("pref", "spat", "combo") ||
+  ##   stop("Scenario must be one of \"pref\", \"spat\", or \"combo\"")
   TRUE
 }
 

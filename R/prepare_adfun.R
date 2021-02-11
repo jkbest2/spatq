@@ -81,11 +81,14 @@ spatq_obj <- function(setup, runSymbolicAnalysis = TRUE, normalize = TRUE, ...) 
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
-make_sim_adfun <- function(repl, sc, sub_df = NULL,
+make_sim_adfun <- function(repl, study, sc, sub_df = NULL,
                            root_dir = ".", max_T = NULL,
                            index_step,
                            spec_estd = specify_estimated(), ...) {
-  setup <- spatq_simsetup(repl, sc, sub_df, root_dir, max_T, index_step,
+  setup <- spatq_simsetup(repl, study, sc,
+                          sub_df,
+                          root_dir,
+                          max_T, index_step,
                           spec_estd)
   prepare_adfun(setup$data, setup$parameters,
                 setup$map, setup$random, ...)

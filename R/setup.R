@@ -20,13 +20,13 @@
 ##'   \code{\link{prepare_adfun}} or passed to \code{\link{spatq_obj}}
 ##' @author John K Best
 ##' @export
-spatq_simsetup <- function(repl, sc, sub_df = NULL,
+spatq_simsetup <- function(repl, study, sc, sub_df = NULL,
                            root_dir = ".", max_T = NULL,
                            index_step = 5,
                            spec_estd = specify_estimated(),
                            init_fixef = TRUE, ...) {
   ## Read in data
-  catch_df <- read_catch(repl, sc, root_dir)
+  catch_df <- read_catch(repl, study, sc, root_dir)
   if (!is.null(max_T)) {
     catch_df <- dplyr::filter(catch_df, time <= max_T)
     attr(catch_df, "T") <- max_T
