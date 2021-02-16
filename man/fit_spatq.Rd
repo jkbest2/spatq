@@ -14,6 +14,7 @@ report_spatq(obj)
 sdreport_spatq(
   obj,
   bias.correct = !is.null(obj$env$random),
+  bias.correct.control = list(sd = TRUE),
   getJointPrecision = FALSE,
   ...
 )

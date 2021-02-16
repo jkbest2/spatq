@@ -5,14 +5,14 @@
 \alias{sim_file_paths}
 \title{Paths to simulated data sets}
 \usage{
-sim_file_names(study, scenario)
+sim_file_names(study, opmod)
 
-sim_file_paths(study, repl, scenario, root_dir = ".")
+sim_file_paths(study, repl, opmod, root_dir = ".")
 }
 \arguments{
 \item{study}{Study; currently only "qdevscaling"}
 
-\item{scenario}{Scenario identifier; "qdevscaling" uses numeric}
+\item{opmod}{Operating model}
 
 \item{repl}{Replicate number}
 
@@ -24,7 +24,7 @@ A list of file paths with elements \code{catch}, \code{popcsv}, and
 }
 \description{
 Get the paths to each simulation file.
-File names are ${study_dir}/repl_${repl}/${study_scenario}\emph{catch.csv File
+File names are ${study_dir}/repl_${repl}/${study_opmod}\emph{catch.csv File
 names are repl}$repl/catch_$repl_$sc.csv, with $repl padded to two digits.
 }
 \section{Functions}{

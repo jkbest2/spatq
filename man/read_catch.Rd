@@ -4,12 +4,14 @@
 \alias{read_catch}
 \title{Read simulated data}
 \usage{
-read_catch(repl, sc, root_dir = ".")
+read_catch(study, repl, opmod, root_dir = ".")
 }
 \arguments{
+\item{study}{Simulation study name}
+
 \item{repl}{Replicate number}
 
-\item{sc}{Scenario; one of "pref", "spat", or "combo"}
+\item{opmod}{Operating model}
 
 \item{root_dir}{Directory to work in; defaults to current working directory}
 }
@@ -18,9 +20,6 @@ A \code{tibble} with catch observations
 }
 \description{
 Read in a replicate of data simulated by FisherySim.jl
-}
-\details{
-Requires that catch files are e.g. \code{repl_01/catch_simple.csv}.
 }
 \author{
 John Best

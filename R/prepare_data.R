@@ -1,23 +1,16 @@
 ##' Read in a replicate of data simulated by FisherySim.jl
 ##'
-##' Requires that catch files are e.g. \code{repl_01/catch_simple.csv}.
 ##' @title Read simulated data
+##' @param study Simulation study name
 ##' @param repl Replicate number
-##' @param sc Scenario; one of "pref", "spat", or "combo"
+##' @param opmod Operating model
 ##' @param root_dir Directory to work in; defaults to current working directory
 ##' @return A \code{tibble} with catch observations
 ##' @author John Best
 ##' @importFrom dplyr %>%
 ##' @export
-read_catch <- function(repl, study, sc, root_dir = ".") {
-  base_dir <- study_dir(study, root_dir)
-  ## File names are ${study_dir}/repl_${repl}/${study_scenario}_catch.csv
-  ## File names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two
-  ## digits.
-  repl_str <- stringr::str_pad(repl, 2, pad = "0")
-  repl_dir <- paste0("repl_", repl_str)
-  catch_file <- study_scenario_files(study, sc)$catch
-  flnm <- file.path(root_dir, repl_dir, catch_file)
+read_catch <- function(study, repl, opmod, root_dir = ".") {
+  flnm <- sim_file_paths(study, repl, opmod, root_dir)$catch
   catch_df <- readr::read_csv(flnm,
                               col_types = readr::cols(
                                                    time = readr::col_integer(),
@@ -32,38 +25,6 @@ read_catch <- function(repl, study, sc, root_dir = ".") {
   ## projection matrices etc.
   attr(catch_df, "T") <- length(unique(catch_df$time))
   catch_df
-}
-
-##' Each set of simulations is stored in a separate directory; this function
-##' serves to look up the name of that directory based on the name of that
-##' directory.
-##'
-##' @title Directory where a study's simulations live
-##' @param study Study; currently only "qdevscaling"
-##' @param root_dir Where to start
-##' @return Directory path for study
-##' @author John K Best
-study_dir <- function(study, root_dir = ".") {
-  sdir <- switch(study,
-                 qdevscaling = "qdevscaling")
-  file.path(root_dir, sdir)
-}
-
-##' List filenames of simulated catch and population data sets.
-##'
-##' @title Files with simulated data sets
-##' @param study Study; currently only "qdevscaling"
-##' @param scenario Scenario identifier; "qdevscaling" uses numeric
-##' @param root_dir Where to start
-##' @return A list with elements \code{catch}, \code{popcsv}, and \code{poph5}
-##' @author John K Best
-study_scenario_files <- function(study, scenario) {
-  study_file <- switch(study,
-                       qdevscaling = "qdevscale_")
-  scenario <- stringr::str_pad(scenario, 2, pad = "0")
-  list(catch = paste0(study_file, scenario, "_catch.csv"),
-                      popcsv = paste0(study_file, scenario, "_popstate.csv"),
-                      poph5 = paste0(study_file, scenario, "_popstate.h5"))
 }
 
 ##' Randomly choose a subset of observations for some or all vessels etc.
@@ -108,40 +69,19 @@ subsample_catch <- function(catch_df, n_df = NULL) {
   catch_df
 }
 
-##' NO LONGER USED. Always returns TRUE now.
-##'
-##' Check that scenario name is correct. Available options are "pref", "spat",
-##' or "combo". Any other string will throw an error.
-##'
-##' @title Check scenario name
-##' @param sc Scenario name, as a string
-##' @return \code{TRUE} if scenario is correct
-##' @author John Best
-##' @export
-check_scenario <- function(sc) {
-  ## sc %in% c("pref", "spat", "combo") ||
-  ##   stop("Scenario must be one of \"pref\", \"spat\", or \"combo\"")
-  TRUE
-}
-
 ##' Read true population total from file
 ##'
 ##' @title Read true population state for each year
+##' @param study Study name, e.g. "qdevscaling"
 ##' @param repl Replicate number
-##' @param sc Scenario; one of "pref", "spat", or "combo"
+##' @param opmod Operating model
 ##' @param root_dir Directory with e.g. \code{repl_01} subdirectory that
 ##'   contains \code{popstate_*.csv}
 ##' @return A \code{tibble} with population and year, starting from 1
 ##' @author John Best
 ##' @export
-read_popstate <- function(repl, sc, root_dir = ".") {
-  check_scenario(sc)
-  ## File names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two
-  ## digits.
-  repl_str <- stringr::str_pad(repl, 2, pad = "0")
-  repl_dir <- paste0("repl_", repl_str)
-  sc_file <- paste0("popstate_", repl_str, "_", sc, ".csv")
-  flnm <- file.path(root_dir, repl_dir, sc_file)
+read_popstate <- function(study, repl, opmod, root_dir = ".") {
+  flnm <- sim_file_paths(study, repl, opmod, root_dir)$popcsv
   pop <- readr::read_csv(flnm,
                          col_types = readr::cols(pop = readr::col_double()))
   dplyr::mutate(pop, time = seq_along(pop))

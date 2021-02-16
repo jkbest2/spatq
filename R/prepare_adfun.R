@@ -64,12 +64,11 @@ spatq_obj <- function(setup, runSymbolicAnalysis = TRUE, normalize = TRUE, ...) 
 }
 
 ##' Read in a simulated data set and construct a TMB ADFun for model fitting.
-##' From the working directory, replicates should be in subdirectories and
-##' scenarios named appropriately. See \code{read_catch} for details.
 ##'
 ##' @title Create ADFun from simulated data
+##' @param study Simulation study
 ##' @param repl Replicate number
-##' @param sc Scenario; "pref", "spat", or "combo"
+##' @param opmod Operating model
 ##' @param sub_df Data frame indicating subsampling strategy; see
 ##'   \code{subsample_catch}
 ##' @param root_dir Directory to load data from
@@ -81,7 +80,7 @@ spatq_obj <- function(setup, runSymbolicAnalysis = TRUE, normalize = TRUE, ...) 
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
-make_sim_adfun <- function(repl, study, sc, sub_df = NULL,
+make_sim_adfun <- function(study, repl, opmod, sub_df = NULL,
                            root_dir = ".", max_T = NULL,
                            index_step,
                            spec_estd = specify_estimated(), ...) {

@@ -5,8 +5,9 @@
 \title{Create ADFun from simulated data}
 \usage{
 make_sim_adfun(
+  study,
   repl,
-  sc,
+  opmod,
   sub_df = NULL,
   root_dir = ".",
   max_T = NULL,
@@ -16,9 +17,11 @@ make_sim_adfun(
 )
 }
 \arguments{
+\item{study}{Simulation study}
+
 \item{repl}{Replicate number}
 
-\item{sc}{Scenario; "pref", "spat", or "combo"}
+\item{opmod}{Operating model}
 
 \item{sub_df}{Data frame indicating subsampling strategy; see
 \code{subsample_catch}}
@@ -39,8 +42,6 @@ A TMB ADFun suitable for optimization
 }
 \description{
 Read in a simulated data set and construct a TMB ADFun for model fitting.
-From the working directory, replicates should be in subdirectories and
-scenarios named appropriately. See \code{read_catch} for details.
 }
 \author{
 John Best

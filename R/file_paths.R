@@ -26,7 +26,7 @@ study_file_base <- function(study) {
 ##' @title Directory name for each replicate
 ##' @param repl Replicate number
 ##' @return A string with the number left-padded to two characters and
-##'   concatenated with \code{}"repl_"}
+##'   concatenated with \code{"repl_"}
 ##' @author John K Best
 repl_dir <- function(repl) {
   repl <- stringr::str_pad(repl, 2, pad = 0)
@@ -34,29 +34,29 @@ repl_dir <- function(repl) {
 }
 
 ##' @describeIn sim_file_paths The name of each simulation file
-sim_file_names <- function(study, scenario) {
+sim_file_names <- function(study, opmod) {
   study_file <- study_file_base(study)
-  scenario <- stringr::str_pad(scenario, 2, pad = "0")
-  list(catch = paste0(study_file, scenario, "_catch.csv"),
-       popcsv = paste0(study_file, scenario, "_popstate.csv"),
-       poph5 = paste0(study_file, scenario, "_popstate.h5"))
+  opmod <- stringr::str_pad(opmod, 2, pad = "0")
+  list(catch = paste0(study_file, opmod, "_catch.csv"),
+       popcsv = paste0(study_file, opmod, "_popstate.csv"),
+       poph5 = paste0(study_file, opmod, "_popstate.h5"))
 }
 
 ##' Get the paths to each simulation file.
 ##
-##' File names are ${study_dir}/repl_${repl}/${study_scenario}_catch.csv File
+##' File names are ${study_dir}/repl_${repl}/${study_opmod}_catch.csv File
 ##' names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two digits.
 ##' @title Paths to simulated data sets
 ##' @param study Study; currently only "qdevscaling"
 ##' @param repl Replicate number
-##' @param scenario Scenario identifier; "qdevscaling" uses numeric
+##' @param opmod Operating model
 ##' @param root_dir Where to start
 ##' @return A list of file paths with elements \code{catch}, \code{popcsv}, and
 ##'   \code{poph5}
 ##' @author John K Best
 ##' @export
-sim_file_paths <- function(study, repl, scenario, root_dir = ".") {
-  files <- sim_file_names(study, scenario)
+sim_file_paths <- function(study, repl, opmod, root_dir = ".") {
+  files <- sim_file_names(study, opmod)
   paths <- file.path(study_dir(study, root_dir),
                      repl_dir(repl),
                      files)
@@ -65,9 +65,25 @@ sim_file_paths <- function(study, repl, scenario, root_dir = ".") {
 }
 
 ##' @describeIn res_file_paths Create a results directory if necessary
-create_res_dir <- function(study) {
+create_res_dir <- function(study, repl = NULL) {
   res <- file.path(study_dir(study), "results")
-  if (!dir.exists(res)) dir.create(res)
+  if (!dir.exists(res))
+    dir.create(res)
+  if (!is.null(repls)) {
+    res_repls <- file.path(study_dir(study),
+                           "results",
+                           repl_dir(repls))
+    ## If ${study_dir}/resutls/${repl_dir} doesn't exist, create it
+    vapply(res_repls,
+           function(rdir) {
+             v <- TRUE
+             if (!dir.exists(rdir)) {
+               v <- dir.create(rdir)
+             }
+             v
+           }, TRUE)
+  }
+  invisible(TRUE)
 }
 
 ##' @describeIn res_file_paths File names for each study, operating, and
@@ -88,7 +104,7 @@ res_file_names <- function(study, opmod, estmod) {
 ##'
 ##' @title Paths to each results file
 ##' @param study Study name
-##' @param repl Replicate number
+##' @param repl Replicate number(s)
 ##' @param opmod Operating model
 ##' @param estmod Estimation model
 ##' @param root_dir Root directory

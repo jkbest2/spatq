@@ -4,12 +4,14 @@
 \alias{read_popstate}
 \title{Read true population state for each year}
 \usage{
-read_popstate(repl, sc, root_dir = ".")
+read_popstate(study, repl, opmod, root_dir = ".")
 }
 \arguments{
+\item{study}{Study name, e.g. "qdevscaling"}
+
 \item{repl}{Replicate number}
 
-\item{sc}{Scenario; one of "pref", "spat", or "combo"}
+\item{opmod}{Operating model}
 
 \item{root_dir}{Directory with e.g. \code{repl_01} subdirectory that
 contains \code{popstate_*.csv}}

@@ -2,8 +2,9 @@
 ##' structure. See also \code{\link{new_spatq_setup}}.
 ##'
 ##' @title Construct a spatq_setup from a simulated data set
+##' @param study Simulation study name
 ##' @param repl Replicate number
-##' @param sc Scenario; "pref", "spat", or "combo"
+##' @param opmod Operating model
 ##' @param sub_df Data frame indicating subsampling strategy; see
 ##'   \code{\link{subsample_catch}}
 ##' @param root_dir Directory to load data from
@@ -20,13 +21,13 @@
 ##'   \code{\link{prepare_adfun}} or passed to \code{\link{spatq_obj}}
 ##' @author John K Best
 ##' @export
-spatq_simsetup <- function(repl, study, sc, sub_df = NULL,
+spatq_simsetup <- function(study, repl, opmod, sub_df = NULL,
                            root_dir = ".", max_T = NULL,
                            index_step = 5,
                            spec_estd = specify_estimated(),
                            init_fixef = TRUE, ...) {
   ## Read in data
-  catch_df <- read_catch(repl, study, sc, root_dir)
+  catch_df <- read_catch(study, repl, opmod, root_dir)
   if (!is.null(max_T)) {
     catch_df <- dplyr::filter(catch_df, time <= max_T)
     attr(catch_df, "T") <- max_T
@@ -36,7 +37,7 @@ spatq_simsetup <- function(repl, study, sc, sub_df = NULL,
 
   setup <- spatq_setup(catch_df, spec_estd, index_step, init_fixef, ...)
   attr(setup, "repl") <- repl
-  attr(setup, "scenario") <- sc
+  attr(setup, "opmod") <- opmod
   class(setup) <- c("spatq_simsetup", "spatq_setup")
   return(setup)
 }

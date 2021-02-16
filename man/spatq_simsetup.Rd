@@ -5,8 +5,9 @@
 \title{Construct a spatq_setup from a simulated data set}
 \usage{
 spatq_simsetup(
+  study,
   repl,
-  sc,
+  opmod,
   sub_df = NULL,
   root_dir = ".",
   max_T = NULL,
@@ -17,9 +18,11 @@ spatq_simsetup(
 )
 }
 \arguments{
+\item{study}{Simulation study name}
+
 \item{repl}{Replicate number}
 
-\item{sc}{Scenario; "pref", "spat", or "combo"}
+\item{opmod}{Operating model}
 
 \item{sub_df}{Data frame indicating subsampling strategy; see
 \code{\link{subsample_catch}}}

@@ -10,11 +10,3 @@ test_that("Gathering named vector works", {
                     c = rep(3, 2),
                     d = 4))
 })
-
-
-test_that("Scenario checking works", {
-  expect_true(all(vapply(c("pref", "spat", "combo"),
-                         check_scenario, TRUE)))
-  expect_error(check_scenario("naive"))
-  expect_error(check_scenario("asdf"))
-})

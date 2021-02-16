@@ -11,7 +11,7 @@ repl_dir(repl)
 }
 \value{
 A string with the number left-padded to two characters and
-concatenated with \code{}"repl_"}
+concatenated with \code{"repl_"}
 }
 \description{
 Convenience function for writing replicate directory names

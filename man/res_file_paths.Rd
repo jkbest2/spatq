@@ -7,7 +7,7 @@
 \alias{all_res_file_paths}
 \title{Paths to each results file}
 \usage{
-create_res_dir(study)
+create_res_dir(study, repl = NULL)
 
 res_file_names(study, opmod, estmod)
 
@@ -18,11 +18,11 @@ all_res_file_paths(study, repls, opmods, estmods, root_dir = ".")
 \arguments{
 \item{study}{Study name}
 
+\item{repl}{Replicate number(s)}
+
 \item{opmod}{Operating model}
 
 \item{estmod}{Estimation model}
-
-\item{repl}{Replicate number}
 
 \item{root_dir}{Root directory}
 }
