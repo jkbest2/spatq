@@ -3,21 +3,27 @@
 ##' directory.
 ##'
 ##' @title Directory where a study's simulations live
-##' @param study Study; currently only "qdevscaling"
+##' @param study Study name
 ##' @param root_dir Where to start
 ##' @param repl Replicate number
 ##' @return Directory path or file base name for study
 ##' @author John K Best
 study_dir <- function(study, root_dir = ".") {
   sdir <- switch(study,
-                 qdevscaling = "qdevscaling")
+                 qdevscaling = "qdevscaling",
+                 sharedq = "sharedq",
+                 prefintensity = "prefintensity",
+                 densdepq = "densdepq")
   file.path(root_dir, sdir)
 }
 
 ##' @describeIn study_dir The file base for each study
 study_file_base <- function(study) {
   study_file <- switch(study,
-                       qdevscaling = "qdevscale_")
+                       qdevscaling = "qdevscale_",
+                       sharedq = "sharedq_",
+                       prefintensity = "prefintensity_",
+                       densdepq = "densdepq_")
   study_file
 }
 
