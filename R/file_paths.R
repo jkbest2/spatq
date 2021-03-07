@@ -13,7 +13,8 @@ study_dir <- function(study, root_dir = ".") {
                  qdevscaling = "qdevscaling",
                  sharedq = "sharedq",
                  prefintensity = "prefintensity",
-                 densdepq = "densdepq")
+                 densdepq = "densdepq",
+                 counterpref = "counterpref")
   file.path(root_dir, sdir)
 }
 
@@ -23,7 +24,8 @@ study_file_base <- function(study) {
                        qdevscaling = "qdevscale_",
                        sharedq = "sharedq_",
                        prefintensity = "prefintensity_",
-                       densdepq = "densdepq_")
+                       densdepq = "densdepq_",
+                       counterpref = "counterpref_")
   study_file
 }
 
@@ -72,12 +74,12 @@ sim_file_paths <- function(study, repl, opmod, root_dir = ".") {
 
 ##' @describeIn res_file_paths Create a results directory if necessary
 ##' @export
-create_res_dir <- function(study, repl = NULL) {
-  res <- file.path(study_dir(study), "results")
+create_res_dir <- function(study, repl = NULL, root_dir = ".") {
+  res <- file.path(study_dir(study, root_dir), "results")
   if (!dir.exists(res))
     dir.create(res)
   if (!is.null(repls)) {
-    res_repls <- file.path(study_dir(study),
+    res_repls <- file.path(study_dir(study, root_dir),
                            "results",
                            repl_dir(repls))
     ## If ${study_dir}/resutls/${repl_dir} doesn't exist, create it
