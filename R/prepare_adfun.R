@@ -84,10 +84,13 @@ make_sim_adfun <- function(study, repl, opmod, sub_df = NULL,
                            root_dir = ".", max_T = NULL,
                            index_step,
                            spec_estd = specify_estimated(), ...) {
-  setup <- spatq_simsetup(repl, study, sc,
+  setup <- spatq_simsetup(study,
+                          repl,
+                          opmod,
                           sub_df,
                           root_dir,
-                          max_T, index_step,
+                          max_T,
+                          index_step,
                           spec_estd)
   prepare_adfun(setup$data, setup$parameters,
                 setup$map, setup$random, ...)
