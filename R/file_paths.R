@@ -5,7 +5,6 @@
 ##' @title Directory where a study's simulations live
 ##' @param study Study name
 ##' @param root_dir Where to start
-##' @param repl Replicate number
 ##' @return Directory path or file base name for study
 ##' @author John K Best
 study_dir <- function(study, root_dir = ".") {
@@ -45,9 +44,11 @@ repl_dir <- function(repl) {
 sim_file_names <- function(study, opmod) {
   study_file <- study_file_base(study)
   opmod <- stringr::str_pad(opmod, 2, pad = "0")
-  list(catch = paste0(study_file, opmod, "_catch.csv"),
-       popcsv = paste0(study_file, opmod, "_popstate.csv"),
-       poph5 = paste0(study_file, opmod, "_popstate.h5"))
+  list(catch_csv = paste0(study_file, opmod, "_catch.csv"),
+       catch_feather = paste0(study_file, opmod, "_catch.feather"),
+       pop_csv = paste0(study_file, opmod, "_popstate.csv"),
+       pop_feather = paste0(study_file, opmod, "_popstate.feather"),
+       pop_h5 = paste0(study_file, opmod, "_popstate.h5"))
 }
 
 ##' Get the paths to each simulation file.
@@ -78,12 +79,12 @@ create_res_dir <- function(study, repl = NULL, root_dir = ".") {
   res <- file.path(study_dir(study, root_dir), "results")
   if (!dir.exists(res))
     dir.create(res)
-  if (!is.null(repls)) {
-    res_repls <- file.path(study_dir(study, root_dir),
+  if (!is.null(repl)) {
+    res_repl <- file.path(study_dir(study, root_dir),
                            "results",
-                           repl_dir(repls))
+                           repl_dir(repl))
     ## If ${study_dir}/resutls/${repl_dir} doesn't exist, create it
-    vapply(res_repls,
+    vapply(res_repl,
            function(rdir) {
              v <- TRUE
              if (!dir.exists(rdir)) {
@@ -132,7 +133,16 @@ res_file_paths <- function(study, repl, opmod, estmod, root_dir = ".") {
   as.list(res_paths)
 }
 
-##' @describeIn res_file_paths Get paths for all results files
+##' List all paths to results files for a study.
+##'
+##' @title List paths for all result files
+##' @param study Study name
+##' @param repls Replicate numbers
+##' @param opmods Operating model numbers
+##' @param estmods Estimation model names
+##' @param root_dir Root directory
+##' @return List where each element has \code{rdata} and \code{indexcsv} paths
+##' @author John K Best
 ##' @export
 all_res_file_paths <- function(study, repls, opmods, estmods, root_dir = ".") {
   res_dirs <- file.path(study_dir(study, root_dir),

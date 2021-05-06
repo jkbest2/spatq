@@ -4,7 +4,7 @@
 \alias{read_catch}
 \title{Read simulated data}
 \usage{
-read_catch(study, repl, opmod, root_dir = ".")
+read_catch(study, repl, opmod, root_dir = ".", feather = TRUE)
 }
 \arguments{
 \item{study}{Simulation study name}
@@ -14,6 +14,8 @@ read_catch(study, repl, opmod, root_dir = ".")
 \item{opmod}{Operating model}
 
 \item{root_dir}{Directory to work in; defaults to current working directory}
+
+\item{feather}{Read the Feather (default) or CSV catch file?}
 }
 \value{
 A \code{tibble} with catch observations

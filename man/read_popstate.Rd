@@ -4,7 +4,13 @@
 \alias{read_popstate}
 \title{Read true population state for each year}
 \usage{
-read_popstate(study, repl, opmod, root_dir = ".")
+read_popstate(
+  study,
+  repl,
+  opmod,
+  root_dir = ".",
+  filetype = c("feather", "csv", "h5")
+)
 }
 \arguments{
 \item{study}{Study name, e.g. "qdevscaling"}
@@ -15,6 +21,9 @@ read_popstate(study, repl, opmod, root_dir = ".")
 
 \item{root_dir}{Directory with e.g. \code{repl_01} subdirectory that
 contains \code{popstate_*.csv}}
+
+\item{filetype}{Which popstate file to read? Can be \code{"feather"},
+\code{"csv"}, or \code{"h5"}}
 }
 \value{
 A \code{tibble} with population and year, starting from 1

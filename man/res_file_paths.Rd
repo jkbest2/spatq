@@ -4,7 +4,6 @@
 \alias{create_res_dir}
 \alias{res_file_names}
 \alias{res_file_paths}
-\alias{all_res_file_paths}
 \title{Paths to each results file}
 \usage{
 create_res_dir(study, repl = NULL, root_dir = ".")
@@ -12,8 +11,6 @@ create_res_dir(study, repl = NULL, root_dir = ".")
 res_file_names(study, opmod, estmod)
 
 res_file_paths(study, repl, opmod, estmod, root_dir = ".")
-
-all_res_file_paths(study, repls, opmods, estmods, root_dir = ".")
 }
 \arguments{
 \item{study}{Study name}
@@ -41,8 +38,6 @@ then operating model, then estimation model.
 
 \item \code{res_file_names}: File names for each study, operating, and
 estimation model combination
-
-\item \code{all_res_file_paths}: Get paths for all results files
 }}
 
 \author{

@@ -13,8 +13,6 @@ study_file_base(study)
 \item{study}{Study name}
 
 \item{root_dir}{Where to start}
-
-\item{repl}{Replicate number}
 }
 \value{
 Directory path or file base name for study

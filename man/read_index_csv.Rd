@@ -23,6 +23,8 @@ read_index_csv(
 \item{estmod}{Estimation model name}
 
 \item{root_dir}{Root directory}
+
+\item{estmods}{Names of estimation models to code column as a factor}
 }
 \value{
 \code{\link[tibble]{tibble}} with true and estimated indices of

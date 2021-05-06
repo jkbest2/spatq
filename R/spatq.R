@@ -16,10 +16,17 @@ NULL
 globalVariables(c("s1",
                   "loc_idx",
                   "n",
+                  "pop",
+                  "raw_true",
+                  "raw_est",
+                  "raw_unb",
+                  "raw_sd",
+                  "raw_unb_sd",
                   "sample_n",
                   "time",
                   "vessel_idx",
                   "data",
                   "cloglog",
                   "coord1",
-                  "coord2"))
+                  "coord2",
+                  "year"))

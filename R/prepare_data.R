@@ -5,25 +5,35 @@
 ##' @param repl Replicate number
 ##' @param opmod Operating model
 ##' @param root_dir Directory to work in; defaults to current working directory
+##' @param feather Read the Feather (default) or CSV catch file?
 ##' @return A \code{tibble} with catch observations
 ##' @author John Best
 ##' @importFrom dplyr %>%
 ##' @export
-read_catch <- function(study, repl, opmod, root_dir = ".") {
-  flnm <- sim_file_paths(study, repl, opmod, root_dir)$catch
-  catch_df <- readr::read_csv(flnm,
-                              col_types = readr::cols(
-                                                   time = readr::col_integer(),
-                                                   vessel_idx = readr::col_integer(),
-                                                   loc_idx = readr::col_integer(),
-                                                   coord1 = readr::col_double(),
-                                                   coord2 = readr::col_double(),
-                                                   effort = readr::col_double(),
-                                                   catch_biomass = readr::col_double())) %>%
-    dplyr::rename(s1 = coord1, s2 = coord2)
+read_catch <- function(study, repl, opmod, root_dir = ".", feather = TRUE) {
+  if (feather) {
+    flnm <- sim_file_paths(study, repl, opmod, root_dir)$catch_feather
+    catch_df <- arrow::read_feather(flnm)
+  } else {
+    flnm <- sim_file_paths(study, repl, opmod, root_dir)$catch_csv
+    catch_df <- readr::read_csv(flnm,
+                                col_types = readr::cols(
+                                                     time = readr::col_integer(),
+                                                     vessel_idx = readr::col_integer(),
+                                                     loc_idx = readr::col_integer(),
+                                                     coord1 = readr::col_double(),
+                                                     coord2 = readr::col_double(),
+                                                     effort = readr::col_double(),
+                                                     catch_biomass = readr::col_double()))
+  }
+  catch_df <- catch_df %>%
+    dplyr::rename(year = time,
+                  s1 = coord1,
+                  s2 = coord2) %>%
+    dplyr::mutate(vessel = factor(vessel_idx, labels = c("Survey", "Commercial")))
   ## Number of years and store as an attribute for later use in constructing
   ## projection matrices etc.
-  attr(catch_df, "T") <- length(unique(catch_df$time))
+  attr(catch_df, "T") <- length(unique(catch_df$year))
   catch_df
 }
 
@@ -58,7 +68,7 @@ subsample_catch <- function(catch_df, n_df = NULL) {
   "n" %in% names(n_df) || stop("Need column \`n\`")
   nms_join <- nms[nms != "n"]
   catch_df <- catch_df %>%
-    tidyr::nest(data = c(-vessel_idx, -time)) %>%
+    tidyr::nest(data = c(-vessel_idx, -year)) %>%
     dplyr::left_join(n_df, by = nms_join) %>%
     dplyr::mutate(n = dplyr::coalesce(n, purrr::map_dbl(data, nrow))) %>%
     dplyr::mutate(data = purrr::map2(data, n, dplyr::sample_n)) %>%
@@ -77,14 +87,26 @@ subsample_catch <- function(catch_df, n_df = NULL) {
 ##' @param opmod Operating model
 ##' @param root_dir Directory with e.g. \code{repl_01} subdirectory that
 ##'   contains \code{popstate_*.csv}
+##' @param filetype Which popstate file to read? Can be \code{"feather"},
+##'   \code{"csv"}, or \code{"h5"}
 ##' @return A \code{tibble} with population and year, starting from 1
 ##' @author John Best
 ##' @export
-read_popstate <- function(study, repl, opmod, root_dir = ".") {
-  flnm <- sim_file_paths(study, repl, opmod, root_dir)$popcsv
-  pop <- readr::read_csv(flnm,
-                         col_types = readr::cols(pop = readr::col_double()))
-  dplyr::mutate(pop, time = seq_along(pop))
+read_popstate <- function(study, repl, opmod, root_dir = ".", filetype = c("feather", "csv", "h5")) {
+  if (filetype == "feather") {
+    flnm <- sim_file_paths(study, repl, opmod, root_dir)$pop_feather
+    pop <- arrow::read_feather(flnm)
+  } else if (filetype == "csv") {
+    flnm <- sim_file_paths(study, repl, opmod, root_dir)$pop_csv
+    pop <- readr::read_csv(flnm,
+                           col_types = readr::cols(pop = readr::col_double())) %>%
+      dplyr::mutate(time = seq_along(pop))
+  } else if (filetype == "h5") {
+    flnm <- sim_file_paths(study, repl, opmod, root_dir)$pop_h5
+    h5 <- hdf5r::h5file(flnm, mode = "r")
+    pop <- h5[["popstate"]]$read()
+  }
+  pop
 }
 
 ##' Parse coordinates that were saved as a tuple of \code{Float64} and read in
@@ -163,7 +185,7 @@ create_index_df <- function(step = 1.0, T = 25) {
 prepare_data <- function(catch_df, index_df, mesh, fem,
                          obs_lik = 0L,
                          X_contr = contr.helmert) {
-  T <- length(unique(catch_df$time))
+  T <- length(unique(catch_df$year))
   ## Convert `time` to a factor so different contrasts can be set easily. Don't
   ## overwrite `time` because later calls to `generate_projection` need it to be
   ## numeric.
