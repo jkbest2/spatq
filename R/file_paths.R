@@ -55,7 +55,7 @@ sim_file_names <- function(study, opmod) {
 ##' File names are ${study_dir}/repl_${repl}/${study_opmod}_catch.csv File
 ##' names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two digits.
 ##' @title Paths to simulated data sets
-##' @param study Study; currently only "qdevscaling"
+##' @param study Study
 ##' @param repl Replicate number
 ##' @param opmod Operating model
 ##' @param root_dir Where to start

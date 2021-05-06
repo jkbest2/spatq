@@ -10,7 +10,7 @@ study_dir(study, root_dir = ".")
 study_file_base(study)
 }
 \arguments{
-\item{study}{Study; currently only "qdevscaling"}
+\item{study}{Study name}
 
 \item{root_dir}{Where to start}
 

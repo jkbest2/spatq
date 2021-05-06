@@ -7,7 +7,7 @@
 \alias{all_res_file_paths}
 \title{Paths to each results file}
 \usage{
-create_res_dir(study, repl = NULL)
+create_res_dir(study, repl = NULL, root_dir = ".")
 
 res_file_names(study, opmod, estmod)
 
@@ -20,11 +20,11 @@ all_res_file_paths(study, repls, opmods, estmods, root_dir = ".")
 
 \item{repl}{Replicate number(s)}
 
+\item{root_dir}{Root directory}
+
 \item{opmod}{Operating model}
 
 \item{estmod}{Estimation model}
-
-\item{root_dir}{Root directory}
 }
 \value{
 A list with elements \code{rdata} and \code{indexcsv} with relative

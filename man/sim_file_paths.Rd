@@ -10,7 +10,7 @@ sim_file_names(study, opmod)
 sim_file_paths(study, repl, opmod, root_dir = ".")
 }
 \arguments{
-\item{study}{Study; currently only "qdevscaling"}
+\item{study}{Study}
 
 \item{opmod}{Operating model}
 
