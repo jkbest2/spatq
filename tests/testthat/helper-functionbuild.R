@@ -4,7 +4,7 @@ estd <- specify_estimated(beta = TRUE, gamma = FALSE,
                           phi = FALSE, psi = FALSE)
 obj <- make_sim_adfun(study = "qdevscaling",
                       repl = 1,
-                      opmod = 1,
+                      opmod = 6,
                       sub_df = data.frame(vessel_idx = 2,
                                           n = 500),
                       root_dir = normalizePath(
@@ -20,7 +20,7 @@ obj <- make_sim_adfun(study = "qdevscaling",
 estd_f <- specify_estimated()
 obj_f <- make_sim_adfun(study = "qdevscaling",
                         repl = 1,
-                        opmod = 1,
+                        opmod = 6,
                         root_dir = normalizePath(
                           system.file("testdata", package = "spatq")),
                         max_T = 15,
@@ -36,7 +36,7 @@ twf_estd <- specify_estimated(beta = TRUE, lambda = TRUE,
                               obs_lik = 1L)
 twf_setup <- spatq_simsetup(study = "qdevscaling",
                             repl = 1,
-                            opmod = 1,
+                            opmod = 6,
                             root_dir = normalizePath(
                               system.file("testdata", package = "spatq")),
                             max_T = 5,
@@ -54,7 +54,7 @@ tw_estd <- specify_estimated(beta = TRUE, gamma = FALSE,
                              obs_lik = 1L)
 tw_setup <- spatq_simsetup(study = "qdevscaling",
                            repl = 1,
-                           opmod = 1,
+                           opmod = 6,
                            root_dir = normalizePath(
                              system.file("testdata", package = "spatq")),
                            max_T = 15,
