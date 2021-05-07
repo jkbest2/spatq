@@ -35,9 +35,9 @@ plot_field <- function(est, gen = NULL, mesh = generate_mesh(),
   s1 <- unique(index_df$s1)
   s2 <- unique(index_df$s2)
   if (nyears > 1) {
-    grps <- index_df$time
+    grps <- index_df$year
   } else {
-    grps <- purrr::rep_along(index_df$time, 1)
+    grps <- purrr::rep_along(index_df$year, 1)
   }
   projmat <- generate_projection(mesh, index_df, group = grps)
 

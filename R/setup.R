@@ -29,7 +29,7 @@ spatq_simsetup <- function(study, repl, opmod, sub_df = NULL,
   ## Read in data
   catch_df <- read_catch(study, repl, opmod, root_dir)
   if (!is.null(max_T)) {
-    catch_df <- dplyr::filter(catch_df, time <= max_T)
+    catch_df <- dplyr::filter(catch_df, year <= max_T)
     attr(catch_df, "T") <- max_T
   }
   ## Subset observations
@@ -75,7 +75,7 @@ new_spatq_setup <- function(data, parameters, map, random) {
 ##' @export
 spatq_setup <- function(catch_df, spatq_spec, index_step, init_fixef = TRUE, ...) {
   ## Get number of years represented in catch data
-  T <- length(unique(catch_df$time))
+  T <- length(unique(catch_df$year))
 
   ## Create index integration reference
   index_df <- create_index_df(step = index_step, T = T)

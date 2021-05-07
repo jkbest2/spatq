@@ -75,7 +75,7 @@ subsample_catch <- function(catch_df, n_df = NULL) {
     dplyr::select(-n) %>%
     tidyr::unnest(data)
   ## Double check that T is correct here
-  attr(catch_df, "T") <- length(unique(catch_df$time))
+  attr(catch_df, "T") <- length(unique(catch_df$year))
   catch_df
 }
 
@@ -95,12 +95,13 @@ subsample_catch <- function(catch_df, n_df = NULL) {
 read_popstate <- function(study, repl, opmod, root_dir = ".", filetype = c("feather", "csv", "h5")) {
   if (filetype == "feather") {
     flnm <- sim_file_paths(study, repl, opmod, root_dir)$pop_feather
-    pop <- arrow::read_feather(flnm)
+    pop <- arrow::read_feather(flnm) %>%
+      dplyr::rename(year = time)
   } else if (filetype == "csv") {
     flnm <- sim_file_paths(study, repl, opmod, root_dir)$pop_csv
     pop <- readr::read_csv(flnm,
                            col_types = readr::cols(pop = readr::col_double())) %>%
-      dplyr::mutate(time = seq_along(pop))
+      dplyr::mutate(year = seq_along(pop))
   } else if (filetype == "h5") {
     flnm <- sim_file_paths(study, repl, opmod, root_dir)$pop_h5
     h5 <- hdf5r::h5file(flnm, mode = "r")
@@ -155,9 +156,9 @@ get_coordref <- function(root_dir = ".") {
 ##' @export
 create_index_df <- function(step = 1.0, T = 25) {
   loc_df <- tibble::as_tibble(loc_grid(step)) %>%
-   dplyr::mutate(loc_idx = seq_along(s1))
+    dplyr::mutate(loc_idx = seq_along(s1))
   index_df <- purrr::cross_df(list(loc_idx = loc_df$loc_idx,
-                                   time = seq_len(T))) %>%
+                                   year = seq_len(T))) %>%
     dplyr::full_join(loc_df, by = "loc_idx") %>%
     dplyr::select(-loc_idx)
   attr(index_df, "step") <- step
@@ -189,8 +190,8 @@ prepare_data <- function(catch_df, index_df, mesh, fem,
   ## Convert `time` to a factor so different contrasts can be set easily. Don't
   ## overwrite `time` because later calls to `generate_projection` need it to be
   ## numeric.
-  catch_df$ftime <- factor(catch_df$time)
-  index_df$ftime <- factor(index_df$time)
+  catch_df$ftime <- factor(catch_df$year)
+  index_df$ftime <- factor(index_df$year)
 
   ## If single-vessel and no covariates, nothing to estimate for `lambda_n` or
   ## `lambda_w`. Check length of unique column contents rather than `levels` in
@@ -233,10 +234,10 @@ prepare_data <- function(catch_df, index_df, mesh, fem,
               ## Abundance projection matrices
               A_spat = generate_projection(mesh, catch_df),
               A_sptemp = generate_projection(mesh, catch_df,
-                                             group = catch_df$time),
+                                             group = catch_df$year),
               IA_spat = generate_projection(mesh, index_df),
               IA_sptemp = generate_projection(mesh, index_df,
-                                              group = index_df$time),
+                                              group = index_df$year),
               ## Integration weights
               Ih = rep_len(attr(index_df, "step")^2, nrow(index_df)),
 
@@ -251,7 +252,7 @@ prepare_data <- function(catch_df, index_df, mesh, fem,
               A_qspat = generate_projection(mesh, catch_df, vessel_idx = 2),
               A_qsptemp = generate_projection(mesh, catch_df,
                                               vessel_idx = 2,
-                                              group = catch_df$time),
+                                              group = catch_df$year),
 
               ## FEM matrices for spatial/spatiotemporal effects
               spde = fem,
