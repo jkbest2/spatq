@@ -18,7 +18,8 @@ all_res_file_paths(study, repls, opmods, estmods, root_dir = ".")
 \item{root_dir}{Root directory}
 }
 \value{
-List where each element has \code{rdata} and \code{indexcsv} paths
+List where each element has \code{rdata}, \code{index_csv}, and
+\code{index_feather} paths
 }
 \description{
 List all paths to results files for a study.

@@ -62,11 +62,11 @@ read_index_csv <- function(filestudy,
 ##' @return \code{\link[tibble]{tibble}} with indices for all fitted models
 ##' @author John K Best
 ##' @export
-read_all_indices <- function (study,
-                              repls,
-                              opmods,
-                              estmods,
-                              root_dir = ".") {
+read_all_indices <- function(study,
+                             repls,
+                             opmods,
+                             estmods,
+                             root_dir = ".") {
   csv_list <- all_res_file_paths(study, repls, opmods, estmods, root_dir)$indexcsv
   purrr::map_df(csv_list, read_index_csv)
 }

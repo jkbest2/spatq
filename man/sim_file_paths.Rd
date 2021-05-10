@@ -19,13 +19,11 @@ sim_file_paths(study, repl, opmod, root_dir = ".")
 \item{root_dir}{Where to start}
 }
 \value{
-A list of file paths with elements \code{catch}, \code{popcsv}, and
-\code{poph5}
+A list of file paths with elements \code{catch_csv},
+\code{catch_feather}, \code{pop_csv}, \code{pop_feather}, and \code{poph5}
 }
 \description{
-Get the paths to each simulation file.
-File names are ${study_dir}/repl_${repl}/${study_opmod}\emph{catch.csv File
-names are repl}$repl/catch_$repl_$sc.csv, with $repl padded to two digits.
+Get the paths to each simulation file. ' File names are
 }
 \section{Functions}{
 \itemize{

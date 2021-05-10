@@ -1,7 +1,7 @@
 ##' Save the results of a fit.
 ##'
 ##' @title Save fit results
-##' @param spec A \code{spatq_spec} specification
+##' @param studyspec A \code{spatq_studyspec} specification
 ##' @param fit A \code{\link{spatq_fit}} fit result
 ##' @param lpb The contents of \code{obj$env$last.par.best}, gathered into a
 ##'   named list
@@ -9,30 +9,37 @@
 ##' @param sdr An SD Report from \code{\link{sdreport_spatq}}
 ##' @return The name of the saved file
 ##' @author John K Best
-save_fit <- function(spec, fit, lpb, rep, sdr) {
-  saveRDS(list(spec = spec,
+##' @export
+save_fit <- function(studyspec, fit, lpb, rep, sdr, root_dir = ".") {
+  rdata_path <- res_file_paths(studyspec$study,
+                               studyspec$repl,
+                               studyspec$opmod,
+                               studyspec$estmod,
+                               root_dir)
+  saveRDS(list(spec = studyspec,
                fit = fit,
                lpb = lpb,
                rep = rep,
                sdr = sdr),
-          spec$Rdata)
-  invisible(spec$Rdata)
+          rdata_path$rdata)
+  invisible(rdata_path$rdata)
 }
 
 ##' Save the index results, scaled appropriately. Also includes error estimates.
 ##'
 ##' @title Save true and estimated indices to a CSV
-##' @param spec A \code{spatq_spec}
+##' @param path File path to write to
 ##' @param sdr  An SD report from \code{\link{sdreport_spatq}}
 ##' @param max_T End year
 ##' @return The CSV file name
 ##' @author John K Best
-save_index <- function(spec, sdr, max_T = 15) {
+##' @export
+save_index <- function(studyspec, sdr, max_T = 15, feather = TRUE) {
   ## Read true population state and calculate index
   true_index <- read_popstate(study = spec$study,
                               repl = spec$repl,
                               opmod = spec$opmod,
-                              root_dir = ".") %>%
+                              root_dir = studyspec$root_dir) %>%
     dplyr::rename(raw_true = pop) %>%
     dplyr::filter(year <= max_T) %>%
     dplyr::mutate(index_true = rescale_index(raw_true)$index,
@@ -71,8 +78,19 @@ save_index <- function(spec, sdr, max_T = 15) {
 
   }
 
-  ## Join and write to CSV file
+  ## Join and write
   index_df <- dplyr::left_join(est_index, true_index, by = "year")
-  readr::write_csv(index_df, spec$index)
-  invisible(spec$index)
+  index_path <- res_file_paths(studyspec$study,
+                               studyspec$repl,
+                               studyspec$opmod,
+                               studyspec$estmod,
+                               studyspec$root_dir)
+  if (feather) {
+    flnm <- index_path$index_feather
+    arrow::write_feather(index_df, flnm)
+  } else {
+    flnm <- index_path$index_csv
+    readr::write_csv(index_df, flnm)
+  }
+  flnm
 }

@@ -4,14 +4,14 @@
 \alias{save_index}
 \title{Save true and estimated indices to a CSV}
 \usage{
-save_index(spec, sdr, max_T = 15)
+save_index(studyspec, sdr, max_T = 15, feather = TRUE)
 }
 \arguments{
-\item{spec}{A \code{spatq_spec}}
-
 \item{sdr}{An SD report from \code{\link{sdreport_spatq}}}
 
 \item{max_T}{End year}
+
+\item{path}{File path to write to}
 }
 \value{
 The CSV file name

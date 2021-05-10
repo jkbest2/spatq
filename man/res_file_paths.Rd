@@ -8,7 +8,7 @@
 \usage{
 create_res_dir(study, repl = NULL, root_dir = ".")
 
-res_file_names(study, opmod, estmod)
+res_file_names(study, opmod, estmod, feather = TRUE)
 
 res_file_paths(study, repl, opmod, estmod, root_dir = ".")
 }

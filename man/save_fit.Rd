@@ -4,10 +4,10 @@
 \alias{save_fit}
 \title{Save fit results}
 \usage{
-save_fit(spec, fit, lpb, rep, sdr)
+save_fit(studyspec, fit, lpb, rep, sdr)
 }
 \arguments{
-\item{spec}{A \code{spatq_spec} specification}
+\item{studyspec}{A \code{spatq_studyspec} specification}
 
 \item{fit}{A \code{\link{spatq_fit}} fit result}
 

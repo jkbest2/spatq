@@ -51,17 +51,16 @@ sim_file_names <- function(study, opmod) {
        pop_h5 = paste0(study_file, opmod, "_popstate.h5"))
 }
 
-##' Get the paths to each simulation file.
-##
-##' File names are ${study_dir}/repl_${repl}/${study_opmod}_catch.csv File
-##' names are repl_$repl/catch_$repl_$sc.csv, with $repl padded to two digits.
+##' Get the paths to each simulation file. ' File names are
+##${study_dir}/repl_${repl}/${study_opmod}_catch.csv File ' names are
+##repl_$repl/catch_$repl_$sc.csv, with $repl padded to two digits.
 ##' @title Paths to simulated data sets
 ##' @param study Study
 ##' @param repl Replicate number
 ##' @param opmod Operating model
 ##' @param root_dir Where to start
-##' @return A list of file paths with elements \code{catch}, \code{popcsv}, and
-##'   \code{poph5}
+##' @return A list of file paths with elements \code{catch_csv},
+##'   \code{catch_feather}, \code{pop_csv}, \code{pop_feather}, and \code{poph5}
 ##' @author John K Best
 ##' @export
 sim_file_paths <- function(study, repl, opmod, root_dir = ".") {
@@ -98,13 +97,13 @@ create_res_dir <- function(study, repl = NULL, root_dir = ".") {
 
 ##' @describeIn res_file_paths File names for each study, operating, and
 ##'   estimation model combination
-res_file_names <- function(study, opmod, estmod) {
+res_file_names <- function(study, opmod, estmod, feather = TRUE) {
   opmod <- stringr::str_pad(opmod, 2, pad = 0)
   res_files <- paste0(study_file_base(study),
                       opmod, "_",
                       estmod,
-                      c(".Rdata", "_index.csv"))
-  names(res_files) <- c("rdata", "indexcsv")
+                      c(".Rdata", "_index.csv", "_index.feather"))
+  names(res_files) <- c("rdata", "index_csv", "index_feather")
   res_files
 }
 
@@ -141,7 +140,8 @@ res_file_paths <- function(study, repl, opmod, estmod, root_dir = ".") {
 ##' @param opmods Operating model numbers
 ##' @param estmods Estimation model names
 ##' @param root_dir Root directory
-##' @return List where each element has \code{rdata} and \code{indexcsv} paths
+##' @return List where each element has \code{rdata}, \code{index_csv}, and
+##'   \code{index_feather} paths
 ##' @author John K Best
 ##' @export
 all_res_file_paths <- function(study, repls, opmods, estmods, root_dir = ".") {
@@ -157,5 +157,6 @@ all_res_file_paths <- function(study, repls, opmods, estmods, root_dir = ".") {
                              res_dirs) %>%
     purrr::map_chr(~ file.path(.[2], .[1]))
   list(rdata = paste0(res_paths, ".Rdata"),
-       indexcsv = paste0(res_paths, "_index.csv"))
+       index_csv = paste0(res_paths, "_index.csv"),
+       index_feather = paste0(res_paths, "_index.feather"))
 }
