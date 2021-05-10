@@ -55,7 +55,7 @@ spatq_obj <- function(setup, runSymbolicAnalysis = TRUE, normalize = TRUE, ...) 
                         parameters = setup$parameters,
                         map = setup$map,
                         random = setup$random,
-                        ...)
+                        DLL = "spatq", ...)
   if (!normalize)
     obj <- TMB::normalize(obj, flag = "incl_data", value = FALSE)
   if (runSymbolicAnalysis & length(setup$random) > 0)
