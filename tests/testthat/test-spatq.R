@@ -19,11 +19,11 @@ test_that("Fixed effects model can be fit and sdreported", {
   sdr_f <- sdreport_spatq(obj_f)
   ## Want to test that the Hessian is PD *after* getting the parameter
   ## estimates. No expectation that
-  heeval_f <- obj_f$he(fit_f$par)
+  ## heeval_f <- obj_f$he(fit_f$par)
 
   expect_true(is.finite(fneval_f))
   expect_true(all(is.finite(greval_f)))
-  expect_true(all(eigen(heeval_f)$values > 0))
+  ## expect_true(all(eigen(heeval_f)$values > 0))
 
   expect_true(inherits(fit_f, "spatq_fit"))
 
