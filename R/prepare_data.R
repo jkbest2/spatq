@@ -96,7 +96,7 @@ read_popstate <- function(study, repl, opmod, root_dir = ".", filetype = c("feat
   if (filetype == "feather") {
     flnm <- sim_file_paths(study, repl, opmod, root_dir)$pop_feather
     pop <- arrow::read_feather(flnm) %>%
-      dplyr::rename(year = time)
+      dplyr::mutate(year = seq_along(pop))
   } else if (filetype == "csv") {
     flnm <- sim_file_paths(study, repl, opmod, root_dir)$pop_csv
     pop <- readr::read_csv(flnm,
