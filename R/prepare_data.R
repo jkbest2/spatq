@@ -93,6 +93,9 @@ subsample_catch <- function(catch_df, n_df = NULL) {
 ##' @author John Best
 ##' @export
 read_popstate <- function(study, repl, opmod, root_dir = ".", filetype = c("feather", "csv", "h5")) {
+  if (length(filetype) > 1) {
+    filetype <- filetype[1]
+  }
   if (filetype == "feather") {
     flnm <- sim_file_paths(study, repl, opmod, root_dir)$pop_feather
     pop <- arrow::read_feather(flnm) %>%
