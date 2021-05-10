@@ -97,7 +97,7 @@ create_res_dir <- function(study, repl = NULL, root_dir = ".") {
 
 ##' @describeIn res_file_paths File names for each study, operating, and
 ##'   estimation model combination
-res_file_names <- function(study, opmod, estmod, feather = TRUE) {
+res_file_names <- function(study, opmod, estmod) {
   opmod <- stringr::str_pad(opmod, 2, pad = 0)
   res_files <- paste0(study_file_base(study),
                       opmod, "_",

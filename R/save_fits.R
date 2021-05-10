@@ -7,6 +7,7 @@
 ##'   named list
 ##' @param rep A parameter report from \code{\link{report_spatq}}
 ##' @param sdr An SD Report from \code{\link{sdreport_spatq}}
+##' @param root_dir Root directory
 ##' @return The name of the saved file
 ##' @author John K Best
 ##' @export
@@ -28,30 +29,31 @@ save_fit <- function(studyspec, fit, lpb, rep, sdr, root_dir = ".") {
 ##' Save the index results, scaled appropriately. Also includes error estimates.
 ##'
 ##' @title Save true and estimated indices to a CSV
-##' @param path File path to write to
+##' @param studyspec Simulation study specification
 ##' @param sdr  An SD report from \code{\link{sdreport_spatq}}
 ##' @param max_T End year
+##' @param feather Save as feather or CSV?
 ##' @return The CSV file name
 ##' @author John K Best
 ##' @export
 save_index <- function(studyspec, sdr, max_T = 15, feather = TRUE) {
   ## Read true population state and calculate index
-  true_index <- read_popstate(study = spec$study,
-                              repl = spec$repl,
-                              opmod = spec$opmod,
+  true_index <- read_popstate(study = studyspec$study,
+                              repl = studyspec$repl,
+                              opmod = studyspec$opmod,
                               root_dir = studyspec$root_dir) %>%
     dplyr::rename(raw_true = pop) %>%
     dplyr::filter(year <= max_T) %>%
     dplyr::mutate(index_true = rescale_index(raw_true)$index,
-                  study = spec$study)
+                  study = studyspec$study)
 
   if (!("fail" %in% names(sdr))) {
     ## Organize details for estimated index
     which_index <- which(names(sdr$value) == "Index")
-    est_index <- tibble::tibble(study = spec$study,
-                                repl = spec$repl,
-                                opmod = spec$opmod,
-                                estmod = spec$estmod,
+    est_index <- tibble::tibble(study = studyspec$study,
+                                repl = studyspec$repl,
+                                opmod = studyspec$opmod,
+                                estmod = studyspec$estmod,
                                 year = 1:max_T,
                                 raw_est = sdr$value[which_index],
                                 index_est = rescale_index(raw_est)$index,
@@ -62,10 +64,10 @@ save_index <- function(studyspec, sdr, max_T = 15, feather = TRUE) {
                                 raw_unb_sd = sdr$unbiased$sd,
                                 unb_sd = rescale_index(raw_unb, raw_unb_sd)$sd)
   } else {
-    est_index <- tibble::tibble(study = spec$study,
-                                repl = spec$repl,
-                                opmod = spec$opmod,
-                                estmod = spec$estmod,
+    est_index <- tibble::tibble(study = studyspec$study,
+                                repl = studyspec$repl,
+                                opmod = studyspec$opmod,
+                                estmod = studyspec$estmod,
                                 year = 1:max_T,
                                 raw_est = rep(NA, max_T),
                                 index_est = rep(NA, max_T),

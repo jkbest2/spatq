@@ -9,11 +9,12 @@
 ##' @param estmod Estimation model name
 ##' @param sub_df Data subsetting data frame
 ##' @param estd Parameter estimation specification
+##' @param root_dir Root directory
 ##' @return The same list, but with class \code{spatq_simstudyspec}. Only checks
 ##'   that all elements are non-\code{NULL}.
 ##' @author John K Best
 ##' @export
-spatq_simstudyspec <- function(speclist, feather = TRUE) {
+spatq_simstudyspec <- function(speclist) {
   new_spatq_simstudyspec(speclist$study,
                          speclist$repl,
                          speclist$opmod,

@@ -4,7 +4,7 @@
 \alias{save_fit}
 \title{Save fit results}
 \usage{
-save_fit(studyspec, fit, lpb, rep, sdr)
+save_fit(studyspec, fit, lpb, rep, sdr, root_dir = ".")
 }
 \arguments{
 \item{studyspec}{A \code{spatq_studyspec} specification}
@@ -17,6 +17,8 @@ named list}
 \item{rep}{A parameter report from \code{\link{report_spatq}}}
 
 \item{sdr}{An SD Report from \code{\link{sdreport_spatq}}}
+
+\item{root_dir}{Root directory}
 }
 \value{
 The name of the saved file

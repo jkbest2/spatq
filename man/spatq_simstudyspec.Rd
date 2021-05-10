@@ -5,9 +5,9 @@
 \alias{new_spatq_simstudyspec}
 \title{Simulation study specification}
 \usage{
-spatq_simstudyspec(speclist, feather = TRUE)
+spatq_simstudyspec(speclist)
 
-new_spatq_simstudyspec(study, repl, opmod, estmod, sub_df, estd)
+new_spatq_simstudyspec(study, repl, opmod, estmod, sub_df, estd, root_dir)
 }
 \arguments{
 \item{speclist}{List with \code{study}, \code{repl}, \code{opmod},
@@ -24,16 +24,15 @@ new_spatq_simstudyspec(study, repl, opmod, estmod, sub_df, estd)
 \item{sub_df}{Data subsetting data frame}
 
 \item{estd}{Parameter estimation specification}
+
+\item{root_dir}{Root directory}
 }
 \value{
-The same list, but with class \code{spatq_simstudyspec}. No checks are
-performed.
+The same list, but with class \code{spatq_simstudyspec}. Only checks
+that all elements are non-\code{NULL}.
 }
 \description{
-.. content for \description{} (no empty lines) ..
-}
-\details{
-.. content for \details{} ..
+Specification of a single simulation study fit.
 }
 \section{Functions}{
 \itemize{

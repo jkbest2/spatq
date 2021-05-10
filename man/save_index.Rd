@@ -7,11 +7,13 @@
 save_index(studyspec, sdr, max_T = 15, feather = TRUE)
 }
 \arguments{
+\item{studyspec}{Simulation study specification}
+
 \item{sdr}{An SD report from \code{\link{sdreport_spatq}}}
 
 \item{max_T}{End year}
 
-\item{path}{File path to write to}
+\item{feather}{Save as feather or CSV?}
 }
 \value{
 The CSV file name
