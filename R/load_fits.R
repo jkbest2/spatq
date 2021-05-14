@@ -72,7 +72,6 @@ read_all_indices <- function(study,
                     opmod = opmods,
                     estmod = estmods,
                     root_dir = root_dir)) %>%
-    purrr::map_chr(index_path, filetype = "csv") %>%
     purrr::map_df(read_index, filetype = "csv")
 }
 
