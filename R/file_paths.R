@@ -160,3 +160,31 @@ all_res_file_paths <- function(study, repls, opmods, estmods, root_dir = ".") {
        index_csv = paste0(res_paths, "_index.csv"),
        index_feather = paste0(res_paths, "_index.feather"))
 }
+
+##' @title Construct the relative path to the index file output by a fit.
+##' @param spec A \code{\link{spatq_simstudyspec}} object
+##' @param filetype Index file type, either "feather"  or "csv"
+##' @return The relative path to the index data file
+##' @author John K Best
+##' @export
+index_path <- function(spec, filetype) UseMethod("index_path")
+##' @export
+index_path.spatq_simstudyspec <- function(spec, filetype) {
+  ## Check filetype
+  filetype %in% c("feather", "csv") || stop("filetype must be \"feather\" or \"csv\"")
+  opmod <- stringr::str_pad(spec$opmod, 2, pad = 0)
+  index_file <- paste0(study_file_base(spec$study),
+                      opmod, "_",
+                      spec$estmod, "_index.",
+                      filetype)
+
+  file.path(study_dir(spec$study, spec$root_dir),
+            "results",
+            repl_dir(spec$repl),
+            index_file)
+}
+##' @export
+index_path.list <- function(spec, filetype) {
+  spec <- spatq_simstudyspec(spec)
+  index_path(spec, filetype)
+}

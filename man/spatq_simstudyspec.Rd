@@ -5,13 +5,22 @@
 \alias{new_spatq_simstudyspec}
 \title{Simulation study specification}
 \usage{
-spatq_simstudyspec(speclist)
+spatq_simstudyspec(s, ...)
 
-new_spatq_simstudyspec(study, repl, opmod, estmod, sub_df, estd, root_dir)
+new_spatq_simstudyspec(
+  study,
+  repl,
+  opmod,
+  estmod,
+  sub_df = NULL,
+  estd = NULL,
+  root_dir = "."
+)
 }
 \arguments{
-\item{speclist}{List with \code{study}, \code{repl}, \code{opmod},
-\code{estmod}, \code{sub_df}, \code{estd}}
+\item{s}{list of spec components (arguments listed below) or study name}
+
+\item{...}{Rest of the spec components if s is study name}
 
 \item{study}{Simulation study name}
 

@@ -70,3 +70,65 @@ read_all_indices <- function(study,
   csv_list <- all_res_file_paths(study, repls, opmods, estmods, root_dir)$indexcsv
   purrr::map_df(csv_list, read_index_csv)
 }
+
+##' @title Read an index from a fitted model
+##' @param x Path to index or \code{\link{spatq_simstudyspec}}
+##' @param filetype File type, either "feather" or "csv"
+##' @param estmods Names of estimation models
+##' @return A data frame with fitted index values
+##' @author John K Best
+##' @export
+read_index <- function(x, filetype, estmods) UseMethod("read_index")
+##' @export
+read_index.character <- function(x,
+                                 filetype = NULL,
+                                 estmods = c("survey", "spatial_ab", "spatial_q")) {
+  if (is.null(filetype)) {
+    if (grepl("\\.feather$", x)) {
+      filetype <- "feather"
+    } else if (grepl("\\.csv$")) {
+      filetype <- "csv"
+    }
+  }
+
+  if (filetype == "feather") {
+    index_df <- arrow::read_feather(x) %>%
+      dplyr::mutate(estmod = factor(estmod, levels = estmods))
+  } else if (filetype == "csv") {
+    index_df <- readr::read_csv(x,
+                                col_types =
+                                  readr::cols(
+                                           study = readr::col_character(),
+                                           repl = readr::col_integer(),
+                                           opmod = readr::col_integer(),
+                                           estmod = readr::col_factor(levels = estmods),
+                                           year = readr::col_integer(),
+                                           raw_est = readr::col_double(),
+                                           index_est = readr::col_double(),
+                                           raw_unb = readr::col_double(),
+                                           index_unb = readr::col_double(),
+                                           raw_sd = readr::col_double(),
+                                           index_sd = readr::col_double(),
+                                           raw_unb_sd = readr::col_double(),
+                                           unb_sd = readr::col_double(),
+                                           raw_true = readr::col_double(),
+                                           index_true = readr::col_double()))
+  }
+  index_df %>%
+    dplyr::mutate(repl = factor(repl),
+                  opmod = factor(opmod))
+}
+##' @export
+read_index.spatq_simstudyspec <- function(x,
+                                          filetype = "csv",
+                                          estmods = c("survey", "spatial_ab", "spatial_q")) {
+  file <- index_path(x, filetype)
+  read_index(file, filetype, estmods)
+}
+##' @export
+read_index.list <- function(x,
+                            filetype = "csv",
+                            estmods = c("survey", "spatial_ab", "spatial_q")) {
+  spec <- spatq_simstudyspec(x)
+  read_index(spec, filetype, estmods)
+}
