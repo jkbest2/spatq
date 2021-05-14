@@ -136,3 +136,24 @@ read_index.list <- function(x,
   spec <- spatq_simstudyspec(x)
   read_index(spec, filetype, estmods)
 }
+
+##' @title Read saved Rdata from a fitted model
+##' @param x Path to index, \code{\link{spatq_simstudyspec}}, or list
+##' @return A data frame with fitted index values
+##' @author John K Best
+##' @export
+read_rdata <- function(x) UseMethod("read_rdata")
+##' @export
+read_rdata.character <- function(x) {
+  readRDS(x)
+}
+##' @export
+read_rdata.spatq_simstudyspec <- function(x) {
+  path <- rdata_path(x)
+  read_rdata(path)
+}
+##' @export
+read_rdata.list <- function(x) {
+  path <- rdata_path(x)
+  read_rdata(path)
+}

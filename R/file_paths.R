@@ -188,3 +188,28 @@ index_path.list <- function(spec, filetype) {
   spec <- spatq_simstudyspec(spec)
   index_path(spec, filetype)
 }
+
+##' @title Construct the relative path to the Rdata fit file
+##' @param spec A \code{\link{spatq_simstudyspec}} object or list with its
+##'   elements
+##' @return The relative path to the Rdata file
+##' @author John K Best
+##' @export
+rdata_path <- function(spec) UseMethod("rdata_path")
+##' @export
+rdata_path.spatq_simstudyspec <- function(spec) {
+  opmod <- stringr::str_pad(spec$opmod, 2, pad = 0)
+  rdata_file <- paste0(study_file_base(spec$study),
+                      opmod, "_",
+                      spec$estmod, ".Rdata")
+
+  file.path(study_dir(spec$study, spec$root_dir),
+            "results",
+            repl_dir(spec$repl),
+            rdata_file)
+}
+##' @export
+rdata_path.list <- function(spec) {
+  spec <- spatq_simstudyspec(spec)
+  rdata_path(spec)
+}
