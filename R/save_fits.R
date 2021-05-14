@@ -44,8 +44,7 @@ save_index <- function(studyspec, sdr, max_T = 15, feather = TRUE) {
                               root_dir = studyspec$root_dir) %>%
     dplyr::rename(raw_true = pop) %>%
     dplyr::filter(year <= max_T) %>%
-    dplyr::mutate(index_true = rescale_index(raw_true)$index,
-                  study = studyspec$study)
+    dplyr::mutate(index_true = rescale_index(raw_true)$index)
 
   if (!("fail" %in% names(sdr))) {
     ## Organize details for estimated index
