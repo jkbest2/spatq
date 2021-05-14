@@ -67,8 +67,13 @@ read_all_indices <- function(study,
                              opmods,
                              estmods,
                              root_dir = ".") {
-  csv_list <- all_res_file_paths(study, repls, opmods, estmods, root_dir)$indexcsv
-  purrr::map_df(csv_list, read_index_csv)
+  purrr::cross(list(study = study,
+                    repl = repls,
+                    opmod = opmods,
+                    estmod = estmods,
+                    root_dir = root_dir)) %>%
+    purrr::map_chr(index_path, filetype = "csv") %>%
+    purrr::map_df(read_index, filetype = "csv")
 }
 
 ##' @title Read an index from a fitted model
