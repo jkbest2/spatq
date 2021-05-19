@@ -73,7 +73,7 @@ fix_nlminb_fit <- function(fit) {
 ##' @param fit Previous fit to use as starting values
 ##' @param optcontrol a
 ##' @param bias.correct Use bias correction for \code{\link[TMB]{sdreport}}?
-##' @param bias.correct.control control bias correction
+##' @param bias.correct.control Control list for \code{bias.correct}
 ##' @param getJointPrecision Return the joint fixed and random effect precision
 ##'   matrix from \code{\link[TMB]{sdreport}}?
 ##' @param ... additional arguments to pass to \code{\link[TMB]{sdreport}}

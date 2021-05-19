@@ -145,7 +145,9 @@ read_index.list <- function(x,
 read_rdata <- function(x) UseMethod("read_rdata")
 ##' @export
 read_rdata.character <- function(x) {
-  readRDS(x)
+  result <- readRDS(x)
+  structure(result,
+            class = "spatq_result")
 }
 ##' @export
 read_rdata.spatq_simstudyspec <- function(x) {

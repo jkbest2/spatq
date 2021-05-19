@@ -26,6 +26,11 @@ spatq_simstudyspec.list <- function(s, ...) {
                          s$root_dir)
 }
 ##' @export
+spatq_simstudyspec.data.frame <- function(s, ...) {
+  spatq_simstudyspec(as.list(s))
+}
+
+##' @export
 spatq_simstudyspec.character <- function(s, ...) {
   new_spatq_simstudyspec(s, ...)
 }

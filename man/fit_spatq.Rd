@@ -31,7 +31,7 @@ hessian_spatq(obj, fit)
 
 \item{bias.correct}{Use bias correction for \code{\link[TMB]{sdreport}}?}
 
-\item{bias.correct.control}{control bias correction}
+\item{bias.correct.control}{Control list for \code{bias.correct}}
 
 \item{getJointPrecision}{Return the joint fixed and random effect precision
 matrix from \code{\link[TMB]{sdreport}}?}
