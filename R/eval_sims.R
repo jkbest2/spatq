@@ -4,21 +4,28 @@
 ##' 'est_index', 'true_biomass', and 'repl'.
 ##'
 ##' @title Estimate bias of estimation models
-##' @param fit_df Data frame with estimated indices, true biomass, and replicate
+##' @param index_df Data frame with estimated indices, true biomass, and replicate
 ##'   number
+##' @param unbiased Use debiased index estimates?
 ##' @return A list with 'alpha', the offsets for each replicate; 'delta', the
 ##'   bias coefficient; 'epsilon', the residuals; and 'sigma', the standard
 ##'   deviation of the regression.
 ##' @author John Best
 ##' @export
-bias_metric <- function(fit_df) {
-  if (!all(c("est_index", "true_biomass", "repl") %in% names(fit_df)))
-    stop("Data frame must have columns \'est_index\', \'true_biomass\', and \'repl\'")
-  mod <- stats::lm(log(est_index) ~ 0 + factor(repl) + log(true_biomass),
-            data = fit_df)
+bias_metric <- function(index_df, unbiased = TRUE) {
+  if (unbiased) {
+    resp <- "raw_unb"
+    form <- formula(log(raw_unb) ~ 0 + factor(repl) + log(raw_true))
+  } else {
+    resp <- "raw_est"
+    form <- formula(log(raw_est) ~ 0 + factor(repl) + log(raw_true))
+  }
+  if (!all(c(resp, "raw_true", "repl") %in% names(index_df)))
+    stop("Data frame must have columns \'raw_unb\', \'raw_true\', and \'repl\'")
+  mod <- stats::lm(form, data = index_df)
   mod_coef <- stats::coef(mod)
-  list(alpha = mod_coef[!grepl("true_biomass", names(mod_coef))],
-       delta = mod_coef[grepl("true_biomass", names(mod_coef))],
+  list(alpha = mod_coef[!grepl("raw_true", names(mod_coef))],
+       delta = mod_coef[grepl("raw_true", names(mod_coef))],
        epsilon = stats::resid(mod),
        sigma = stats::sigma(mod))
 
