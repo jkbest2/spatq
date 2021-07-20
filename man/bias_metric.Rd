@@ -4,11 +4,13 @@
 \alias{bias_metric}
 \title{Estimate bias of estimation models}
 \usage{
-bias_metric(fit_df)
+bias_metric(index_df, unbiased = TRUE)
 }
 \arguments{
-\item{fit_df}{Data frame with estimated indices, true biomass, and replicate
+\item{index_df}{Data frame with estimated indices, true biomass, and replicate
 number}
+
+\item{unbiased}{Use debiased index estimates?}
 }
 \value{
 A list with 'alpha', the offsets for each replicate; 'delta', the
