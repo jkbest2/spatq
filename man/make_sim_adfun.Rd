@@ -8,11 +8,12 @@ make_sim_adfun(
   study,
   repl,
   opmod,
+  estmod = NULL,
   sub_df = NULL,
+  spec_estd = NULL,
   root_dir = ".",
   max_T = NULL,
   index_step,
-  spec_estd = specify_estimated(),
   ...
 )
 }
@@ -26,14 +27,14 @@ make_sim_adfun(
 \item{sub_df}{Data frame indicating subsampling strategy; see
 \code{subsample_catch}}
 
+\item{spec_estd}{List of logicals indicating which parameters are to be
+estimated, as output \code{\link{specify_estimated}}}
+
 \item{root_dir}{Directory to load data from}
 
 \item{max_T}{Last year of data to include}
 
 \item{index_step}{Index grid step size}
-
-\item{spec_estd}{List of logicals indicating which parameters are to be
-estimated, as output \code{\link{specify_estimated}}}
 
 \item{...}{Additional options to pass to \code{prepare_adfun}}
 }

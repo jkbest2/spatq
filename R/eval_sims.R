@@ -11,6 +11,7 @@
 ##'   bias coefficient; 'epsilon', the residuals; and 'sigma', the standard
 ##'   deviation of the regression.
 ##' @author John Best
+##' @importFrom stats formula
 ##' @export
 bias_metric <- function(index_df, unbiased = TRUE) {
   if (unbiased) {

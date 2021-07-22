@@ -82,6 +82,10 @@ fix_nlminb_fit <- function(fit) {
 ##' @importFrom stats optim
 ##' @export
 fit_spatq <- function(obj, fit = NULL, optcontrol = spatq_optcontrol()) {
+  UseMethod("fit_spatq")
+}
+##' @export
+fit_spatq.spatq_obj <- function(obj, fit = NULL, optcontrol = spatq_optcontrol()) {
   if (is.null(fit)) {
     fit <- init_spatq_fit(obj)
   }
@@ -91,6 +95,23 @@ fit_spatq <- function(obj, fit = NULL, optcontrol = spatq_optcontrol()) {
     fit <- attach_optdiags(fit1, fit, obj)
   }
   fit
+}
+##' @export
+fit_spatq.spatq_designobj <- function(obj, fit = NULL, optcontrol = spatq_optcontrol()) {
+  index_df <- obj %>%
+    dplyr::group_by(year) %>%
+    dplyr::summarize(index = mean(catch_biomass),
+                     n = dplyr::n(),
+                     sd = sd(catch_biomass) / sqrt(n))
+  index <- index_df$index
+  names(index) <- purrr::rep_along(index, "Index")
+  sd <- index_df$sd
+
+  structure(list(value = index,
+                 sd = sd,
+                 unbiased = list(value = index,
+                                 sd = sd)),
+            class = "spatq_designfit")
 }
 
 ##' Attach optimization diagnostics comparing a previous optimization result to
@@ -210,7 +231,15 @@ spatq_optcontrol <- function(grtol = 1e-8,
 ##' @describeIn fit_spatq Get object report
 ##' @export
 report_spatq <- function(obj) {
+  UseMethod("report_spatq")
+}
+##' @export
+report_spatq.spatq_obj <- function(obj) {
   obj$report()
+}
+##' @export
+report_spatq.spatq_designobj <- function(obj) {
+  list()
 }
 
 ##' @describeIn fit_spatq Get object sdreport
@@ -221,11 +250,26 @@ sdreport_spatq <- function(obj,
                            bias.correct.control = list(sd = TRUE),
                            getJointPrecision = FALSE,
                            ...) {
+  UseMethod("sdreport_spatq")
+}
+##' @export
+sdreport_spatq.spatq_obj <- function(obj,
+                                     ## Don't bias correct if no random effects
+                                     bias.correct = !is.null(obj$env$random),
+                                     bias.correct.control = list(sd = TRUE),
+                                     getJointPrecision = FALSE,
+                                     ...) {
   TMB::sdreport(obj,
                 bias.correct = bias.correct,
                 bias.correct.control = bias.correct.control,
                 getJointPrecision = getJointPrecision,
                 ...)
+}
+##' @export
+sdreport_spatq.spatq_designobj <- function(obj) {
+  index <- fit_spatq(obj)
+  ## class(index) <- c("sdreport_spatq")
+  index
 }
 
 ##' @describeIn fit_spatq Get finite difference Hessian

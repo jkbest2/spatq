@@ -1,3 +1,21 @@
+root_dir <- normalizePath(system.file("testdata", package = "spatq"))
+
+spec_design <- spatq_simstudyspec("qdevscaling",
+                                  repl = 1,
+                                  opmod = 6,
+                                  estmod = "design",
+                                  root_dir = root_dir)
+setup_design <- spatq_simsetup(study = "qdevscaling",
+                               repl = 1,
+                               opmod = 6,
+                               estmod = "design",
+                               root_dir = root_dir,
+                               max_T = 15)
+obj_design <- spatq_obj(setup_design)
+fit_design <- fit_spatq(obj_design)
+rep_design <- report_spatq(obj_design)
+sdr_design <- sdreport_spatq(obj_design)
+
 estd <- specify_estimated(beta = TRUE, gamma = FALSE,
                           omega = TRUE, epsilon = TRUE,
                           lambda = TRUE, eta = FALSE,
@@ -21,6 +39,7 @@ estd_f <- specify_estimated()
 obj_f <- make_sim_adfun(study = "qdevscaling",
                         repl = 1,
                         opmod = 6,
+                        estmod = NULL,
                         root_dir = normalizePath(
                           system.file("testdata", package = "spatq")),
                         max_T = 15,

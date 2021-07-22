@@ -45,6 +45,8 @@ em_subsample.character <- function(estmod, n_comm = 4000) {
 ##' @export
 em_subsample.data.frame <- function(estmod, n_comm = 4000) estmod
 ##' @export
+em_subsample.NULL <- function(estmod, n_comm = 4000) NULL
+##' @export
 em_subsample.default <- function(estmod, n_comm = 4000) {
   stop("Must pass either data frame or name of valid estimation model")
 }
@@ -70,11 +72,11 @@ em_subsample.default <- function(estmod, n_comm = 4000) {
 ##' Default is to use a Tweedie observation likelihood and to map all
 ##' \code{kappa} decorrelation rate parameters to the same value.
 ##' @title Estimated parameters for an estimation model
-##' @param estmod Name of an estimation model or a \code{\link{spatq_spec}}
+##' @param estmod Name of an estimation model or a \code{spatq_spec}
 ##'   object
 ##' @param obs_lik Use delta Poisson link log-normal (\code{0}) or Tweedie
 ##'   (\code{1})?
-##' @return A \code{\link{spatq_spec}} object
+##' @return A \code{spatq_spec} object
 ##' @author John K Best
 ##' @export
 em_estd <- function(estmod, obs_lik = 1L) UseMethod("em_estd")

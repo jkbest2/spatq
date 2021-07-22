@@ -5,6 +5,7 @@
 ##' @param study Simulation study name
 ##' @param repl Replicate number
 ##' @param opmod Operating model
+##' @param estmod Estimation model
 ##' @param sub_df Data frame indicating subsampling strategy; see
 ##'   \code{\link{subsample_catch}}
 ##' @param root_dir Directory to load data from
@@ -21,11 +22,14 @@
 ##'   \code{\link{prepare_adfun}} or passed to \code{\link{spatq_obj}}
 ##' @author John K Best
 ##' @export
-spatq_simsetup <- function(study, repl, opmod, sub_df = NULL,
+spatq_simsetup <- function(study, repl, opmod, estmod = NULL,
+                           sub_df = NULL, spec_estd = NULL,
                            root_dir = ".", max_T = NULL,
                            index_step = 5,
-                           spec_estd = specify_estimated(),
                            init_fixef = TRUE, ...) {
+  if (is.null(sub_df)) sub_df <- em_subsample(estmod)
+  if (is.null(spec_estd)) spec_estd <- em_estd(estmod)
+
   ## Read in data
   catch_df <- read_catch(study, repl, opmod, root_dir)
   if (!is.null(max_T)) {
@@ -35,9 +39,16 @@ spatq_simsetup <- function(study, repl, opmod, sub_df = NULL,
   ## Subset observations
   catch_df <- subsample_catch(catch_df, sub_df)
 
+  ## For "design*" EMs, just return the data frame
+  if (!is.null(estmod) && estmod %in% c("design", "design_all")) {
+    class(catch_df) <- c("spatq_designsetup", class(catch_df))
+    return(catch_df)
+  }
+
   setup <- spatq_setup(catch_df, spec_estd, index_step, init_fixef, ...)
   attr(setup, "repl") <- repl
   attr(setup, "opmod") <- opmod
+  attr(setup, "estmod") <- estmod
   class(setup) <- c("spatq_simsetup", "spatq_setup")
   return(setup)
 }

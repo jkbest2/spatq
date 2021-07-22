@@ -56,7 +56,7 @@ plot_field <- function(est, gen = NULL, mesh = generate_mesh(),
   lmat <- layout_mat(nyears, !is.null(gen), length(parnames), colorbar)
   lw <- layout_widths(nyears, !is.null(gen), length(parnames), colorbar)
   layout(lmat, lw)
-  par(oma = c(1, 2, 1, 0), mar = c(1, 1, 1, 0))
+  par(oma = c(1, 2, 1, 1), mar = c(1, 1, 1, 1))
   ## Iterate along parameter names, which will be single or double depending
   ## whether the generative values are included
   for (p in parnames) {

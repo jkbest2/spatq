@@ -14,6 +14,7 @@ NULL
 ## if they're not declared here. They could probably be converted to standard
 ## evaluation using `rlang`, but that's for later.
 globalVariables(c(
+  "catch_biomass",
   "cloglog",
   "coord1",
   "coord2",

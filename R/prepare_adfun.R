@@ -48,6 +48,10 @@ prepare_adfun <- function(data, parameters, map, random,
 ##' @author John K Best
 ##' @export
 spatq_obj <- function(setup, runSymbolicAnalysis = TRUE, normalize = TRUE, ...) {
+  UseMethod("spatq_obj")
+}
+##' @export
+spatq_obj.spatq_setup <- function(setup, runSymbolicAnalysis = TRUE, normalize = TRUE, ...) {
   setup$data$proc_switch <- prepare_proc_switch(setup$random)
   setup$data$norm_flag <- normalize
   verify_spatq(setup$data, setup$parameters, setup$map)
@@ -61,6 +65,11 @@ spatq_obj <- function(setup, runSymbolicAnalysis = TRUE, normalize = TRUE, ...) 
   if (runSymbolicAnalysis & length(setup$random) > 0)
     TMB::runSymbolicAnalysis(obj)
   structure(obj, class = "spatq_obj")
+}
+##' @export
+spatq_obj.spatq_designsetup <- function(setup, ...) {
+  class(setup) <- c("spatq_designobj", class(setup))
+  setup
 }
 
 ##' Read in a simulated data set and construct a TMB ADFun for model fitting.
@@ -80,18 +89,19 @@ spatq_obj <- function(setup, runSymbolicAnalysis = TRUE, normalize = TRUE, ...) 
 ##' @return A TMB ADFun suitable for optimization
 ##' @author John Best
 ##' @export
-make_sim_adfun <- function(study, repl, opmod, sub_df = NULL,
+make_sim_adfun <- function(study, repl, opmod, estmod = NULL,
+                           sub_df = NULL, spec_estd = NULL,
                            root_dir = ".", max_T = NULL,
-                           index_step,
-                           spec_estd = specify_estimated(), ...) {
-  setup <- spatq_simsetup(study,
-                          repl,
-                          opmod,
-                          sub_df,
-                          root_dir,
-                          max_T,
-                          index_step,
-                          spec_estd)
+                           index_step, ...) {
+  setup <- spatq_simsetup(study = study,
+                          repl = repl,
+                          opmod = opmod,
+                          estmod = estmod,
+                          sub_df = sub_df,
+                          root_dir = root_dir,
+                          max_T = max_T,
+                          index_step = index_step,
+                          spec_estd = spec_estd)
   prepare_adfun(setup$data, setup$parameters,
                 setup$map, setup$random, ...)
 }

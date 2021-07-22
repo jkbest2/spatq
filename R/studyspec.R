@@ -38,8 +38,15 @@ spatq_simstudyspec.character <- function(s, ...) {
 ##' @describeIn spatq_simstudyspec New simstudyspec
 ##' @export
 new_spatq_simstudyspec <- function(study, repl, opmod, estmod, sub_df = NULL, estd = NULL, root_dir = ".") {
+  ## Get sub_df and estd from estmod if necessary
+  if (!is.null(estmod) && is.null(sub_df))
+    sub_df <- em_subsample(estmod)
+  if (!is.null(estmod) && is.null(estd))
+    estd <- em_estd(estmod)
   ## Set default root as current working directory
-  if (is.null(root_dir)) root_dir <- "."
+  if (is.null(root_dir))
+    root_dir <- "."
+
   spec <- structure(list(study = study,
                          repl = repl,
                          opmod = opmod,

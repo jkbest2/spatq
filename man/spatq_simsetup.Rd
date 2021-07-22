@@ -8,11 +8,12 @@ spatq_simsetup(
   study,
   repl,
   opmod,
+  estmod = NULL,
   sub_df = NULL,
+  spec_estd = NULL,
   root_dir = ".",
   max_T = NULL,
   index_step = 5,
-  spec_estd = specify_estimated(),
   init_fixef = TRUE,
   ...
 )
@@ -24,17 +25,19 @@ spatq_simsetup(
 
 \item{opmod}{Operating model}
 
+\item{estmod}{Estimation model}
+
 \item{sub_df}{Data frame indicating subsampling strategy; see
 \code{\link{subsample_catch}}}
+
+\item{spec_estd}{List of logicals indicating which parameters are to be
+estimated, as output \code{\link{specify_estimated}}}
 
 \item{root_dir}{Directory to load data from}
 
 \item{max_T}{Last year of data to include}
 
 \item{index_step}{Step for the index grid}
-
-\item{spec_estd}{List of logicals indicating which parameters are to be
-estimated, as output \code{\link{specify_estimated}}}
 
 \item{init_fixef}{Use parameter estimates from model with only fixed effects
 as initial values?}

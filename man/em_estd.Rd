@@ -7,14 +7,14 @@
 em_estd(estmod, obs_lik = 1L)
 }
 \arguments{
-\item{estmod}{Name of an estimation model or a \code{\link{spatq_spec}}
+\item{estmod}{Name of an estimation model or a \code{spatq_spec}
 object}
 
 \item{obs_lik}{Use delta Poisson link log-normal (\code{0}) or Tweedie
 (\code{1})?}
 }
 \value{
-A \code{\link{spatq_spec}} object
+A \code{spatq_spec} object
 }
 \description{
 Estimated parameter list for a set of common estimation models. Otherwise
