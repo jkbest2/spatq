@@ -24,6 +24,8 @@ make_sim_adfun(
 
 \item{opmod}{Operating model}
 
+\item{estmod}{Estimation model}
+
 \item{sub_df}{Data frame indicating subsampling strategy; see
 \code{subsample_catch}}
 

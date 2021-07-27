@@ -78,6 +78,7 @@ spatq_obj.spatq_designsetup <- function(setup, ...) {
 ##' @param study Simulation study
 ##' @param repl Replicate number
 ##' @param opmod Operating model
+##' @param estmod Estimation model
 ##' @param sub_df Data frame indicating subsampling strategy; see
 ##'   \code{subsample_catch}
 ##' @param root_dir Directory to load data from

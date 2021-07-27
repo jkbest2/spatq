@@ -49,6 +49,14 @@ save_index <- function(studyspec, sdr, max_T = 15, feather = TRUE) {
   if (!("fail" %in% names(sdr))) {
     ## Organize details for estimated index
     which_index <- which(names(sdr$value) == "Index")
+
+    ## No bias correction if no random effects, so fill in with uncorrected
+    ## estimates
+    if (is.null(sdr$unbiased$value)) {
+      sdr$unbiased <- list(value = sdr$value,
+                           sd = sdr$sd)
+    }
+
     est_index <- tibble::tibble(study = studyspec$study,
                                 repl = studyspec$repl,
                                 opmod = studyspec$opmod,

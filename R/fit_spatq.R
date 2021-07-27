@@ -266,7 +266,11 @@ sdreport_spatq.spatq_obj <- function(obj,
                 ...)
 }
 ##' @export
-sdreport_spatq.spatq_designobj <- function(obj) {
+sdreport_spatq.spatq_designobj <- function(obj,
+                                           bias.correct = NULL,
+                                           bias.correct.control = NULL,
+                                           getJointPrecision = FALSE,
+                                           ...) {
   index <- fit_spatq(obj)
   ## class(index) <- c("sdreport_spatq")
   index

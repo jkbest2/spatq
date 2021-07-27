@@ -124,17 +124,35 @@ read_index.character <- function(x,
 }
 ##' @export
 read_index.spatq_simstudyspec <- function(x,
-                                          filetype = "csv",
+                                          filetype = NULL,
                                           estmods = c("survey", "spatial_ab", "spatial_q")) {
+  if (is.null(filetype)) {
+    get_index_filetype(x)
+  }
   file <- index_path(x, filetype)
   read_index(file, filetype, estmods)
 }
 ##' @export
 read_index.list <- function(x,
-                            filetype = "csv",
+                            filetype = NULL,
                             estmods = c("survey", "spatial_ab", "spatial_q")) {
   spec <- spatq_simstudyspec(x)
   read_index(spec, filetype, estmods)
+}
+
+##' Checks whether the Feather or CSV index result files exist, and returns the
+##' appropriate string. If both exist, returns the file type that was most
+##' recently modified.
+##'
+##' @title Get index file type
+##' @param spec A \code{list} or \code{spatq_simstudyspec}
+##' @return Either string \code{"feather"} or \code{"csv"}
+##' @author John K Best
+get_index_filetype <- function(spec) {
+  fts <- c("feather", "csv")
+  index_files <- index_path(spec, fts)
+  modtimes <- file.mtime(index_files)
+  fts[which.max(modtimes)]
 }
 
 ##' @title Read saved Rdata from a fitted model
