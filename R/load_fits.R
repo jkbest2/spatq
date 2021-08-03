@@ -126,9 +126,13 @@ read_index.character <- function(x,
 read_index.spatq_simstudyspec <- function(x,
                                           filetype = NULL,
                                           estmods = c("survey", "spatial_ab", "spatial_q")) {
-  if (is.null(filetype)) {
-    get_index_filetype(x)
-  }
+  ## Check which index file extension exists and/or was more recently modified
+  if (is.null(filetype))
+    filetype <- get_index_filetype(x)
+  ## If neither file extension exists, return an empty data frame
+  if (is.null(filetype))
+    return(data.frame())
+
   file <- index_path(x, filetype)
   read_index(file, filetype, estmods)
 }
@@ -152,6 +156,8 @@ get_index_filetype <- function(spec) {
   fts <- c("feather", "csv")
   index_files <- index_path(spec, fts)
   modtimes <- file.mtime(index_files)
+  if (all(is.na(modtimes)))
+    return(NULL)
   fts[which.max(modtimes)]
 }
 
@@ -163,7 +169,11 @@ get_index_filetype <- function(spec) {
 read_rdata <- function(x) UseMethod("read_rdata")
 ##' @export
 read_rdata.character <- function(x) {
-  result <- readRDS(x)
+  if (file.exists(x)) {
+    result <- readRDS(x)
+  } else {
+    result <- list()
+  }
   structure(result,
             class = "spatq_result")
 }
