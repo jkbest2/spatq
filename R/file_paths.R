@@ -13,7 +13,8 @@ study_dir <- function(study, root_dir = ".") {
                  sharedq = "sharedq",
                  prefintensity = "prefintensity",
                  densdepq = "densdepq",
-                 counterpref = "counterpref")
+                 counterpref = "counterpref",
+                 habq = "habq")
   file.path(root_dir, sdir)
 }
 
@@ -24,7 +25,8 @@ study_file_base <- function(study) {
                        sharedq = "sharedq_",
                        prefintensity = "prefintensity_",
                        densdepq = "densdepq_",
-                       counterpref = "counterpref_")
+                       counterpref = "counterpref_",
+                       habq = "habq_")
   study_file
 }
 
