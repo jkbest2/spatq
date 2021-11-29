@@ -45,12 +45,20 @@ repl_dir <- function(repl) {
 ##' @describeIn sim_file_paths The name of each simulation file
 sim_file_names <- function(study, opmod) {
   study_file <- study_file_base(study)
+  prep <- switch(study,
+                 qdevscaling =,
+                 sharedq =,
+                 prefintensity =,
+                 densdepq =,
+                 counterpref = "../../prep.h5",
+                 habq = paste0(study_file, "prep.h5"))
   opmod <- stringr::str_pad(opmod, 2, pad = "0")
   list(catch_csv = paste0(study_file, opmod, "_catch.csv"),
        catch_feather = paste0(study_file, opmod, "_catch.feather"),
        pop_csv = paste0(study_file, opmod, "_popstate.csv"),
        pop_feather = paste0(study_file, opmod, "_popstate.feather"),
-       pop_h5 = paste0(study_file, opmod, "_popstate.h5"))
+       pop_h5 = paste0(study_file, opmod, "_popstate.h5"),
+       prep = prep)
 }
 
 ##' Get the paths to each simulation file. ' File names are
