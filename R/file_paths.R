@@ -14,7 +14,8 @@ study_dir <- function(study, root_dir = ".") {
                  prefintensity = "prefintensity",
                  densdepq = "densdepq",
                  counterpref = "counterpref",
-                 habq = "habq")
+                 habq = "habq",
+                 bycatch = "bycatch")
   file.path(root_dir, sdir)
 }
 
@@ -26,7 +27,8 @@ study_file_base <- function(study) {
                        prefintensity = "prefintensity_",
                        densdepq = "densdepq_",
                        counterpref = "counterpref_",
-                       habq = "habq_")
+                       habq = "habq_",
+                       bycatch = "bycatch")
   study_file
 }
 
@@ -51,7 +53,8 @@ sim_file_names <- function(study, opmod) {
                  prefintensity =,
                  densdepq =,
                  counterpref = "../../prep.h5",
-                 habq = paste0(study_file, "prep.h5"))
+                 habq = paste0(study_file, "prep.h5"),
+                 bycatch = paste0(study_file, "prep.h5"))
   opmod <- stringr::str_pad(opmod, 2, pad = "0")
   list(catch_csv = paste0(study_file, opmod, "_catch.csv"),
        catch_feather = paste0(study_file, opmod, "_catch.feather"),
