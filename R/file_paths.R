@@ -28,7 +28,7 @@ study_file_base <- function(study) {
                        densdepq = "densdepq_",
                        counterpref = "counterpref_",
                        habq = "habq_",
-                       bycatch = "bycatch")
+                       bycatch = "bycatch_")
   study_file
 }
 
