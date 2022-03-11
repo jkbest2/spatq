@@ -60,13 +60,13 @@ em_subsample.default <- function(estmod, n_comm = 4000) {
 ##'   \item{\code{design}}{Only yearly intercepts}
 ##'   \item{\code{model}}{Only yearly intercepts}
 ##'   \item{\code{survey}}{Yearly intercepts and spatial abundance}
-##'   \item{\code{survey_spt}}{Yearly intercepts and spatiotemporal abundance}
+##'   \item{\code{survey_spt}}{Yearly intercepts with spatial and spatiotemporal abundance}
 ##'   \item{\code{design_all}}{Yearly intercepts}
 ##'   \item{\code{model_all}}{Yearly and vessel intercepts}
 ##'   \item{\code{spatial_ab}}{Yearly and vessel intercepts, spatial abundance}
 ##'   \item{\code{spatial_q}}{Yearly and vessel intercepts, spatial abundance and catchability}
-##'   \item{\code{sptemp_ab}}{Yearly and vessel intercepts, spatiotemporal abundance}
-##'   \item{\code{sptemp_q}}{Yearly and vessel intercepts, spatiotemporal abundance and catchability}
+##'   \item{\code{sptemp_ab}}{Yearly and vessel intercepts with spatial and spatiotemporal abundance}
+##'   \item{\code{sptemp_q}}{Yearly and vessel intercepts, spatiotemporal abundance and spatial catchability}
 ##' }
 ##'
 ##' Default is to use a Tweedie observation likelihood and to map all
@@ -94,8 +94,13 @@ em_estd.character <- function(estmod, obs_lik = 1L) {
                                     lambda = FALSE,
                                     obs_lik = obs_lik),
          survey_spt = specify_estimated(beta = TRUE,
+                                        omega = TRUE,
                                         epsilon = TRUE,
                                         lambda = FALSE,
+                                        kappa_map = c(1, NA,
+                                                      1, NA,
+                                                      NA, NA,
+                                                      NA, NA),
                                         obs_lik = obs_lik),
          design_all = specify_estimated(beta = TRUE,
                                         lambda = FALSE,
@@ -117,17 +122,23 @@ em_estd.character <- function(estmod, obs_lik = 1L) {
                                                      NA, NA),
                                        obs_lik = obs_lik),
          sptemp_ab = specify_estimated(beta = TRUE,
+                                       omega = TRUE
                                        epsilon = TRUE,
                                        lambda = TRUE,
+                                       kappa_map = c(1, NA,
+                                                     1, NA,
+                                                     NA, NA,
+                                                     NA, NA),
                                        obs_lik = obs_lik),
          sptemp_q = specify_estimated(beta = TRUE,
+                                      omega = TRUE,
                                       epsilon = TRUE,
                                       lambda = TRUE,
-                                      psi = TRUE,
-                                      kappa_map = c(NA, NA,
+                                      phi = TRUE,
+                                      kappa_map = c(1, NA,
                                                     1, NA,
-                                                    NA, NA,
-                                                    1, NA),
+                                                    1, NA,
+                                                    NA, NA),
                                       obs_lik = obs_lik),
          stop("Invalid estimation model"))
 }
