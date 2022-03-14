@@ -122,7 +122,7 @@ em_estd.character <- function(estmod, obs_lik = 1L) {
                                                      NA, NA),
                                        obs_lik = obs_lik),
          sptemp_ab = specify_estimated(beta = TRUE,
-                                       omega = TRUE
+                                       omega = TRUE,
                                        epsilon = TRUE,
                                        lambda = TRUE,
                                        kappa_map = c(1, NA,
