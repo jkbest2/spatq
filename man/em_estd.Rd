@@ -27,13 +27,13 @@ Valid estimation models are:
 \item{\code{design}}{Only yearly intercepts}
 \item{\code{model}}{Only yearly intercepts}
 \item{\code{survey}}{Yearly intercepts and spatial abundance}
-\item{\code{survey_spt}}{Yearly intercepts and spatiotemporal abundance}
+\item{\code{survey_spt}}{Yearly intercepts with spatial and spatiotemporal abundance}
 \item{\code{design_all}}{Yearly intercepts}
 \item{\code{model_all}}{Yearly and vessel intercepts}
 \item{\code{spatial_ab}}{Yearly and vessel intercepts, spatial abundance}
 \item{\code{spatial_q}}{Yearly and vessel intercepts, spatial abundance and catchability}
-\item{\code{sptemp_ab}}{Yearly and vessel intercepts, spatiotemporal abundance}
-\item{\code{sptemp_q}}{Yearly and vessel intercepts, spatiotemporal abundance and catchability}
+\item{\code{sptemp_ab}}{Yearly and vessel intercepts with spatial and spatiotemporal abundance}
+\item{\code{sptemp_q}}{Yearly and vessel intercepts, spatiotemporal abundance and spatial catchability}
 }
 
 Default is to use a Tweedie observation likelihood and to map all

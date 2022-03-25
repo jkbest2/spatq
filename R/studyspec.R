@@ -60,3 +60,12 @@ new_spatq_simstudyspec <- function(study, repl, opmod, estmod, sub_df = NULL, es
   }
   spec
 }
+
+##' @export
+print.spatq_simstudyspec <- function(x, ...) {
+  cat("Study: ", x$study, "\n",
+      "Replicate: ", x$repl, "\n",
+      "Opmod: ", x$opmod, "\n",
+      "Estmod: ", x$estmod, "\n",
+      sep = "")
+}
