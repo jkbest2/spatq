@@ -52,9 +52,9 @@ sim_file_names <- function(study, opmod) {
                  sharedq =,
                  prefintensity =,
                  densdepq =,
-                 counterpref = "../../prep.h5",
-                 habq = paste0(study_file, "prep.h5"),
-                 bycatch = paste0(study_file, "prep.h5"))
+                 habq = ,
+                 bycatch = paste0(study_file, "prep.h5"),
+                 counterpref = "../../prep.h5")
   opmod <- stringr::str_pad(opmod, 2, pad = "0")
   list(catch_csv = paste0(study_file, opmod, "_catch.csv"),
        catch_feather = paste0(study_file, opmod, "_catch.feather"),

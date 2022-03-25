@@ -4,13 +4,23 @@
 \alias{generate_mesh}
 \title{Generate INLA mesh}
 \usage{
-generate_mesh()
+generate_mesh(resolution = "coarse")
+}
+\arguments{
+\item{resolution}{One of "coarse", "medium", or "fine"}
 }
 \value{
 A \code{inla.mesh} object that can be passed to \code{generate_fem}.
 }
 \description{
 Generate the standard mesh used for simulation fits
+}
+\details{
+Provides three options for standard meshes. All include the same constraints
+on max edge length and minimum vertex angle, as well as offset. The "coarse"
+mesh uses 404 vertices with a \code{cutoff} of 5, the "medium" mesh uses
+1437 vertices with a \code{cutoff} of 2, and the "fine" mesh uses 3038
+vertices with a \code{cutoff} of 1.
 }
 \author{
 John Best

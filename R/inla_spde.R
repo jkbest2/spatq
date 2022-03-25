@@ -30,22 +30,51 @@ loc_grid <- function(step = 1.0) {
 
 ##' Generate the standard mesh used for simulation fits
 ##'
+##' Provides three options for standard meshes. All include the same constraints
+##' on max edge length and minimum vertex angle, as well as offset. The "coarse"
+##' mesh uses 404 vertices with a \code{cutoff} of 5, the "medium" mesh uses
+##' 1437 vertices with a \code{cutoff} of 2, and the "fine" mesh uses 3038
+##' vertices with a \code{cutoff} of 1.
 ##' @title Generate INLA mesh
+##' @param resolution One of "coarse", "medium", or "fine"
 ##' @return A \code{inla.mesh} object that can be passed to \code{generate_fem}.
 ##' @author John Best
 ##' @export
-generate_mesh <- function() {
+generate_mesh <- function(resolution = "coarse") {
   ## Discretize spatial domain into mesh
   boundary <- domain_boundary()
   loc <- loc_grid(2.0)
-  INLA::inla.mesh.2d(loc,
-                     boundary = boundary,
-                     offset = c(0.0, 30.0),
-                     # Shortest correlation range should be ~30
-                     max.edge = c(5, 20),
-                     max.n = c(400, 100),
-                     min.angle = c(30, 21),
-                     cutoff = 5)
+  if (resolution == "coarse") {
+    mesh <- INLA::inla.mesh.2d(loc,
+                               boundary = boundary,
+                               offset = c(0.0, 30.0),
+                               ## Shortest correlation range should be ~30
+                               max.edge = c(5, 20),
+                               max.n = c(400, 100),
+                               min.angle = c(30, 21),
+                               cutoff = 5)
+  } else if (resolution == "medium") {
+    mesh <- INLA::inla.mesh.2d(loc,
+                               boundary = boundary,
+                               offset = c(0.0, 30.0),
+                               ## Shortest correlation range should be ~30
+                               max.edge = c(5, 20),
+                               max.n = c(1000, 250),
+                               min.angle = c(30, 21),
+                               cutoff = 2)
+  } else if (resolution == "fine") {
+    mesh <- INLA::inla.mesh.2d(loc,
+                               boundary = boundary,
+                               offset = c(0.0, 30.0),
+                               ## Shortest correlation range should be ~30
+                               max.edge = c(5, 20),
+                               max.n = c(4000, 500),
+                               min.angle = c(30, 21),
+                               cutoff = 1)
+  } else {
+    error("resolution must be \"coarse\", \"medium\", or \"fine\"")
+  }
+  mesh
 }
 
 ##' Generate the FEM matrices with appropriate names to pass to TMB as a
