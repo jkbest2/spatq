@@ -7,7 +7,14 @@
 \usage{
 new_spatq_setup(data, parameters, map, random)
 
-spatq_setup(catch_df, spatq_spec, index_step, init_fixef = TRUE, ...)
+spatq_setup(
+  catch_df,
+  spatq_spec,
+  index_step,
+  init_fixef = TRUE,
+  mesh_resolution = "coarse",
+  ...
+)
 }
 \arguments{
 \item{data}{Data for spatq model, as produced by \code{\link{prepare_data}}}
@@ -27,6 +34,9 @@ spatq_setup(catch_df, spatq_spec, index_step, init_fixef = TRUE, ...)
 
 \item{init_fixef}{Use parameter estimates from model with only fixed effects
 as initial values?}
+
+\item{mesh_resolution}{Mesh resolution to pass to
+\code{\link{generate_mesh}}. Must be "coarse", "medium", or "fine".}
 
 \item{...}{Additional arguments to pass to \code{\link{init_fixef}}, which
 are then passed to \code{\link{spatq_fit}} for the fixed effect model fit}
