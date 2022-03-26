@@ -14,6 +14,7 @@ spatq_simsetup(
   root_dir = ".",
   max_T = NULL,
   index_step = 5,
+  mesh_resolution = "coarse",
   init_fixef = TRUE,
   ...
 )
@@ -38,6 +39,9 @@ estimated, as output \code{\link{specify_estimated}}}
 \item{max_T}{Last year of data to include}
 
 \item{index_step}{Step for the index grid}
+
+\item{mesh_resolution}{Mesh resolution to pass to
+\code{\link{generate_mesh}}. Must be "coarse", "medium", or "fine".}
 
 \item{init_fixef}{Use parameter estimates from model with only fixed effects
 as initial values?}

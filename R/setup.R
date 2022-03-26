@@ -13,6 +13,8 @@
 ##' @param index_step Step for the index grid
 ##' @param spec_estd List of logicals indicating which parameters are to be
 ##'   estimated, as output \code{\link{specify_estimated}}
+##' @param mesh_resolution Mesh resolution to pass to
+##'   \code{\link{generate_mesh}}. Must be "coarse", "medium", or "fine".
 ##' @param init_fixef Use parameter estimates from model with only fixed effects
 ##'   as initial values?
 ##' @param ... Additional arguments to pass to \code{\link{init_fixef}}, which
@@ -26,6 +28,7 @@ spatq_simsetup <- function(study, repl, opmod, estmod = NULL,
                            sub_df = NULL, spec_estd = NULL,
                            root_dir = ".", max_T = NULL,
                            index_step = 5,
+                           mesh_resolution = "coarse",
                            init_fixef = TRUE, ...) {
   if (is.null(sub_df)) sub_df <- em_subsample(estmod)
   if (is.null(spec_estd)) spec_estd <- em_estd(estmod)
@@ -81,10 +84,12 @@ new_spatq_setup <- function(data, parameters, map, random) {
 ##' @param index_step Index grid step size \code{\link{create_index_df}}
 ##' @param init_fixef Use parameter estimates from model with only fixed effects
 ##'   as initial values?
+##' @param mesh_resolution Mesh resolution to pass to
+##'   \code{\link{generate_mesh}}. Must be "coarse", "medium", or "fine".
 ##' @param ... Additional arguments to pass to \code{\link{init_fixef}}, which
 ##'   are then passed to \code{\link{spatq_fit}} for the fixed effect model fit
 ##' @export
-spatq_setup <- function(catch_df, spatq_spec, index_step, init_fixef = TRUE, ...) {
+spatq_setup <- function(catch_df, spatq_spec, index_step, init_fixef = TRUE, mesh_resolution = "coarse", ...) {
   ## Get number of years represented in catch data
   T <- length(unique(catch_df$year))
 
@@ -92,7 +97,7 @@ spatq_setup <- function(catch_df, spatq_spec, index_step, init_fixef = TRUE, ...
   index_df <- create_index_df(step = index_step, T = T)
 
   ## Discretize space
-  mesh <- generate_mesh()
+  mesh <- generate_mesh(resolution = mesh_resolution)
   fem <- generate_fem(mesh)
 
   ## Prepare model specification components
