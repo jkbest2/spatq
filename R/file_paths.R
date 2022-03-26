@@ -90,7 +90,7 @@ sim_file_paths <- function(study, repl, opmod, root_dir = ".") {
 create_res_dir <- function(study, repl = NULL, root_dir = ".") {
   res <- file.path(study_dir(study, root_dir), "results")
   if (!dir.exists(res))
-    dir.create(res)
+    dir.create(res, recursive = TRUE)
   if (!is.null(repl)) {
     res_repl <- file.path(study_dir(study, root_dir),
                            "results",
@@ -100,7 +100,7 @@ create_res_dir <- function(study, repl = NULL, root_dir = ".") {
            function(rdir) {
              v <- TRUE
              if (!dir.exists(rdir)) {
-               v <- dir.create(rdir)
+               v <- dir.create(rdir, recursive = TRUE)
              }
              v
            }, TRUE)
