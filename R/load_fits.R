@@ -187,3 +187,25 @@ read_rdata.list <- function(x) {
   path <- rdata_path(x)
   read_rdata(path)
 }
+
+##' Load estimated population map from a fit and reshape it so that the first
+##' two dimensions represent space and the third represents time.
+##'
+##' @title Read and reshape population estimates
+##' @param spec A \code{\link{spatq_simstudyspec}} or \code{\link{spatq_result}}
+##'   object
+##' @param domdim Domain dimension
+##' @return An array with first two dimensions \code{domdim}
+##' @author John K Best
+##' @export
+read_estpop <- function(x, domdim) UseMethod("read_estpop")
+read_estpop.spatq_result <- function(x, domdim = c(100, 100)) {
+  logpopmat <- x$rep$Ilog_n
+  nyr <- length(logpopmat) / prod(domdim)
+  logpop <- array(logpopmat, dim = c(100, 100, nyr))
+  exp(logpop)
+}
+read_estpop.spatq_simstudyspec <- function(x, domdim = c(100, 100)) {
+  rda <- read_rdata(spec)
+  read_estpop(rda, domdim = domdim)
+}
