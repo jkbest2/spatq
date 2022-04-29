@@ -199,12 +199,14 @@ read_rdata.list <- function(x) {
 ##' @author John K Best
 ##' @export
 read_estpop <- function(x, domdim) UseMethod("read_estpop")
+##' @export
 read_estpop.spatq_result <- function(x, domdim = c(100, 100)) {
   logpopmat <- x$rep$Ilog_n
   nyr <- length(logpopmat) / prod(domdim)
   logpop <- array(logpopmat, dim = c(100, 100, nyr))
   exp(logpop)
 }
+##' @export
 read_estpop.spatq_simstudyspec <- function(x, domdim = c(100, 100)) {
   rda <- read_rdata(spec)
   read_estpop(rda, domdim = domdim)
