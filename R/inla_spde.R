@@ -104,6 +104,56 @@ generate_fem <- function(mesh) {
   fem
 }
 
+##' Generate FEM matrices for anisotropic SPDE. Code adapted from TMB anisotropy
+##' example.
+##'
+##' @title Generate anisotropic FEM matrices
+##' @param mesh INLA mesh
+##' @return List of data expected for \code{spde_aniso_t} TMB object
+##' @author John Best
+##' @export
+generate_aniso_fem <- function(mesh) {
+  inla_spde <- INLA::inla.spde2.matern(mesh, alpha = 2)
+
+  ## whi
+  dset <- 1:2
+
+  # Triangle info
+  TV <- mesh$graph$tv # Triangle to vertex indexing
+  V0 <- mesh$loc[TV[, 1], 1:2] # V = vertices for each triangle
+  V1 <- mesh$loc[TV[, 2], 1:2]
+  V2 <- mesh$loc[TV[, 3], 1:2]
+  E0 <- V2 - V1 # E = edge for each triangle
+  E1 <- V0 - V2
+  E2 <- V1 - V0
+
+  # Calculate Areas
+  TmpFn <- function(Vec1, Vec2) abs(det(rbind(Vec1, Vec2)))
+  Tri_Area <- rep(NA, nrow(E0))
+  for (i in 1:length(Tri_Area)) Tri_Area[i] <- TmpFn(E0[i, ], E1[i, ]) / 2 # T = area of each triangle
+
+  G0_inv_diag <- vapply(
+    seq_len(nrow(inla_spde$param.inla$M0)),
+    function(i) {
+      1 / inla_spde$param.inla$M0[i, i]
+    }, 0.0
+  )
+  G0_inv <- as(diag(G0_inv_diag), "TsparseMatrix")
+
+  list(
+    n_s      = inla_spde$n.spde,
+    n_tri    = nrow(TV),
+    Tri_Area = Tri_Area,
+    E0       = E0,
+    E1       = E1,
+    E2       = E2,
+    TV       = TV - 1,
+    G0       = inla_spde$param.inla$M0,
+    ## G0_inv   = as(diag(1 / diag(inla_spde$param.inla$M0)), "TsparseMatrix")
+    G0_inv   = G0_inv
+  )
+}
+
 ##' Generate a projection matrix to locations in \code{data_df}, possible
 ##' zeroing out some observations. Also group by year for a spatiotemporal
 ##' effect.

@@ -38,19 +38,23 @@ verify_spatq <- function(data, parameters, map = list()) {
 ##' @export
 verify_spatq_names <- function(data, parameters, map = list()) {
   ## Check that all required elements are present
-  datanames <- c("catch_obs", "area_swept",
-                 "X_n", "X_w", "IX_n", "IX_w",
-                 "Z_n", "Z_w", "IZ_n", "IZ_w",
-                 "A_spat", "A_sptemp", "IA_spat", "IA_sptemp", "Ih",
-                 "R_n", "R_w", "V_n", "V_w",
-                 "A_qspat", "A_qsptemp", "spde",
-                 "proc_switch", "obs_lik",
-                 "norm_flag", "incl_data")
-  parnames <- c("beta_n", "beta_w", "gamma_n", "gamma_w",
-                "omega_n", "omega_w", "epsilon_n", "epsilon_w",
-                "lambda_n", "lambda_w", "eta_n", "eta_w",
-                "phi_n", "phi_w", "psi_n", "psi_w",
-                "log_xi", "log_kappa", "log_tau", "obs_lik_pars")
+  datanames <- c(
+    "catch_obs", "area_swept",
+    "X_n", "X_w", "IX_n", "IX_w",
+    "Z_n", "Z_w", "IZ_n", "IZ_w",
+    "A_spat", "A_sptemp", "IA_spat", "IA_sptemp", "Ih",
+    "R_n", "R_w", "V_n", "V_w",
+    "A_qspat", "A_qsptemp", "spde",
+    "proc_switch", "obs_lik",
+    "norm_flag", "incl_data"
+  )
+  parnames <- c(
+    "beta_n", "beta_w", "gamma_n", "gamma_w",
+    "omega_n", "omega_w", "epsilon_n", "epsilon_w",
+    "lambda_n", "lambda_w", "eta_n", "eta_w",
+    "phi_n", "phi_w", "psi_n", "psi_w",
+    "log_xi", "log_kappa", "log_tau", "H_pars", "obs_lik_pars"
+  )
   ret <- verify_setequal(names(data), datanames) &&
     verify_setequal(names(parameters), parnames)
   return(ret)
@@ -71,8 +75,10 @@ verify_setequal <- function(set1, set2) {
     only2 <- setdiff(set2, set1)
     nm1 <- deparse1(substitute(set1))
     nm2 <- deparse1(substitute(set2))
-    stop("\nOnly ", nm1, " has ", set_string(only1), ".\n",
-         "Only ", nm2, " has ", set_string(only2), ".")
+    stop(
+      "\nOnly ", nm1, " has ", set_string(only1), ".\n",
+      "Only ", nm2, " has ", set_string(only2), "."
+    )
     ret <- FALSE
   } else {
     ret <- TRUE
@@ -183,8 +189,9 @@ verify_spatq_dims <- function(data, parameters, map = list()) {
 
   ## Check correct number of observation likelihood parameters are provided
   n_olp <- switch(data$obs_lik + 1, # R uses 1-indexing vs. 0- for C++
-                  1, # Zero-inflated Poisson link log-normal (sigma)
-                  2) # Tweedie (dispersion and shape)
+    1, # Zero-inflated Poisson link log-normal (sigma)
+    2
+  ) # Tweedie (dispersion and shape)
   stopifnot(exprs = {
     ## Be sure to extract the first element because this is now a 2-vector
     pdims$obs_lik_pars[1] == n_olp
@@ -227,8 +234,10 @@ verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
 
   ## Check that spat/sptemp field parameters are map'd if corresponding fields
   ## are
-  spattemp_names <- c("omega_n", "omega_w", "epsilon_n", "epsilon_w",
-                      "phi_n", "phi_w", "psi_n", "psi_w")
+  spattemp_names <- c(
+    "omega_n", "omega_w", "epsilon_n", "epsilon_w",
+    "phi_n", "phi_w", "psi_n", "psi_w"
+  )
   for (nm in names(map)) {
     ## Only check spat-temp field parameters if spat-temp fields are map'd.
     ## Allows all parameters to be included in `map` even when not actually
@@ -249,18 +258,22 @@ verify_spatq_map <- function(parameters, map, warn_not_zero = TRUE) {
 
   ## Check that `lambda_n` and `lambda_w` are map'd if required
   if (attr(parameters, "map_lambda")) {
-    stopifnot("lambda_n" %in% names(map),
-              is.na(map$lambda_n),
-              length(map$lambda_n) == 1,
-              "lambda_w" %in% names(map),
-              is.na(map$lambda_w),
-              length(map$lambda_w) == 1)
+    stopifnot(
+      "lambda_n" %in% names(map),
+      is.na(map$lambda_n),
+      length(map$lambda_n) == 1,
+      "lambda_w" %in% names(map),
+      is.na(map$lambda_w),
+      length(map$lambda_w) == 1
+    )
   }
 
   ## If using Tweedie obs lik, make sure that all weight-per-group parameters are map'd
   if (length(parameters$obs_lik_pars) > 1) {
-    w_pars <- c("beta_w", "gamma_w", "omega_w", "epsilon_w",
-                "lambda_w", "eta_w", "phi_w", "psi_w")
+    w_pars <- c(
+      "beta_w", "gamma_w", "omega_w", "epsilon_w",
+      "lambda_w", "eta_w", "phi_w", "psi_w"
+    )
     stopifnot(all(w_pars %in% names(map)))
   }
   return(TRUE)

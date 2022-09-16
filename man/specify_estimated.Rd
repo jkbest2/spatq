@@ -14,6 +14,7 @@ specify_estimated(
   phi = FALSE,
   psi = FALSE,
   kappa_map = NULL,
+  aniso = FALSE,
   obs_lik = 0L
 )
 }

@@ -32,6 +32,7 @@ specify_estimated <- function(beta = TRUE,
                               phi = FALSE,
                               psi = FALSE,
                               kappa_map = NULL,
+                              aniso = FALSE,
                               obs_lik = 0L) {
   estd <- list()
   estd$beta_n <- is_estd_proc("beta_n", beta, obs_lik)
@@ -52,11 +53,14 @@ specify_estimated <- function(beta = TRUE,
   estd$psi_n <- is_estd_proc("psi_n", psi, obs_lik)
   estd$psi_w <- is_estd_proc("psi_w", psi, obs_lik)
 
-  spec <- list(gamma = gamma, omega = omega, epsilon = epsilon,
-               eta = eta, phi = phi, psi = psi)
+  spec <- list(
+    gamma = gamma, omega = omega, epsilon = epsilon,
+    eta = eta, phi = phi, psi = psi
+  )
   estd$log_xi <- is_estd_hpar("log_xi", estd)
   estd$log_kappa <- is_estd_hpar("log_kappa", estd)
   estd$log_tau <- is_estd_hpar("log_tau", estd)
+  estd$H_pars <- aniso
   estd$obs_lik <- obs_lik
   if (!is.null(kappa_map)) {
     attr(estd, "kappa_map") <- factor(kappa_map)
@@ -64,7 +68,9 @@ specify_estimated <- function(beta = TRUE,
 
   return(
     structure(estd,
-              class = "spatq_spec"))
+      class = "spatq_spec"
+    )
+  )
 }
 
 ##' Only intended to be called from \code{\link{specify_estimated}};
@@ -112,5 +118,4 @@ is_estd_hpar <- function(parname, estd) {
   }
 
   unlist(estd[procs])
-
 }

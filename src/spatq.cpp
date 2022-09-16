@@ -56,7 +56,7 @@ Type objective_function<Type>::operator() () {
   // ---------------------------------------------------------------------------
   // FEM matrices for SPDE spatial and spatiotemporal effects. Sharing the mesh
   // between effects means that this only needs to be passed once.
-  DATA_STRUCT(spde, spde_t);
+  DATA_STRUCT(spde, spde_aniso_t);
 
   // ---------------------------------------------------------------------------
   // Vector indicating which of the 12 random processes should be included in
@@ -131,8 +131,11 @@ Type objective_function<Type>::operator() () {
   PARAMETER_VECTOR(log_kappa);     // 8
   PARAMETER_VECTOR(log_tau);       // 8
 
+  // Anisotropy parameters
+  PARAMETER_VECTOR(H_pars);        // 2
+
   // Log catch variation parameter
-  PARAMETER_VECTOR(obs_lik_pars);   // 1 for ZI log-normal, 2 for Tweedie
+  PARAMETER_VECTOR(obs_lik_pars);  // 1 for ZI log-normal, 2 for Tweedie
 
   // ===========================================================================
   // Derived values
@@ -153,6 +156,8 @@ Type objective_function<Type>::operator() () {
   vector<Type> xi = exp(log_xi);
   vector<Type> kappa = exp(log_kappa);
   vector<Type> tau = exp(log_tau);
+
+  matrix<Type> H = aniso_H(H_pars);
 
   // ===========================================================================
   // Log-likelihood accumulator
@@ -249,7 +254,7 @@ Type objective_function<Type>::operator() () {
     // Get density of spatial random effects, repeated for each process. Scale the
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
-    SparseMatrix<Type> Q_n_om = Q_spde(spde, kappa(0));
+    SparseMatrix<Type> Q_n_om = Q_spde(spde, kappa(0), H);
     SCALE_t<GMRF_t<Type>> gmrf_n_om = SCALE(GMRF(Q_n_om, nrmlz), tau(0));
     jnll(0) += gmrf_n_om(omega_n);
 
@@ -277,7 +282,7 @@ Type objective_function<Type>::operator() () {
     // Get density of spatial random effects, repeated for each process. Scale the
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
-    SparseMatrix<Type> Q_w_om = Q_spde(spde, kappa(1));
+    SparseMatrix<Type> Q_w_om = Q_spde(spde, kappa(1), H);
     SCALE_t<GMRF_t<Type>> gmrf_w_om = SCALE(GMRF(Q_w_om, nrmlz), tau(1));
     jnll(1) += gmrf_w_om(omega_w);
 
@@ -314,7 +319,7 @@ Type objective_function<Type>::operator() () {
     // Get density of spatial random effects, repeated for each process. Scale the
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
-    SparseMatrix<Type> Q_n_ep = Q_spde(spde, kappa(2));
+    SparseMatrix<Type> Q_n_ep = Q_spde(spde, kappa(2), H);
     SCALE_t<GMRF_t<Type>> gmrf_n_ep = SCALE(GMRF(Q_n_ep, nrmlz), tau(2));
 
     for (int yr = 0; yr < N_yrs; yr++) {
@@ -356,7 +361,7 @@ Type objective_function<Type>::operator() () {
     // Get density of spatial random effects, repeated for each process. Scale the
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
-    SparseMatrix<Type> Q_w_ep = Q_spde(spde, kappa(3));
+    SparseMatrix<Type> Q_w_ep = Q_spde(spde, kappa(3), H);
     SCALE_t<GMRF_t<Type>> gmrf_w_ep = SCALE(GMRF(Q_w_ep, nrmlz), tau(3));
 
     for (int yr = 0; yr < N_yrs; yr++) {
@@ -453,7 +458,7 @@ Type objective_function<Type>::operator() () {
     // Get density of spatial random effects, repeated for each process. Scale the
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
-    SparseMatrix<Type> Q_n_ph = Q_spde(spde, kappa(4));
+    SparseMatrix<Type> Q_n_ph = Q_spde(spde, kappa(4), H);
     SCALE_t<GMRF_t<Type>> gmrf_n_ph = SCALE(GMRF(Q_n_ph, nrmlz), tau(4));
     jnll(4) += gmrf_n_ph(phi_n);
 
@@ -477,7 +482,7 @@ Type objective_function<Type>::operator() () {
     // Get density of spatial random effects, repeated for each process. Scale the
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
-    SparseMatrix<Type> Q_w_ph = Q_spde(spde, kappa(5));
+    SparseMatrix<Type> Q_w_ph = Q_spde(spde, kappa(5), H);
     SCALE_t<GMRF_t<Type>> gmrf_w_ph = SCALE(GMRF(Q_w_ph, nrmlz), tau(5));
     jnll(5) += gmrf_w_ph(phi_w);
 
@@ -508,7 +513,7 @@ Type objective_function<Type>::operator() () {
     // Get density of spatial random effects, repeated for each process. Scale the
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
-    SparseMatrix<Type> Q_n_ps = Q_spde(spde, kappa(6));
+    SparseMatrix<Type> Q_n_ps = Q_spde(spde, kappa(6), H);
     SCALE_t<GMRF_t<Type>> gmrf_n_ps = SCALE(GMRF(Q_n_ps, nrmlz), tau(6));
 
     for (int yr = 0; yr < N_yrs; yr++) {
@@ -545,7 +550,7 @@ Type objective_function<Type>::operator() () {
     // Get density of spatial random effects, repeated for each process. Scale the
     // precision matrix by τ² to match the usual (Lindgren et al. 2011)
     // formulation.
-    SparseMatrix<Type> Q_w_ps = Q_spde(spde, kappa(7));
+    SparseMatrix<Type> Q_w_ps = Q_spde(spde, kappa(7), H);
     SCALE_t<GMRF_t<Type>> gmrf_w_ps = SCALE(GMRF(Q_w_ps, nrmlz), tau(7));
 
     for (int yr = 0; yr < N_yrs; yr++) {
@@ -706,6 +711,7 @@ Type objective_function<Type>::operator() () {
   REPORT(Ilog_w);
   REPORT(rho_sp);
   REPORT(sigma_sp);
+  REPORT(H);
 
   ADREPORT(Index);
 
