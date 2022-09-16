@@ -17,30 +17,32 @@
 prepare_pars <- function(data, mesh, init_fixef = FALSE) {
   T <- attr(data, "T")
   init_olp <- switch(data$obs_lik + 1,
-                     log(1), # log-dispersion for Poisson-link log-normal
-                     c(log(1), 1.5)) # log-dispersion and shift-logit shape for Tweedie
-  pars <- list(beta_n = pars_data(data$X_n),
-               beta_w = pars_data(data$X_w),
-               gamma_n = pars_data(data$Z_n),
-               gamma_w = pars_data(data$Z_w),
-               omega_n = pars_data(mesh),
-               omega_w = pars_data(mesh),
-               epsilon_n = pars_data(mesh, T),
-               epsilon_w = pars_data(mesh, T),
-
-               lambda_n = pars_data(data$R_n),
-               lambda_w = pars_data(data$R_w),
-               eta_n = pars_data(data$V_n),
-               eta_w = pars_data(data$V_w),
-               phi_n = pars_data(mesh),
-               phi_w = pars_data(mesh),
-               psi_n = pars_data(mesh, T),
-               psi_w = pars_data(mesh, T),
-
-               log_xi = rep(0.0, 4L),
-               log_kappa = rep(log(pars_kappa(50)), 8),
-               log_tau = rep(log(pars_tau(1.0, 50)), 8),
-               obs_lik_pars = init_olp)
+    log(1), # log-dispersion for Poisson-link log-normal
+    c(log(1), 1.5) # dispersion and shape parameters for Tweedie
+  ) # log-dispersion and shift-logit shape for Tweedie
+  pars <- list(
+    beta_n = pars_data(data$X_n),
+    beta_w = pars_data(data$X_w),
+    gamma_n = pars_data(data$Z_n),
+    gamma_w = pars_data(data$Z_w),
+    omega_n = pars_data(mesh),
+    omega_w = pars_data(mesh),
+    epsilon_n = pars_data(mesh, T),
+    epsilon_w = pars_data(mesh, T),
+    lambda_n = pars_data(data$R_n),
+    lambda_w = pars_data(data$R_w),
+    eta_n = pars_data(data$V_n),
+    eta_w = pars_data(data$V_w),
+    phi_n = pars_data(mesh),
+    phi_w = pars_data(mesh),
+    psi_n = pars_data(mesh, T),
+    psi_w = pars_data(mesh, T),
+    log_xi = rep(0.0, 4L),
+    log_kappa = rep(log(pars_kappa(50)), 8),
+    log_tau = rep(log(pars_tau(1.0, 50)), 8),
+    H_pars = c(log(1.0), 0.0),
+    obs_lik_pars = init_olp
+  )
 
   ## Add attribute noting whether `lambda_n` and `lambda_w` are map'd or not.
   ## Useful for consistency checks later.
@@ -58,10 +60,12 @@ prepare_pars <- function(data, mesh, init_fixef = FALSE) {
 ##' @author John Best
 ##' @export
 spat_par_idx <- function(par_name) {
-  spat_pars <- c("omega_n", "omega_w",
-                 "epsilon_n", "epsilon_w",
-                 "phi_n", "phi_w",
-                 "psi_n", "psi_w")
+  spat_pars <- c(
+    "omega_n", "omega_w",
+    "epsilon_n", "epsilon_w",
+    "phi_n", "phi_w",
+    "psi_n", "psi_w"
+  )
   which(par_name == spat_pars)
 }
 
@@ -75,7 +79,9 @@ spat_par_idx <- function(par_name) {
 ##' @author John Best
 ##' @export
 re_par_idx <- function(par_name) {
-  re_pars <- c("gamma_n", "gamma_w",
-               "eta_n", "eta_w")
+  re_pars <- c(
+    "gamma_n", "gamma_w",
+    "eta_n", "eta_w"
+  )
   which(par_name == re_pars)
 }

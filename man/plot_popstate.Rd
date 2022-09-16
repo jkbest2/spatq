@@ -14,7 +14,7 @@ plot_popstate(popstate, col = hcl.colors(12), colorbar = TRUE, plot_cols = 5)
 \item{plot_cols}{How many years in each row?}
 }
 \value{
-
+Nothing; call for plotting side effects
 }
 \description{
 .. content for \description{} (no empty lines) ..

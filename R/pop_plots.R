@@ -5,15 +5,17 @@
 ##' @param popstate 3-d array with years in the third dimension
 ##' @param colorbar Normalize color scale across years and include a colorbar?
 ##' @param plot_cols How many years in each row?
-##' @return
+##' @return Nothing; call for plotting side effects
 ##' @author John K Best
 ##' @export
 plot_popstate <- function(popstate, col = hcl.colors(12), colorbar = TRUE, plot_cols = 5) {
   if (is.array(popstate)) {
     zlim <- c(min(popstate), max(popstate))
     nyears <- dim(popstate)[3]
-    popstate <- lapply(seq_len(nyears),
-                       function(i) popstate[, , i])
+    popstate <- lapply(
+      seq_len(nyears),
+      function(i) popstate[, , i]
+    )
   } else if (is.list(popstate)) {
     nyears <- length(popstate)
     zmin <- min(vapply(popstate, min, 0))
@@ -24,9 +26,10 @@ plot_popstate <- function(popstate, col = hcl.colors(12), colorbar = TRUE, plot_
 
   lmat <- layout_pop(nyears, plot_cols, colorbar)
   layout(lmat)
-  par(# mfrow = c(plot_rows, plot_cols),
-      oma = c(1, 2, 1, 1),
-      mar = c(1, 1, 1, 1))
+  par( # mfrow = c(plot_rows, plot_cols),
+    oma = c(1, 2, 1, 1),
+    mar = c(1, 1, 1, 1)
+  )
 
   if (colorbar) {
     lapply(popstate, field_image, zlim = zlim, col = col)

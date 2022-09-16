@@ -11,20 +11,24 @@ prepare_map <- function(pars, spec) {
   ## Drop parameters that are *not* mapped
   spec2 <- spec[!vapply(spec, all, TRUE)]
   ## Invert to specify *mapped* parameter vectors of correct length
-  mapped <- lapply(names(spec2),
-                   function(nm) {
-                     rep(!spec2[[nm]], length.out = length(pars[[nm]]))
-                   })
+  mapped <- lapply(
+    names(spec2),
+    function(nm) {
+      rep(!spec2[[nm]], length.out = length(pars[[nm]]))
+    }
+  )
   names(mapped) <- names(spec2)
-  map <- lapply(mapped,
-                function(mpd) {
-                  ## Add individual levels for unmapped parameters
-                  v <- cumsum(!mpd)
-                  ## Specify NA for mapped parameters
-                  v[mpd] <- NA
-                  ## Convert to factor vector for TMB
-                  factor(v)
-                })
+  map <- lapply(
+    mapped,
+    function(mpd) {
+      ## Add individual levels for unmapped parameters
+      v <- cumsum(!mpd)
+      ## Specify NA for mapped parameters
+      v[mpd] <- NA
+      ## Convert to factor vector for TMB
+      factor(v)
+    }
+  )
 
   ## If kappa map is explicitly provided, replace the default
   if (!is.null(attr(spec, "kappa_map"))) {
@@ -33,6 +37,11 @@ prepare_map <- function(pars, spec) {
       stop("kappa_map must include NAs in correct locations")
     }
     map$log_kappa <- factor(kappa_map)
+  }
+
+  ## Anisotropy parameters default to identity matrix
+  if (!spec$H_pars) {
+    map$H_pars <- factor(c(NA, NA))
   }
 
   ## Drop `obs_lik`; currently always estimating these parameters

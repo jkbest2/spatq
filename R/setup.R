@@ -70,11 +70,14 @@ spatq_simsetup <- function(study, repl, opmod, estmod = NULL,
 ##' @export
 new_spatq_setup <- function(data, parameters, map, random) {
   verify_spatq(data, parameters, map)
-  structure(list(data = data,
-                 parameters = parameters,
-                 map = map,
-                 random = random),
-            class = "spatq_setup")
+  structure(list(
+    data = data,
+    parameters = parameters,
+    map = map,
+    random = random
+  ),
+  class = "spatq_setup"
+  )
 }
 
 ##' @describeIn new_spatq_setup Convenient constructor for model setups
@@ -98,13 +101,14 @@ spatq_setup <- function(catch_df, spatq_spec, index_step, init_fixef = TRUE, mes
 
   ## Discretize space
   mesh <- generate_mesh(resolution = mesh_resolution)
-  fem <- generate_fem(mesh)
+  fem <- generate_aniso_fem(mesh)
 
   ## Prepare model specification components
   data <- prepare_data(catch_df, index_df, mesh, fem, spatq_spec$obs_lik)
   parameters <- prepare_pars(data, mesh)
   map <- prepare_map(parameters,
-                     spec = spatq_spec)
+    spec = spatq_spec
+  )
   random <- prepare_random(map)
 
   setup <- new_spatq_setup(data, parameters, map, random)
@@ -129,9 +133,11 @@ spatq_setup <- function(catch_df, spatq_spec, index_step, init_fixef = TRUE, mes
 ##' @author John Best
 ##' @export
 init_fixef <- function(setup, spec, ...) {
-  fix_spec <- specify_estimated(beta = TRUE,
-                                lambda = !attr(setup$parameters, "map_lambda"),
-                                obs_lik = setup$data$obs_lik)
+  fix_spec <- specify_estimated(
+    beta = TRUE,
+    lambda = !attr(setup$parameters, "map_lambda"),
+    obs_lik = setup$data$obs_lik
+  )
   fix_setup <- update_setup(setup, setup$parameters, fix_spec)
   fix_obj <- spatq_obj(fix_setup, runSymbolicAnalysis = FALSE, silent = TRUE)
   fix_fit <- spatq_fit(fix_obj, ...)
@@ -164,9 +170,11 @@ update_parameters <- function(setup, newparobj) {
   ## to iterate over `names(setup$parameters)`, so `lapply` returns an unnamed
   ## list.
   for (nm in names(setup$parameters)) {
-    setup$parameters[[nm]] <- update_onepar(setup$parameters[[nm]],
-                                            newpars[[nm]],
-                                            setup$map[[nm]])
+    setup$parameters[[nm]] <- update_onepar(
+      setup$parameters[[nm]],
+      newpars[[nm]],
+      setup$map[[nm]]
+    )
   }
 
   ## Return entire modified `setup` object

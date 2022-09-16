@@ -6,9 +6,12 @@
 ##' @author John Best
 ##' @export
 domain_boundary <- function() {
-  boundary <- INLA::inla.mesh.segment(matrix(c(0, 0,   100, 100, 0,
-                                               0, 100, 100, 0,   0),
-                                             ncol = 2))
+  boundary <- INLA::inla.mesh.segment(matrix(c(
+    0, 0, 100, 100, 0,
+    0, 100, 100, 0, 0
+  ),
+  ncol = 2
+  ))
 }
 
 ##' Generate the coordinates of a regular grid on a \eqn{[0, 100]×[0, 100]}
@@ -24,8 +27,10 @@ loc_grid <- function(step = 1.0) {
   grid_start <- step / 2
   grid_end <- 100 - step / 2
   grid_seq <- seq(grid_start, grid_end, step)
-  as.matrix(expand.grid(s1 = grid_seq,
-                        s2 = grid_seq))
+  as.matrix(expand.grid(
+    s1 = grid_seq,
+    s2 = grid_seq
+  ))
 }
 
 ##' Generate the standard mesh used for simulation fits
@@ -46,31 +51,34 @@ generate_mesh <- function(resolution = "coarse") {
   loc <- loc_grid(2.0)
   if (resolution == "coarse") {
     mesh <- INLA::inla.mesh.2d(loc,
-                               boundary = boundary,
-                               offset = c(0.0, 30.0),
-                               ## Shortest correlation range should be ~30
-                               max.edge = c(5, 20),
-                               max.n = c(400, 100),
-                               min.angle = c(30, 21),
-                               cutoff = 5)
+      boundary = boundary,
+      offset = c(0.0, 30.0),
+      ## Shortest correlation range should be ~30
+      max.edge = c(5, 20),
+      max.n = c(400, 100),
+      min.angle = c(30, 21),
+      cutoff = 5
+    )
   } else if (resolution == "medium") {
     mesh <- INLA::inla.mesh.2d(loc,
-                               boundary = boundary,
-                               offset = c(0.0, 30.0),
-                               ## Shortest correlation range should be ~30
-                               max.edge = c(5, 20),
-                               max.n = c(1000, 250),
-                               min.angle = c(30, 21),
-                               cutoff = 2)
+      boundary = boundary,
+      offset = c(0.0, 30.0),
+      ## Shortest correlation range should be ~30
+      max.edge = c(5, 20),
+      max.n = c(1000, 250),
+      min.angle = c(30, 21),
+      cutoff = 2
+    )
   } else if (resolution == "fine") {
     mesh <- INLA::inla.mesh.2d(loc,
-                               boundary = boundary,
-                               offset = c(0.0, 30.0),
-                               ## Shortest correlation range should be ~30
-                               max.edge = c(5, 20),
-                               max.n = c(4000, 500),
-                               min.angle = c(30, 21),
-                               cutoff = 1)
+      boundary = boundary,
+      offset = c(0.0, 30.0),
+      ## Shortest correlation range should be ~30
+      max.edge = c(5, 20),
+      max.n = c(4000, 500),
+      min.angle = c(30, 21),
+      cutoff = 1
+    )
   } else {
     error("resolution must be \"coarse\", \"medium\", or \"fine\"")
   }
@@ -89,6 +97,7 @@ generate_fem <- function(mesh) {
   ## Use INLA::inla.mesh.fem instead of INLA::inla.spde2.matern as recommended
   ## by Finn Lindgren
   fem <- INLA::inla.mesh.fem(mesh)
+
   ## Rename elements of `fem` so that they are recognized as a `spde` object in
   ## TMB
   names(fem) <- c("M0", "c1", "M1", "M2", "va", "ta")
@@ -115,7 +124,9 @@ generate_projection <- function(mesh, data_df, vessel_idx = NULL, group = NULL,
                                 zero = FALSE) {
   ## If effect is map'd, return an all-zero projection matrix. Should save some
   ## unnecessary multiplications?
-  if (zero) return(generate_empty_projection(mesh, data_df, group))
+  if (zero) {
+    return(generate_empty_projection(mesh, data_df, group))
+  }
   if (is.null(vessel_idx)) {
     wts <- NULL
   } else {
